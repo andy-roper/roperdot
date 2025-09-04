@@ -44,7 +44,7 @@ For details about the structure of this project, see [**ARCHITECTURE**](docs/ARC
 
 ## License
 
-MIT License with some GPL v2 components. See **[LICENSE](LICENSE.md)** for details.
+MIT License with some GPL v3 components. See **[LICENSE](LICENSE.md)** for details.
 
 ## Note on Contributions  
 
