@@ -10,6 +10,8 @@ My goal for these dotfiles is to create a hybrid environment where your shell de
 
 **Cross-Platform**: I've tried to provide a consistent terminal experience across Windows (WSL/Ubuntu), MacOS, Ubuntu, and Linux Mint.
 
+Note: I've made many changes recently and while MacOS support is solid, the other OSes need to be revisited. I'll be doing that when I have time after soon starting a new job.
+
 **Cross-Shell**: Aliases, functions and scripts in this dotfiles project have been written to work in either bash or zsh.  
 
 **Shell-GUI Integration**: While working in your terminal you can launch GUI apps when needed (`e` for editing, `v` for viewing, `fm` for file manager). Files will be opened in an application based on the file type and the available software.
