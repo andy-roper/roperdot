@@ -122,9 +122,10 @@ PATH="${ROPERDOT_DIR}/bin-${ROPERDOT_CURRENT_SHELL}:${ROPERDOT_DIR}/bin:$PATH"
 
 # Implemented to work around Python externally-managed-environment errors
 current_python="$(command -v python3)"
-if [[ -f /usr/bin/python3 ]] && [[ "$current_python" == "/usr/local/bin/python3" || "$current_python" == */homebrew/bin/python3 ]] && [[ ! -f ~/roperdot/bin/python3 ]]; then
-    ln -sf /usr/bin/python3 ~/roperdot/bin/python3
-    ln -sf /usr/bin/pip3 ~/roperdot/bin/pip3
+if [[ -f /usr/bin/python3 ]] && [[ "$current_python" == "/usr/local/bin/python3" || "$current_python" == */homebrew/bin/python3 ]] && [[ ! -f "${ROPERDOT_DIR}/extra-bin/python3" ]]; then
+	[[ -d "${ROPERDOT_DIR}/extra-bin" ]] || mkdir "${ROPERDOT_DIR}/extra-bin"
+    ln -sf /usr/bin/python3 "${ROPERDOT_DIR}/extra-bin/python3"
+    ln -sf /usr/bin/pip3 "${ROPERDOT_DIR}/extra-bin/pip3"
 fi
 
 #time_event() {
@@ -202,7 +203,7 @@ re=/usr/local/bin
 #	fi
 #fi
 if ! command -v python >/dev/null 2>&1 && [[ -f /usr/bin/python3 ]]; then
-    ln -sf /usr/bin/python3 ~/roperdot/bin/python
+    ln -sf /usr/bin/python3 "${ROPERDOT_DIR}/extra-bin/python"
 fi
 
 do_timing "phase 2b"
