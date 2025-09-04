@@ -547,10 +547,10 @@ fi
 command -v __git_complete >/dev/null 2>&1 && __git_complete g __git_main
 
 # Fix broken links to configuration files
-if [[ -L "/usr/local/bin/grcat" && ! -e "/usr/local/bin/grcat" ]]; then
-	echo "Fixing link for /usr/local/bin/grcat"
-	ln -sf "${ROPERDOT_DIR}/extra-bin/grcat" /usr/local/bin/grcat
-fi
+#if [[ -L "/usr/local/bin/grcat" && ! -e "/usr/local/bin/grcat" ]]; then
+#	echo "Fixing link for /usr/local/bin/grcat"
+#	ln -sf "${ROPERDOT_DIR}/extra-bin/grcat" /usr/local/bin/grcat
+#fi
 
 # fix-link ".dircolors"
 # link_files=(".git_colors" ".gitconfig" ".gitconfig.local" ".gitignore")

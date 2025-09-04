@@ -100,6 +100,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`dc`** - Directory compare
 - **`dirdiff`** - Show differences between directories
 - **`hexdiff`** - Compare files in binary/hex mode
+- **`jsondiff`** - Compare JSON files
 - **`syncdir`** - Sync the files in a source directory with a target directory
 
 ### Archive Operations

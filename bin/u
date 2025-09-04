@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# Description: Shows size in bytes for files
+# Description: Shows space used by subdirectories in human-readable format
 # Author: Andy Roper <andyroper42@gmail.com>
 # URL: https://github.com/andy-roper/roperdot
 

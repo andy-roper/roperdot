@@ -43,14 +43,12 @@ json-to-string-clip: Converts JSON to a quotes string and write the output to th
 killn: Kills processes whose path contains a string, e.g. "killn node"
 l: Same as standard ls -al
 lb: ls with one filename per line
-lf: ls that shows full paths to files, one filename per line
 lfr: Recursive lf
 localip: Prints the machine's ip address on the local network (en0 on Macs, eth0 for others)
 ls (customized): Shows symlink directory contents instead of listing the symlink itself; uses -d for non-directory arguments to suppress single-level recursion into directories
 lsz: ls sorted by size ascending (only for bash 4.x+ or zsh)
 lt: ls sorted by modified time ascending (only for bash 4.x+ or zsh)
 lw: Same as standard ls
-m: Evaluates a mathematical expression
 master: Git checkout master
 md: Creates a directory and create parent directories as needed (mkdir -p)
 mv (customized): Moves files to the current directory if a target directory isn't specified
@@ -66,18 +64,15 @@ pst: Terse ps; pst will truncate long lines at the window boundary
 push: Git push
 PUT: Calls call-api with the PUT method
 rd: Removes a directory (same as rmdir)
-ren: Renames files using regular expressions
 rmdsstore: (Mac) Removes *.DS_Store under the current directory
-roll: Evaluates a dice notation expression
 rolln: Evaluates a dice notation expression an arbitrary number of times
-rt: Replaces text in files
 rtr: Recursively replaces text in files
 show_desktop: (Mac) Restores normal desktop icon display
 show_files: (Mac) Causes Finder to display hidden files (can also do with Cmd + Shift + .)
 TRACE: Calls call-api with the TRACE method
-u: Shows space used by subdirectories in human-readable format
 undopush: Undoes a git push
 update-brew: (Mac) Updates Homebrew and formula definitions, upgrades installed packages, removes old downloads/cache files/unneeded dependencies, and checks for potential issues
 vb: Views a file in binary/hex mode
 vburn: (Mac) Burns a disc image to a CD/DVD/Blu-Ray with verification
 vt: Views a file in text mode
+z: Jumps to recently/frequently used directories (https://github.com/rupa/z and https://github.com/agkozak/zsh-z)

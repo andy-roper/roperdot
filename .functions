@@ -1662,3 +1662,48 @@ switch_sublime_text_theme() {
     # Update the color scheme using sed
     sed -i "s/\"color_scheme\":[[:space:]]*\"[^\"]*\"/\"color_scheme\": \"$color_scheme\"/" "$sublime_settings_file"
 }
+
+jsondiff() {
+    if [[ $# -lt 2 ]]; then
+		cat <<EOT
+jsondiff: compare two JSON files side-by-side
+Usage: jsondiff file1.json file2.json [width]
+EOT
+        return 1
+    fi
+
+    if ! command -v jq >/dev/null 2>&1; then
+        echo "Error: jsondiff requires jq" >&2
+        return 1
+    fi
+
+    local file1="$1"
+    local file2="$2" 
+    local width="${3:-0}"  # 0 = auto-width
+    local temp1=$(mktemp)
+    local temp2=$(mktemp)
+    
+    # Normalize JSON
+    jq --sort-keys . "$file1" > "$temp1" || {
+        echo "Invalid JSON: $file1" >&2
+        rm -f "$temp1" "$temp2" >/dev/null
+        return 1
+    }
+    jq --sort-keys . "$file2" > "$temp2" || {
+        echo "Invalid JSON: $file2" >&2
+        rm -f "$temp1" "$temp2" >/dev/null
+        return 1
+    }
+    
+    if command -v ydiff >/dev/null 2>&1; then
+        if [[ "$width" = "0" ]]; then
+            diff -u --label="$file1" --label="$file2" "$temp1" "$temp2" | ydiff -s
+        else
+            diff -u --label="$file1" --label="$file2" "$temp1" "$temp2" | ydiff -s -w "$width"
+        fi
+    else
+        diff -u --label="$file1" --label="$file2" "$temp1" "$temp2"
+    fi
+    
+    rm -f "$temp1" "$temp2" >/dev/null
+}

@@ -178,26 +178,32 @@ check_binaries() {
     done < "$binaries_file"
 }
 
+process_static_entry() {
+	local line="$1"
+    if [[ -n "$line" && ! "$line" =~ ^[[:space:]]*# ]]; then
+        if should_include_for_os "$line"; then
+            echo "$line"
+        else
+            [[ -n "$verbose" ]] && echo "  Skipping (OS mismatch): ${line%%:*}" >&2
+        fi
+    fi
+}
+
 # Function to load static entries from definition files
 load_static_entries() {
     local file="$1"
     local category="$2"
     
-    if [[ -f "$file" ]]; then
-        [[ -n "$verbose" ]] && echo "Loading $category..." >&2
-        # Skip empty lines and comments, output the rest with OS filtering
-        while IFS= read -r line; do
-            if [[ -n "$line" && ! "$line" =~ ^[[:space:]]*# ]]; then
-                if should_include_for_os "$line"; then
-                    echo "$line"
-                else
-                    [[ -n "$verbose" ]] && echo "  Skipping (OS mismatch): ${line%%:*}" >&2
-                fi
-            fi
-        done < "$file"
-    else
+    if [[ ! -f "$file" ]]; then
         [[ -n "$verbose" ]] && echo "Warning: $file not found, skipping $category" >&2
+        return
     fi
+    [[ -n "$verbose" ]] && echo "Loading $category..." >&2
+    # Skip empty lines and comments, output the rest with OS filtering
+    while IFS= read -r line; do
+    	process_static_entry "$line"
+    done < "$file"
+    [[ -n "$line" ]] && process_static_entry "$line"
 }
 
 # Main execution
