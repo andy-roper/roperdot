@@ -42,6 +42,8 @@ For more information about installation and configuration, see **[GETTING_STARTE
 
 For details about the structure of this project, see [**ARCHITECTURE**](docs/ARCHITECTURE.md).
 
+For information like advanced configuration, third-party applications used, history and future plans, see [**REFERENCE**](docs/REFERENCE.md).
+
 ## License
 
 MIT License with some GPL v3 components. See **[LICENSE](LICENSE.md)** for details.
