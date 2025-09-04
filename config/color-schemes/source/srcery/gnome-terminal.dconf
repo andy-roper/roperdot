@@ -1,0 +1,17 @@
+[:a7f25ec1-eb5f-464a-a475-1c2cb924d54f]
+visible-name='roperdot'
+foreground-color='rgb(239,225,191)'
+background-color='rgb(53,53,53)'
+use-theme-colors=false
+palette=['rgb(37,36,33)', 'rgb(255,74,52)', 'rgb(97,172,99)', 'rgb(253,195,52)', 'rgb(103,135,178)', 'rgb(233,71,128)', 'rgb(0,186,192)', 'rgb(162,147,136)', 'rgb(59,57,53)', 'rgb(251,107,82)', 'rgb(167,197,70)', 'rgb(255,216,129)', 'rgb(159,193,249)', 'rgb(235,111,148)', 'rgb(94,251,238)', 'rgb(255,255,255)']
+use-system-font=false
+font='Hack Nerd Font 11'
+use-theme-transparency=false
+use-transparent-background=true
+background-transparency-percent=3
+default-size-rows=36
+default-size-columns=132
+
+[/]
+list=['a7f25ec1-eb5f-464a-a475-1c2cb924d54f']
+default='a7f25ec1-eb5f-464a-a475-1c2cb924d54f'

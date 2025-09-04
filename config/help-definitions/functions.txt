@@ -1,0 +1,27 @@
+abs-path: Echoes the absolute path for a path including resolving "..." as "../.." in the path
+bindiff: Compares files in binary/hex mode
+camera_used_by: (Mac) Checks to see which apps are using the camera
+cdclip: Changes to the directory contained in the clipboard
+cdd: Changes to subdirectory of the current directory or a target directory; uses fzf to enable choosing the directory
+cdf: (Mac) cd into the folder being viewed in the forefront Finder window
+cds: Changes to a deep subdirectory under the current directory or a target directory; uses fzf to enable choosing the directory
+choose-scheme: Chooses a color scheme
+clone: Clones a git repository, changes to the directory, and runs yarn
+cpp: Copies files and show progress using rsync
+cr: Compresses files recursively
+empty_trash: (Mac) Empties the Trash on all mounted volumes and the main drive and clears sleepimage
+fm: Opens a file manager for the current directory or the specified directory
+gifify: (Mac) Converts a video to an animated GIF
+hexdiff: Compares files in binary/hex mode
+la: ls showing permissions in octal
+lsd: ls that only shows directories
+mdd: Creates a directory and changes directory into it
+modtime: Prints the modified time for a file in a format that's compatible with touch
+mount-drive: (Windows) Mounts a drive in /mnt
+nullify: Directs all output for a command to /dev/null
+setnf: Shows values of environment variables and function definitions (with the function contents suppressed)
+shell_switch: (Mac) Switches to the designated shell
+t: Creates a temporary directory within the current directory and changes directorye to it
+up: Changes to a selected parent directory, to the first parent directory that matches a string argument or up n directories where n is the count argument
+webmify: (Mac) Converts a video into the webm format
+win_env: (Windows) Gets the value of a Windows environment variable

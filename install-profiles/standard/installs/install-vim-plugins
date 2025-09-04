@@ -1,0 +1,208 @@
+#
+# Description: Install script for Vim plugins
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+. "${ROPERDOT_DIR}/source-scripts/input-functions"
+
+[[ -e /tmp/install-vi-plugin-post ]] && \rm /tmp/install-vi-plugin-post >/dev/null
+
+# [[ -e ~/.vimrc ]] && echo "" >> ~/.vimrc
+# [[ -e ~/.config/nvim/init.vim ]] && echo "" >> ~/.config/nvim/init.vim
+
+cd "${ROPERDOT_DIR}/install-profiles/standard/installs" || return 1
+
+command -v nvim >/dev/null 2>&1 && mkdir -p ~/.config/nvim
+
+cat << EOF >> /tmp/install-vi-plugin-post
+install-vi-plugin-post() {
+	if ask_yn_n "Are you installing on a machine you'll be accessing via Citrix" n; then
+		$ROPERDOT_CURRENT_SHELL "${ROPERDOT_DIR}/install-profiles/standard/installs/add-to-vim-config" <<EOT
+vim-airline
+set rtp^=~/.vim/bundle/vim-airline
+set rtp^=~/.vim/bundle/vim-airline-themes
+let g:airline#extensions#tabline#enabled = 2
+
+if !exists('g:airline_symbols')
+    let g:airline_symbols = {}
+endif
+
+" unicode symbols
+let g:airline_symbols.linenr = ' '
+let g:airline_symbols.maxlinenr = ''
+let g:airline_symbols.branch = ' '
+let g:airline_symbols.paste = ' '
+let g:airline_symbols.whitespace = ' '
+
+" airline symbols
+let g:airline#extensions#tabline#fnamemod = ':t'
+let g:airline#extensions#tabline#left_sep = '.'
+let g:airline#extensions#tabline#left_alt_sep = '|'
+let g:airline#extensions#tabline#right_sep = ' '
+let g:airline#extensions#tabline#right_alt_sep = '|'
+let g:airline_left_sep = ' '
+let g:airline_left_alt_sep = '|'
+let g:airline_right_sep = ' '
+let g:airline_right_alt_sep = '|'
+
+if \\\$ROPERDOT_VI_COLOR_SCHEME =~ '^solarized'
+	let g:airline_theme = 'solarized'
+elseif \\\$ROPERDOT_VI_BACKGROUND == 'light'
+	let g:airline_theme = 'light'
+else
+	let g:airline_theme = 'molokai'
+endif
+"let g:airline_theme = 'solarized'
+EOT
+else
+	$ROPERDOT_CURRENT_SHELL "${ROPERDOT_DIR}/install-profiles/standard/installs/add-to-vim-config" <<EOT
+vim-airline
+set rtp^=~/.vim/bundle/vim-airline
+set rtp^=~/.vim/bundle/vim-airline-themes
+let g:airline#extensions#tabline#enabled = 2
+
+if !exists('g:airline_symbols')
+    let g:airline_symbols = {}
+endif
+
+" unicode symbols
+let g:airline_left_sep = '»'
+let g:airline_left_sep = '▶'
+let g:airline_right_sep = '«'
+let g:airline_right_sep = '◀'
+let g:airline_symbols.linenr = '␊'
+let g:airline_symbols.linenr = '␤'
+let g:airline_symbols.linenr = '¶'
+let g:airline_symbols.branch = '⎇'
+let g:airline_symbols.paste = 'ρ'
+let g:airline_symbols.paste = 'Þ'
+let g:airline_symbols.paste = '∥'
+let g:airline_symbols.whitespace = 'Ξ'
+
+" airline symbols
+let g:airline_left_sep = ''
+let g:airline_left_alt_sep = ''
+let g:airline_right_sep = ''
+let g:airline_right_alt_sep = ''
+let g:airline_symbols.branch = ''
+let g:airline_symbols.readonly = ''
+let g:airline_symbols.linenr = ''
+
+let g:airline#extensions#tabline#fnamemod = ':t'
+
+if \\\$ROPERDOT_VI_COLOR_SCHEME =~ '^solarized'
+	let g:airline_theme = 'solarized'
+elseif \\\$ROPERDOT_VI_BACKGROUND == 'light'
+	let g:airline_theme = 'light'
+else
+	let g:airline_theme = 'molokai'
+endif
+"let g:airline_theme = 'solarized'
+EOT
+	fi
+}
+EOF
+
+$ROPERDOT_CURRENT_SHELL ./install-vi-plugin "vim-airline"
+\rm /tmp/install-vi-plugin-post >/dev/null
+
+cat << EOT >> /tmp/install-vi-plugin-post
+install-vi-plugin-post() {
+	$ROPERDOT_CURRENT_SHELL "${ROPERDOT_DIR}/install-profiles/standard/installs/add-to-vim-config" vim-airline-themes
+}
+EOT
+
+$ROPERDOT_CURRENT_SHELL ./install-vi-plugin "vim-airline" "vim-airline-themes"
+\rm /tmp/install-vi-plugin-post >/dev/null
+
+if command -v fzf >/dev/null 2>&1; then
+	cat << EOF >> /tmp/install-vi-plugin-post
+install-vi-plugin-post() {
+	fzf_path="\$(command -v fzf)"
+	$ROPERDOT_CURRENT_SHELL "${ROPERDOT_DIR}/install-profiles/standard/installs/add-to-vim-config" <<EOT
+fzf
+set rtp^="\$fzf_path"
+set rtp^=~/.vim/bundle/fzf
+set rtp^=~/.vim/bundle/fzf.vim
+EOT
+}
+EOF
+	$ROPERDOT_CURRENT_SHELL ./install-vi-plugin "junegunn" "fzf"
+	$ROPERDOT_CURRENT_SHELL ./install-vi-plugin "junegunn" "fzf.vim"
+	\rm /tmp/install-vi-plugin-post >/dev/null
+else
+	echo "fzf not found; skipping installation of vi plugin"
+fi
+
+cat << EOT >> /tmp/install-vi-plugin-post
+install-vi-plugin-post() {
+	$ROPERDOT_CURRENT_SHELL "${ROPERDOT_DIR}/install-profiles/standard/installs/add-to-vim-config" vim-multiple-cursors
+}
+EOT
+$ROPERDOT_CURRENT_SHELL ./install-vi-plugin "terryma" "vim-multiple-cursors"
+\rm /tmp/install-vi-plugin-post >/dev/null
+
+cat << EOF >> /tmp/install-vi-plugin-post
+install-vi-plugin-post() {
+	$ROPERDOT_CURRENT_SHELL "${ROPERDOT_DIR}/install-profiles/standard/installs/add-to-vim-config" <<EOT
+nerdtree
+set rtp^=~/.vim/bundle/nerdtree
+map <C-t> :NERDTreeToggle<CR>
+autocmd StdinReadPre * let s:std_in=1
+autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
+let g:NERDTreeDirArrowExpandable = '>'
+let g:NERDTreeDirArrowCollapsible = 'v'
+EOT
+}
+EOF
+$ROPERDOT_CURRENT_SHELL ./install-vi-plugin "scrooloose" "nerdtree"
+\rm /tmp/install-vi-plugin-post >/dev/null
+
+cat << EOF >> /tmp/install-vi-plugin-post
+install-vi-plugin-post() {
+	$ROPERDOT_CURRENT_SHELL "${ROPERDOT_DIR}/install-profiles/standard/installs/add-to-vim-config" <<EOT
+vim-javascript
+set rtp^=~/.vim/bundle/vim-javascript
+let g:javascript_plugin_jsdoc = 1
+let g:javascript_plugin_ngdoc = 1
+let g:javascript_plugin_flow = 1
+augroup javascript_folding
+    au!
+    au FileType javascript setlocal foldmethod=syntax
+augroup END
+"let g:javascript_conceal_arrow_function = "⇒"
+"set conceallevel=1
+"map <leader>l :exec &conceallevel ? "set conceallevel=0" : "set conceallevel=1"<CR>
+EOT
+#"
+}
+EOF
+
+$ROPERDOT_CURRENT_SHELL ./install-vi-plugin "pangloss" "vim-javascript"
+\rm /tmp/install-vi-plugin-post >/dev/null
+
+cat << EOF >> /tmp/install-vi-plugin-post
+install-vi-plugin-post() {
+	$ROPERDOT_CURRENT_SHELL "${ROPERDOT_DIR}/install-profiles/standard/installs/add-to-vim-config" vim-node
+}
+EOF
+
+$ROPERDOT_CURRENT_SHELL ./install-vi-plugin "moll" "vim-node"
+\rm /tmp/install-vi-plugin-post >/dev/null
+
+if [[ ! -e ~/.vimrc ]] || ! grep matchparen ~/.vimrc >/dev/null; then
+	cat << EOT >> ~/.vimrc
+let g:matchparen_timeout = 2
+let g:matchparen_insert_timeout = 2
+EOT
+fi
+
+if [[ ! -e ~/.config/nvim/init.vim ]] || ! grep matchparen ~/.config/nvim/init.vim >/dev/null; then
+	[[ -d ~/.config/nvim ]] || mkdir -p ~/.config/nvim >/dev/null
+	cat << EOT >> ~/.config/nvim/init.vim
+let g:matchparen_timeout = 2
+let g:matchparen_insert_timeout = 2
+EOT
+fi

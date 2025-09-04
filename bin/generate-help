@@ -1,0 +1,231 @@
+#!/usr/bin/env bash
+#
+# Description: Generate roperdot-help.txt from script metadata and static definitions
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+verbose=false
+
+# Scripts to exclude from help generation
+EXCLUDED_SCRIPTS=(
+    "convert-spaces-to-tabs"
+    "make-t-dir"
+    "process-setnf"
+    "show-file"
+    "_up"
+)
+
+# Check required environment variables
+if [[ -z "$ROPERDOT_DIR" ]]; then
+    echo "Error: ROPERDOT_DIR environment variable not set" >&2
+    exit 1
+fi
+
+if [[ -z "$ROPERDOT_CURRENT_SHELL" ]]; then
+    echo "Error: ROPERDOT_CURRENT_SHELL environment variable not set" >&2
+    exit 1
+fi
+
+if [[ -z "$ROPERDOT_OS_TYPE" ]]; then
+    echo "Error: ROPERDOT_OS_TYPE environment variable not set" >&2
+    exit 1
+fi
+
+if [[ -z "$ROPERDOT_DESKTOP_ENV" ]]; then
+    echo "Error: ROPERDOT_DESKTOP_ENV environment variable not set" >&2
+    exit 1
+fi
+
+# Configuration
+HELP_CONFIG_DIR="$ROPERDOT_DIR/config/help-definitions"
+OUTPUT_FILE="$HOME/roperdot-help.txt"
+TEMP_FILE="$(mktemp)"
+
+# Ensure we clean up temp file
+trap 'rm -f "$TEMP_FILE" >/dev/null 2>&1' EXIT
+
+# Function to check if an entry should be included based on OS filtering
+should_include_for_os() {
+    local entry="$1"
+    
+    # Extract description part after the colon
+    if [[ "$entry" == *:* ]]; then
+        local description="${entry#*: }"
+        
+        # Check for OS-specific prefixes
+        if [[ "$description" == "(Mac)"* ]]; then
+            [[ "$ROPERDOT_DESKTOP_ENV" == "mac" ]]
+        elif [[ "$description" == "(Windows)"* ]]; then
+            [[ "$ROPERDOT_DESKTOP_ENV" == "windows" ]]
+        else
+            # No OS prefix, include on all platforms
+            return 0
+        fi
+    else
+        # No colon found, include by default
+        return 0
+    fi
+}
+
+# Function to check if a script should be excluded
+is_script_excluded() {
+    local script_name="$1"
+    local excluded_script
+    
+    for excluded_script in "${EXCLUDED_SCRIPTS[@]}"; do
+        if [[ "$script_name" = "$excluded_script" ]]; then
+            return 0  # Script is excluded
+        fi
+    done
+    return 1  # Script is not excluded
+}
+
+# Function to extract description from a script file
+extract_description() {
+    local file="$1"
+    local script_name="$(basename "$file")"
+    
+    # Look for "Description: " in various comment formats
+    local description=$(grep -m1 "Description:" "$file" 2>/dev/null | \
+        sed 's/.*Description: *\(.*\)/\1/' | \
+        sed 's/[*\/]*$//' | \
+        sed 's/\.$//')  # Remove trailing period for help format
+    
+    if [[ -n "$description" ]]; then
+        local entry="$script_name: $description"
+        
+        # Apply OS filtering to the extracted description
+        if should_include_for_os "$entry"; then
+            echo "$entry"
+        else
+            [[ -n "$verbose" ]] && echo "  Skipping script (OS mismatch): $script_name" >&2
+        fi
+    fi
+}
+
+# Function to scan script directories for descriptions
+scan_script_directories() {
+    # Determine shell-specific directory
+    if [[ "$ROPERDOT_CURRENT_SHELL" = "zsh" ]]; then
+        local shell_dir="$ROPERDOT_DIR/bin-zsh"
+    else
+        local shell_dir="$ROPERDOT_DIR/bin-bash"
+    fi
+
+    # All directories to scan
+    local script_dirs=(
+        "$shell_dir"
+        "$ROPERDOT_DIR/bin"
+        "$ROPERDOT_DIR/extra-bin"
+        "$ROPERDOT_DIR/os-bin/$ROPERDOT_OS_TYPE"
+    )
+    
+    [[ -n "$verbose" ]] && echo "Scanning script directories for descriptions..." >&2
+    
+    for dir in "${script_dirs[@]}"; do
+        if [[ -d "$dir" ]]; then
+            [[ -n "$verbose" ]] && echo "  Checking: $dir" >&2
+            for file in "$dir"/*; do
+                if [[ -f "$file" && ! "$(basename "$file")" =~ ^\. ]]; then
+                    local script_name="$(basename "$file")"
+                    
+                    is_script_excluded "$script_name" && continue
+                    
+                    extract_description "$file"
+                fi
+            done
+        else
+            [[ -n "$verbose" ]] && echo "  Skipping (not found): $dir" >&2
+        fi
+    done
+}
+
+# Function to check which binaries are available
+check_binaries() {
+    local binaries_file="$HELP_CONFIG_DIR/binaries.txt"
+    
+    if [[ ! -f "$binaries_file" ]]; then
+        [[ -n "$verbose" ]] && echo "Warning: $binaries_file not found, skipping binary checks" >&2
+        return
+    fi
+    
+    echo "Checking binary availability..." >&2
+    
+    while IFS= read -r line; do
+        # Skip empty lines and comments
+        if [[ -n "$line" && ! "$line" =~ ^[[:space:]]*# ]]; then
+            if [[ "$line" == *:* ]]; then
+                # Check OS filtering first
+                if ! should_include_for_os "$line"; then
+                    [[ -n "$verbose" ]] && echo "  Skipping (OS mismatch): ${line%%:*}" >&2
+                    continue
+                fi
+                
+                local binary_name="${line%%:*}"
+                # Remove any platform notes in parentheses for the command check
+                binary_name="${binary_name%% \(*}"
+                binary_name="${binary_name%% *}"  # Remove any remaining spaces
+                
+                if command -v "$binary_name" >/dev/null 2>&1; then
+                    echo "$line"
+                else
+                    [[ -n "$verbose" ]] && echo "  Binary not found: $binary_name" >&2
+                fi
+            fi
+        fi
+    done < "$binaries_file"
+}
+
+# Function to load static entries from definition files
+load_static_entries() {
+    local file="$1"
+    local category="$2"
+    
+    if [[ -f "$file" ]]; then
+        [[ -n "$verbose" ]] && echo "Loading $category..." >&2
+        # Skip empty lines and comments, output the rest with OS filtering
+        while IFS= read -r line; do
+            if [[ -n "$line" && ! "$line" =~ ^[[:space:]]*# ]]; then
+                if should_include_for_os "$line"; then
+                    echo "$line"
+                else
+                    [[ -n "$verbose" ]] && echo "  Skipping (OS mismatch): ${line%%:*}" >&2
+                fi
+            fi
+        done < "$file"
+    else
+        [[ -n "$verbose" ]] && echo "Warning: $file not found, skipping $category" >&2
+    fi
+}
+
+# Main execution
+if [[ -n "$verbose" ]]; then
+	echo "Generating roperdot help file..." >&2
+	echo "Configuration directory: $HELP_CONFIG_DIR" >&2
+	echo "Output file: $OUTPUT_FILE" >&2
+	echo "" >&2
+fi
+
+# Initialize temp file
+rm -f "$TEMP_FILE" >/dev/null 2>&1
+
+load_static_entries "$HELP_CONFIG_DIR/aliases.txt" "aliases" >> "$TEMP_FILE"
+load_static_entries "$HELP_CONFIG_DIR/functions.txt" "functions" >> "$TEMP_FILE"
+check_binaries >> "$TEMP_FILE"
+scan_script_directories >> "$TEMP_FILE"
+
+# Sort and write final file
+if [[ -n "$verbose" ]]; then
+	echo "" >&2
+	echo "Sorting and writing final help file..." >&2
+fi
+LC_ALL=C sort -f "$TEMP_FILE" > "$OUTPUT_FILE"
+
+# Report results
+if [[ -n "$verbose" ]]; then
+	line_count=$(wc -l < "$OUTPUT_FILE")
+	echo "Generated help file with $line_count entries" >&2
+	echo "Help file created: $OUTPUT_FILE" >&2
+fi

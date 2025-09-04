@@ -1,0 +1,30 @@
+add_dir_to_path_var () {
+    local new_dir="${1%/}"
+    local IFS=':'
+    for dir in $PATH ; do
+        dir="${dir%/}"
+        if [ "$dir" = "$new_dir" ]; then
+            return 0
+        fi
+    done
+    export PATH="${PATH:+$PATH:}$new_dir"
+}
+
+remove_from_path_var () {
+    local new_dir="${1%/}"
+    local IFS=':'
+    for dir in $PATH ; do
+        dir="${dir%/}"
+        if [ "$dir" != "$new_dir" ]; then
+            new_path="${new_path:+$new_path:}$dir"
+        fi
+    done
+    export $PATH="$new_path"
+}
+
+add_dirs_to_path () {
+    while [ $# -ne 0 ]; do
+        add_new_dir_to_path_var "$1"
+        shift
+    done
+}

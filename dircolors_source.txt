@@ -1,0 +1,665 @@
+# Creating sample files to test your .dircolors scheme:
+#
+# Execute the ~/roperdot/bin/test-dircolors script to create sample files based on the file names and
+# extensions referenced in this file to test your .dircolors color scheme.
+#
+# Specify categories in this file like:
+#
+# category: some_category
+#
+# This will cause all sample files for the filenames in that section (until the value of category is changed) to be
+# created in a directory in ~/test-dircolors with the name of the category, in addition to being created in
+# ~/test-dircolors/all-files.
+#
+# When creating sample files using this file, if the filename begins with a dot and the comment contains "dotfile",
+# the sample file will be created as-is, e.g. ".bashrc". If the comment doesn't contain "dotfile", a sample file
+# will be created with the specified extension.
+#
+# ----------------------------------------------------------------------------------------------------------------
+#
+# Generating ~/.dircolors:
+#
+# Execute the ~/roperdot/bin/generate-dircolors script to generate ~/.dircolors based on the file names and
+# extensions referenced in this file.
+#
+# When generating .dircolors from this file, entries will use the last color specified with:
+#
+# color: <color codes>
+#
+# You can override this color by specifying a color code on the same line with the filename.
+# Uppercase versions of each extension (starts with a dot and the comment doesn't contain "dotfile") will
+# also be created in the generated .dircolors file.
+#
+# If you want to apply this scheme to all users, copy a file generated from this file to /etc/.dircolors and
+# make it readable by all users.
+#
+# See the help in generate-dircolors for more details.
+#
+# ----------------------------------------------------------------------------------------------------------------
+
+# COLOR needs one of these arguments: 'tty' colorizes output to ttys, but not
+# pipes. 'all' adds color characters to all output. 'none' shuts colorization
+# off.
+COLOR tty
+
+# Below, there should be one TERM entry for each termtype that is colorizable
+TERM ansi
+TERM color_xterm
+TERM color-xterm
+TERM con132x25
+TERM con132x30
+TERM con132x43
+TERM con132x60
+TERM con80x25
+TERM con80x28
+TERM con80x30
+TERM con80x43
+TERM con80x50
+TERM con80x60
+TERM cons25
+TERM console
+TERM dtterm
+TERM dvtm
+TERM dvtm-256color
+TERM Eterm
+TERM eterm-color
+TERM fbterm
+TERM gnome
+TERM gnome-256color
+TERM jfbterm
+TERM konsole
+TERM konsole-256color
+TERM kterm
+TERM linux
+TERM linux-c
+TERM mach-color
+TERM mlterm
+TERM nxterm
+TERM putty
+TERM putty-256color
+TERM rxvt
+TERM rxvt-256color
+TERM rxvt-unicode
+TERM rxvt-unicode256
+TERM rxvt-unicode-256color
+TERM screen
+TERM screen-16color
+TERM screen-16color-bce
+TERM screen-16color-s
+TERM screen-16color-bce-s
+TERM screen-256color
+TERM screen-256color-bce
+TERM screen-256color-s
+TERM screen-256color-bce-s
+TERM screen-256color-italic
+TERM screen-bce
+TERM screen-w
+TERM screen.xterm-256color
+TERM screen.linux
+TERM screen.xterm-new
+TERM st
+TERM st-meta
+TERM st-256color
+TERM st-meta-256color
+TERM tmux
+TERM tmux-256color
+TERM vt100
+TERM xterm
+TERM xterm-new
+TERM xterm-16color
+TERM xterm-256color
+TERM xterm-256color-italic
+TERM xterm-88color
+TERM xterm-color
+TERM xterm-debian
+TERM xterm-termite
+
+# EIGHTBIT, followed by '1' for on, '0' for off. (8-bit output)
+EIGHTBIT 1
+
+# Below are the color init strings for the basic file types. A color init
+# string consists of one or more of the following numeric codes:
+# Attribute codes:
+# 00=none 01=bold 04=underscore 05=blink 07=reverse 08=concealed
+# Text color codes:
+# 30=black 31=red 32=green 33=yellow 34=blue 35=magenta 36=cyan 37=white
+# Background color codes:
+# 40=black 41=red 42=green 43=yellow 44=blue 45=magenta 46=cyan 47=white
+NORMAL 00                                            # no color code at all
+FILE 00                                              # regular file: use no color at all
+DIR "COLOR_CYAN"                                     # directory
+LINK "COLOR_BRCYAN"                                  # symbolic link. If you set this to 'target' instead of a
+                                                     # numeric value, the color is as for the file pointed to.
+#MULTIHARDLINK "COLOR_MAGENTA on COLOR_CYAN"         # regular file with more than one link
+EXEC "COLOR_BRGREEN"                                 # executable
+FIFO "COLOR_BRWHITE on COLOR_BLUE"                   # pipe
+SOCK "COLOR_BLACK on COLOR_YELLOW"                   # socket
+DOOR "COLOR_BLACK on COLOR_YELLOW"                   # door
+BLK "COLOR_BRWHITE on COLOR_BLUE"                    # block device driver
+CHR "COLOR_BRWHITE on COLOR_BLUE"                    # character device driver
+ORPHAN "COLOR_BRWHITE on COLOR_RED"                  # symlink to nonexistent file, or non-stat'able file
+MISSING "COLOR_BRWHITE on COLOR_RED"
+#RESET 0                                             # reset to "normal" color
+#SETUID "COLOR_WHITE on COLOR_RED"                   # file that is setuid (u+s)
+#SETGID "COLOR_BLACK on COLOR_YELLOW"                # file that is setgid (g+s)
+#CAPABILITY "COLOR_BLACK on COLOR_RED"               # file with capability
+#STICKY_OTHER_WRITABLE "COLOR_BLACK on COLOR_GREEN"  # dir that is sticky and other-writable (+t,o+w)
+OTHER_WRITABLE 0                                     # dir that is other-writable (o+w) and not sticky
+#STICKY "COLOR_WHITE on COLOR_BLUE"                  # dir with the sticky bit set (+t) and not other-writable
+
+# File extensions
+
+category: special
+
+*bug                "COLOR_BRWHITE on COLOR_RED"
+*core               "COLOR_BRWHITE on COLOR_RED"     # Core dump
+*fix                "COLOR_BRWHITE on COLOR_BLUE"
+*log                "COLOR_YELLOW"                   # Log file
+*report             "COLOR_YELLOW"
+*README             "COLOR_YELLOW"
+*README.txt         "COLOR_YELLOW"
+*readme.txt         "COLOR_YELLOW"
+*README.markdown    "COLOR_YELLOW"
+*INSTALL            "COLOR_YELLOW"
+*LICENSE            "COLOR_YELLOW"
+*Dockerfile         "COLOR_BRYELLOW"                 # Docker instructions file
+*Makefile           "COLOR_BRYELLOW"                 # Makefile
+*Rakefile           "COLOR_BRYELLOW"                 # Instruction file for ruby/rake
+
+category: dot-files
+color: 07  # reverse
+.bashrc
+.bash_profile
+.dircolors
+.dir_colors
+.git
+.inputrc
+.profile
+.vimrc
+
+category: shell-scripts-and-executables
+color: "COLOR_GREEN"
+*bash                   # Bash script
+*bat                    # Windows batch file
+*btm                    # Take Command batch file
+*cmd                    # Windows command file
+*com                    # DOS command file
+*csh                    # C shell script
+*exe                    # Windows executable file
+*ksh                    # Korn shell script
+*sh                     # Shell script
+*tcsh                   # tcsh script
+
+category: code
+color: "COLOR_BRYELLOW"
+*c                      # C source
+*cc                     # C++ source
+*cl                     # Cursor library
+*class                  # Compiled Java class
+*coffee                 # CoffeeScript JavaScript file
+*cpp                    # C++ source
+*cs                     # C# source
+*css                    # Cascading style sheet
+*cxx                    # C++ source
+*dart                   # Dart source
+*def                    # doT template file
+*dll                    # Windows dynamic link library
+*dot                    # doT template file
+*ear                    # Java enterprise archive
+*el                     # Emacs Lisp source
+*erb                    # Ruby ERB script
+*err                    # Error log file
+*feature                # Gherkin source
+*go                     # Go source
+*groovy                 # Groovy source
+*h                      # C/C++/Objective-C header
+*haml                   # HTML abstraction markup language source
+*hh                     # C++ header
+*hpp                    # C++ header
+*hs                     # Haskell script
+*htm                    # HTML
+*html                   # HTML
+*inc                    # Include file
+*jade                   # Pug (Jade) source
+*jar                    # Java archive
+*java                   # Java source
+*js                     # JavaScript
+*json                   # JSON
+*jsp                    # Java Server Page
+*jst                    # doT template file
+*l                      # Lex source
+*less                   # LESS style sheet
+*log                    # Log file
+*m                      # Objective-C implementation file
+*man                    # Unix man page file
+*mf                     # Java manifest file
+*mk                     # Make file
+*mm                     # Objective-C++ source
+*n
+*o                      # Object file
+*owl                    # OWL source
+*p
+*php                    # PHP source
+*pl                     # Perl script
+*pm                     # Perl module
+*pod                    # Plain Old Documentation (Perl documentation)
+*pug                    # Pug (Jade) source
+*py                     # Python script
+*pyc                    # Python compiled file  
+*pyo                    # Python optimized code
+*rb                     # Ruby source
+*rc                     # Resource script
+*rdf                    # Resource Description Framework file
+*res                    # Resource file
+*rs                     # Rust source
+*rst                    # reStructuredText file, primarily used with Python
+*sass                   # Syntactically Awesome StyleSheets file
+*scss                   # Sass cascading style sheet
+*shtml                  # Server side include HTML file
+*sql                    # SQL script
+*styl                   # Stylus file
+*tex                    # LaTeX source document
+*ts                     # TypeScript source
+*v                      # Verilog source
+*vb                     # Visual Basic Project item file
+*vbproj                 # Visual Basic.NET project file
+*vbs                    # VBScript
+*vim                    # Vim settings file
+*war                    # Java web archive
+*wsf                    # Windows script file
+*xml                    # XML document
+*xsd                    # XML schema definition
+*xsl                    # XML style sheet
+*xslt                   # XSL transformation file
+*y                      # Yacc source
+*yaml                   # YAML document
+*yml                    # YAML document
+
+
+category: uncommon-code
+color: "COLOR_BRYELLOW"
+*asm                    # Assembly
+*bas                    # Visual Basic source
+*bms                    # Basic Mapping Support file (CICS)
+*cbl                    # COBOL source
+*cgi                    # Common Gateway Interface file
+*cls                    # Visual Basic class module
+*cob                    # COBOL source
+*ctl                    # ActiveX control file used with Visual Studio
+*dsw                    # Visual C++ workspace file
+*f                      # Fortran source
+*f90                    # Fortran source
+*for                    # Fortran source
+*fpp                    # Fortran source
+*frm                    # Visual Basic form
+*frx                    # Visual Basic form
+*i                      # Visual Studio intermediate file
+*ihs
+*ii                     # IconWorkshop Extended Information file
+*jacl                   # JACL script
+*jcl                    # Job Control Language (mainframe)
+*jy                     # Jython script
+*mht                    # MHTML web archive
+*mhtml                  # MHTML web archive
+*nsis                   # NSIS (Nullsoft Scriptable Install System) script
+*pas                    # Pascal source
+*rexx                   # REXX script
+*sln                    # Visual Studio Solution file
+*sv                     # SystemVerilog source
+*svh                    # SystemVerilog source
+*twx                    # IBM BPM snapshot
+*vba                    # Visual Basic for Applications
+*vbg                    # Visual Basic project group file
+*vbp                    # Visual Basic project file
+*vh                     # Verilog source
+*vhd                    # Verilog source
+
+category: configuration
+color: "COLOR_YELLOW"
+*cfg                    # Configuration file
+*conf                   # Configuration file
+*ini                    # Initialization file
+*nt                     # Windows NT startup file
+*settings
+
+category: text-files
+color: "COLOR_YELLOW"
+*csv                    # Comma separated value file
+*lst                    # Data list
+*md5                    # MD5 checksum file
+*me                     # read.me file
+*nfo                    # nfo file
+*now                    # readme.now file
+*reg                    # Microsoft registry file
+*sfv                    # Simple file verification file
+*tdf                    # Tab-delimited file
+*txt                    # Text file
+
+category: subtitles
+color: "COLOR_YELLOW"
+*ass                    # Ageisub subtitle file
+*idx                    # Movie subtitle file
+*sami                   # SAMI subtitle file
+*smi                    # SAMI subtitle file
+*srt                    # SubRip subtitle file
+*ssa                    # Sub Station Alpha subtitle file
+*sub                    # Movie subtitle file
+
+category: documents
+color: "COLOR_RED"
+*accdb                  # Microsoft Access database
+*accde                  # Microsoft Access execute-only database
+*azw                    # Amazon Kindle document
+*chm                    # Compressed HTML file
+.df                     # Data file
+*doc                    # Microsoft Word document
+*docm                   # Microsoft Word macro-enabled document
+*docx                   # Microsoft Word document
+*dotm                   # Microsoft Word macro-enabled document template
+*dotx                   # Microsoft Word document template
+*dvi                    # Device independent format file
+*eps                    # Encapsulated PostScript file
+*epub                   # Open eBook file
+*fla                    # Adobe Animate animation project
+*lit                    # eBook file
+*md                     # Markdown documentation file
+*mdb                    # Microsoft Access database
+*mde                    # Microsoft Access compiled add-in file
+*mkd                    # Markdown documentation file
+*mobi                   # Amazon Kindle document (obsolete)
+*msg                    # Microsoft Outlook Mail message
+*odg                    # OpenDocument Graphic file
+*odp                    # OpenDocument Presentation
+*ods                    # OpenDocument Spreadsheet
+*odt                    # OpenDocument Text document
+*one                    # Microsoft OneNote document
+*otp                    # OpenDocument Presentation template
+*ots                    # OpenDocument Spreadsheet template
+*ott                    # OpenDocument Document template
+*pdf                    # Portable Document Format file
+*pps                    # Microsoft PowerPoint Slide Show
+*ppsm                   # Microsoft PowerPoint Slide Show, macro-enabled
+*ppsx                   # Microsoft PowerPoint Slide Show
+*ppt                    # Microsoft PowerPoint file
+*pptm                   # Microsoft PowerPoint macro-enabled file
+*pptx                   # Microsoft PowerPoint file
+*ps                     # PostScript file
+*psd                    # Adobe Photoshop Document
+*rtf                    # Rich Text Format file
+*rpt                    # Crystal Reports file
+*vsd                    # Visio Drawing file
+*vsdm                   # Visio macro-enabled drawing file
+*vsdx                   # Visio Drawing file
+*xls                    # Microsoft Excel spreadsheet
+*xlsb                   # Microsoft Excel binary spreadsheet
+*xlsm                   # Microsoft Excel macro-enabled spreadsheet
+*xlsx                   # Microsoft Excel spreadsheet
+
+category: images
+color: "COLOR_BRMAGENTA"
+*ani                    # Windows animated cursor
+*bmp                    # Bitmap image file
+*gif                    # Graphical Interchange Format file
+*ico                    # Icon file
+*jpeg                   # JPEG image
+*jpg                    # JPEG image
+*png                    # Portable Network Graphic
+*tif                    # Tagged Image File
+*tiff                   # Tagged Image File Format
+*xbm                    # X11 bitmap
+*xcf                    # GIMP image
+
+category: uncommon-images
+color: "COLOR_BRMAGENTA"
+*cgm                    # Computer graphics metafile
+*dl
+*emf                    # Enhanced Windows metafile
+*mng                    # Multiple Network Graphic
+*pbm                    # Portable Bitmap image
+*pgm                    # Portable Gray Map image
+*ppm                    # Portable Pixmap image file
+*svg                    # Scalable Vector Graphics file
+*svgz                   # Compressed SVG file
+*tga                    # Targa graphic
+*xpm                    # X11 pixmap
+*xwd                    # X Windows dump image
+
+category: audio
+color: "COLOR_BRMAGENTA"
+*ac3                    # Audio Codec 3 file
+*flac                   # Free Lossless Audio Codec file
+*m3u                    # Media playlist file
+*m4a                    # MPEG-4 audio file
+*m4b                    # MPEG-4 audiobook file
+*mid                    # MIDI file
+*midi                   # MIDI file
+*mp3                    # MP3 audio file
+*ogg                    # Ogg Vorbis audio file
+*wav                    # WAVE audio file
+*wma                    # Windows Media audio file
+*xspf                   # XSPF playlist file
+
+category: uncommon-audio
+color: "COLOR_BRMAGENTA"
+*aac                    # Advanced Audio Coding file
+*aif                    # Apple Audio Interchange File Format file
+*aifc                   # Apple Audio Interchange File Format file
+*aiff                   # Apple Audio Interchange File Format file
+*au                     # Audacity audio file
+*axa                    # Annodex audio file
+*mka                    # Matroska audio file
+*mpa                    # MPEG-2 audio file
+*mpc                    # Musepack Compressed audio file
+*oga                    # Ogg Vorbis audio file
+*opus                   # Opus audio file
+*ra                     # Real Audio file
+
+category: videos
+color: "COLOR_BRMAGENTA"
+*asf                    # Microsoft Advanced Systems Format file
+*avi                    # Audio Video Interleave file
+*divx                   # DivX-encoded movie file
+*ifo                    # DVD disc information file
+*m2ts                   # Blu-ray BDAV video
+*MTS                    # Blu-ray BDAV video
+*m2v                    # MPEG-2 video
+*m4v                    # iTunes video
+*mkv                    # Matroska video
+*mov                    # Apple QuickTime movie
+*mp4                    # MPEG-4 video file
+*mpeg                   # MPEG movie
+*mpg                    # MPEG movie
+*swf                    # Shockwave Flash movie
+*vob                    # DVD Video Object file
+*webm                   # WebM video
+*wmv                    # Windows Media Video file
+
+category: uncommon-videos
+color: "COLOR_BRMAGENTA"
+*axv                    # Annodex video file
+*flc                    # FLIC animation (Autodesk)
+*fli                    # FLIC animation (Autodesk)
+*flv                    # Animate video file
+*gl                     # GRASP animation
+*nuv                    # NuppelVideo file
+*ogm                    # Ogg media file
+*ogv                    # Ogg video file
+*ogx                    # Ogg Vorbis Multiplexed media file
+*qt                     # Apple QuickTime video
+*rm                     # RealMedia file
+*rmvb                   # RealMedia Variable Bitrate file
+*yuv                    # YUV video file
+
+category: archives
+color: "COLOR_BRBLUE"
+*7z                     # 7-Zip archive
+*bz2                    # bzip2 archive
+*cb7    color="COLOR_RED"   # Comic book 7-Zip archive
+*cba    color="COLOR_RED"   # Comic book ace archive
+*cbr    color="COLOR_RED"   # Comic book rar archive
+*cbt    color="COLOR_RED"   # Comic book tar archive
+*cbz    color="COLOR_RED"   # Comic book zip archive
+*cpgz                   # Gzipped Unix CPIO archive
+*cpio                   # Unix CPIO archive
+.gz                     # Gzip archive
+*lz                     # Lzip compressed file
+*lzh                    # LZH archive
+*lzma                   # LZMA archive
+*par                    # Associated with Parchive files (multi-part RARs)
+*rar                    # WinRAR archive
+*rz                     # Rzip compressed file
+*tar                    # Consolidated Unix file archive
+*taz                    # Tar zipped file, same as .tar.Z
+*tb2                    # Tar file compressed with bzip2
+*tbz                    # Tar file compressed with bzip
+*tbz2                   # Tar file compressed with bzip2
+*tgz                    # Tar file compressed with Gzip
+*tlz                    # Tar file compressed with Lzip compression
+*txz                    # Tar file compressed with XZ
+*tz                     # Zipped tar archive, same as .tar.Z
+*wim                    # Windows imaging format file
+*xz                     # XZ archive
+*z                      # Unix compressed file
+*zip                    # Zip archive
+*zipx                   # Extended Zip file (created with WinZip)
+*r01                    # WinRAR split archive
+*r02                    # WinRAR split archive
+*r03                    # WinRAR split archive
+*r04                    # WinRAR split archive
+*r05                    # WinRAR split archive
+*r06                    # WinRAR split archive
+*r07                    # WinRAR split archive
+*r08                    # WinRAR split archive
+*r09                    # WinRAR split archive
+*r10                    # WinRAR split archive
+*r11                    # WinRAR split archive
+*r12                    # WinRAR split archive
+*r13                    # WinRAR split archive
+*r14                    # WinRAR split archive
+*r15                    # WinRAR split archive
+*r16                    # WinRAR split archive
+*r17                    # WinRAR split archive
+*r18                    # WinRAR split archive
+*r19                    # WinRAR split archive
+*r20                    # WinRAR split archive
+*r21                    # WinRAR split archive
+*r22                    # WinRAR split archive
+*r23                    # WinRAR split archive
+*r24                    # WinRAR split archive
+*r25                    # WinRAR split archive
+*r26                    # WinRAR split archive
+*r27                    # WinRAR split archive
+*r28                    # WinRAR split archive
+*r29                    # WinRAR split archive
+*r30                    # WinRAR split archive
+*001                    # Split archive file
+*002                    # Split archive file
+*003                    # Split archive file
+*004                    # Split archive file
+*005                    # Split archive file
+*006                    # Split archive file
+*007                    # Split archive file
+*008                    # Split archive file
+*009                    # Split archive file
+*010                    # Split archive file
+*011                    # Split archive file
+*012                    # Split archive file
+*013                    # Split archive file
+*014                    # Split archive file
+*015                    # Split archive file
+*016                    # Split archive file
+*017                    # Split archive file
+*018                    # Split archive file
+*019                    # Split archive file
+*020                    # Split archive file
+*021                    # Split archive file
+*022                    # Split archive file
+*023                    # Split archive file
+*024                    # Split archive file
+*025                    # Split archive file
+*026                    # Split archive file
+*027                    # Split archive file
+*028                    # Split archive file
+*029                    # Split archive file
+*030                    # Split archive file
+
+category: uncommon-archives
+color: "COLOR_BRBLUE"
+*ace                    # WinAce compressed file
+*arj                    # ARJ archive
+*bz                     # Bzip archive
+*djvu                   # DjVu compressed image format
+*lha                    # LHARC archive
+*sqz                    # SQZ compressed file
+*zoo                    # Zoo archive
+
+category: disk-images
+color: "COLOR_BRBLUE"
+*bin                    # Binary disc image
+*ccd                    # CloneCD disc image
+*cue                    # Cue sheet file
+*img                    # Disc image data file
+*iso                    # Disc image file
+*isz                    # Zipped ISO disk image
+*mdf                    # Media disc image file
+*mds                    # Media descriptor sidecar file
+*nrg                    # Nero image file
+
+category: virtual-machine-files
+color: "COLOR_BRBLUE"
+*ova                    # Open virtual appliance
+*ovf                    # Open virtualization file
+*vbox                   # Oracle VM VirtualBox settings file
+*vmdk                   # Virtual machine disk file
+*vmsd                   # VMware snapshot metadata file
+*vmx                    # VMware configuration file
+*vmxf                   # VMware team member file
+
+category: install-packages
+color: "COLOR_BRBLUE"
+*apk                    # Android package file
+*cab                    # Windows Cabinet file
+*deb                    # Debian software package
+*dmg                    # Mac OS X disk image
+*gem                    # RubyGems package
+*mpkg                   # Meta package file (Mac OS X)
+*msi                    # Windows installer package
+*rpm                    # Red Hat package manager file
+*xpi                    # Mozilla installer package
+
+category: emulation
+color: "COLOR_MAGENTA"
+*32x                    # Sega Genesis cartridge
+*adf                    # Amiga disk
+*d64                    # Commodore 64 disk
+*chd                    # MAME hard drive image
+*col                    # Colecovision game
+*ctg                    # Cartridge
+*gen                    # Sega Genesis cartridge
+*int                    # Intellivision cartridgel
+*rom                    # ROM
+*t64                    # Commodore 64 tape
+*uae                    # UAE file
+.z1                     # Z-Machine game
+.z2                     # Z-Machine game
+.z3                     # Z-Machine game
+.z4                     # Z-Machine game
+.z5                     # Z-Machine game
+.z6                     # Z-Machine game
+.z7                     # Z-Machine game
+.z8                     # Z-Machine game
+
+#category: unsure
+#color: 
+#.esqlc     C/C++ related
+#.gmk       Game Maker project file
+#.ii        C/C++ related
+#.ll        ?
+#.mod       ?
+#.moin      ?
+#.pgc       C/C++ related
+#.pgcc      C/C++ related
+#.s         ?
+#.t         ?
+#.yy        ?
+#*tags      # C/C++ related

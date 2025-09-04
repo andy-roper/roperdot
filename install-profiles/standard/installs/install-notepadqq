@@ -1,0 +1,16 @@
+#
+# Description: Install script for Notepadqq
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+# Notes:
+# I stopped using snap to install notepadqq on 4 Nov 2018 because snap was failing to download the package
+# https://notepadqq.com/wp/download/
+
+if [[ "$ROPERDOT_OS_FAMILY" = debian ]]; then
+	# sudo add-apt-repository -y ppa:notepadqq-team/notepadqq
+	sudo apt-get update
+	sudo apt-get install notepadqq -y
+fi

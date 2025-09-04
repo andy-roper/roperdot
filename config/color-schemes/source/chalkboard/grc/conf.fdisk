@@ -1,0 +1,35 @@
+# Error
+regexp=fdisk: cannot open ([^:]+).*$
+colours="\033[38;5;174m","\033[01;38;5;174m"
+-
+# Disk
+regexp=^(Disk) (?:\/([^\/: ]+))+
+colours="\033[38;5;186m","\033[38;5;16;48;5;186m","\033[01;38;5;186m"
+-
+# Boot?
+regexp=\*\s\s\s
+colours="\033[01;38;5;188;48;5;174m"
+-
+# Partitions
+regexp=^(?:\/([^\/: ]+))+
+colours="\033[38;5;114m","\033[01;38;5;114m"
+-
+# Type
+regexp=type: (.*)$
+colours=unchanged,"\033[01;38;5;116m"
+-
+# ID
+regexp=identifier: (.*)$
+colours=unchanged,"\033[38;5;116m"
+-
+# Size 'K'
+regexp=\s\d*[.,]?\d*\s?Ki?B?
+colours="\033[38;5;114m"
+-
+# Size 'M'
+regexp=\s\d*[.,]?\d*\s?Mi?B?
+colours="\033[38;5;186m"
+-
+# Size 'G'
+regexp=\s\d+[.,]?\d*\s?Gi?B?
+colours="\033[38;5;174m"

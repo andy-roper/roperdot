@@ -1,0 +1,63 @@
+# REPO, TAG, IMAGE ID
+regexp=^([a-z]+\/?[^\s]+)\s+([^\s]+)\s+(\w+)
+colours=default,"\033[01;38;5;188m","\033[38;5;152m","\033[38;5;241m"
+=====
+# latest
+regexp=(?<=\s)latest(?=\s+)
+colours="\033[38;5;116m"
+=====
+# REPOSITORY (Image name)
+regexp=^(?:(\S+)\/)*(\S+)\s
+colours=default,"\033[38;5;186m","\033[38;5;231m"
+=====
+# images without name
+regexp=^<none>.*$
+colours="\033[01;38;5;174m"
+=====
+# images without tag
+regexp=\s+(<none>)\s+
+colours=unchanged,"\033[01;38;5;174m"
+=====
+# Size 'K'
+regexp=(?<=\s)\d+[.,]?\d*\s?(KB?|B)
+colours="\033[38;5;114m"
+======
+# Size 'M', 2 digits
+regexp=(?<=\s)\d{1,2}[.,]?\d*\s?MB?
+colours="\033[38;5;114m"
+======
+# Size 'M' 3+ digits
+regexp=(?<=\s)\d{3,4}[.,]?\d*\s?MB?
+colours="\033[38;5;186m"
+======
+# Size 'G'
+regexp=(?<=\s)\d+[.,]?\d*\s?GB?
+colours="\033[38;5;174m"
+=====
+# CREATED seconds/minutes
+regexp=[\da-f]{12}\s+((?:About a|\d+) (?:seconds?|minutes?) ago)
+colours=unchanged,"\033[01;38;5;188;48;5;114m"
+======
+# CREATED About a minute ago
+regexp=\s+(About a minute ago)\s\w+
+colours=unchanged,"\033[01;38;5;188;48;5;114m"
+======
+# CREATED hours
+regexp=\s+(\d+\shours\s\w+)
+colours=unchanged,"\033[38;5;151m"
+======
+# CREATED days
+regexp=\s+(\d+\sdays\s\w+)
+colours=unchanged,"\033[38;5;114m"
+======
+# CREATED weeks
+regexp=\s+(\d+\sweeks\s\w+)
+colours=unchanged,"\033[38;5;186m"
+======
+# CREATED months
+regexp=\s+(\d+\smonths\s\w+)
+colours=unchanged,"\033[38;5;174m"
+=====
+# HEADERS
+regexp=(?:\s|^)(REPOSITORY|TAG|IMAGE ID|CREATED|SIZE)(?:\s|$)
+colours=default,underline

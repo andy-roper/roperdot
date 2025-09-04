@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Poorly formatted XML file for testing formatters-->
+<catalog xmlns:book="http://example.com/books" xmlns:author="http://example.com/authors">
+<BOOK id='1' status="available">
+<title>The Great Adventure</title><author:name>John Smith</author:name>
+<author:bio><![CDATA[John Smith is a renowned author with over 20 books published.
+He specializes in adventure and mystery novels.]]></author:bio>
+<publication year="2023" month="March"/><genre>Adventure</genre>
+<price currency="USD">24.99</price>
+    <description>
+        An exciting tale of discovery and courage in uncharted territories.
+    </description>
+<reviews>
+<review rating='5' reviewer="BookLover123">Amazing story! Couldn't put it down.</review>
+<review rating="4" reviewer='CriticalReader'>Great adventure, minor pacing issues.</review>
+</reviews>
+</BOOK>
+
+<book id="2" status='out-of-stock'>
+<title>Digital Dreams</title>
+<author:name>Jane Doe</author:name><author:bio><![CDATA[Jane Doe is a technology writer and futurist.]]></author:bio>
+<publication year="2024" month="January"/>
+<genre>Science Fiction</genre><price currency="USD">19.99</price>
+<description>A vision of humanity's digital future.</description><reviews>
+<review rating="5" reviewer="TechEnthusiast">Brilliant prediction of our digital future!</review>
+</reviews>
+</book>
+
+<BOOK id="3" status="available">
+<title>Mystery at Midnight</title>
+    <author:name>Robert Brown</author:name>
+<author:bio>Mystery writer with 15 years experience.</author:bio>
+<publication year='2022' month="November"   />
+<genre>Mystery</genre>
+<price currency='EUR'>22.50</price>
+<description>A thrilling mystery set in Victorian London.</description>
+<reviews/>
+</BOOK>
+
+<metadata>
+<total-books>3</total-books><last-updated>2024-08-25T10:30:00Z</last-updated>
+<categories>
+<category name="Adventure" count="1"/>
+<category name='Science Fiction' count="1"/>
+<category name="Mystery" count="1"/></categories>
+</metadata>
+
+<!-- Configuration section -->
+<config>
+<display-settings theme='dark' items-per-page="10"/>
+<api-settings base-url="https://api.example.com" timeout="5000" retries='3'/>
+<features>
+<feature name="search" enabled="true"/>
+<feature name='recommendations' enabled="false"/>
+<feature name="reviews" enabled="true"/></features>
+</config>
+</catalog>

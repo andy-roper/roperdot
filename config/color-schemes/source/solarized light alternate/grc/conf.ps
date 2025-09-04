@@ -1,0 +1,72 @@
+# /full/path
+regexp=(\s|^)/[-\w\d.]+/[-\w\d./]+
+colours="\033[01;38;5;246m"
+=======
+# CAPS LINE
+regexp=^[A-Z\s%]*([A-Z]{3})[A-Z\s%]*$
+colours=underline
+=======
+# Capd Line
+regexp=^([A-Z][-a-z0-9]+(\s+|$)){3,}$
+colours=underline
+=======
+# VMSTAT
+regexp=(\s|^)\d+([.,]\d+)?(?=[\s,]|$)
+colours="\033[38;5;64m"
+=======
+# PID
+regexp=^[a-zA-Z]+\w+\s+(\d+)|^\d\s+\w\s+(?:\w+\s+)?(\d+)|^\s*(\d+)
+colours=unchanged,"\033[01;38;5;61m","\033[01;38;5;61m","\033[01;38;5;61m"
+=======
+# n.n.n
+regexp=(\s|^)\d+\.\d+\.\d+(?=[\s,]|$)
+colours="\033[01;38;5;36m"
+=======
+# text:
+regexp=^([-a-z0-9]+):\s
+colours=unchanged,"\033[38;5;136m"
+=======
+# -options
+regexp=(?<=\s)-[\w\d]+(?=\s|$)
+colours="\033[38;5;136m"
+=======
+# --long-option=
+# legacy: regexp=(?<=\s)--[-\w\d]+[\w\d](?==|\s|$)(=?)
+regexp=(?<=\s)--[-\w\d]+[\w\d](?==|\s|$)(=|\s)?(?!--)([^\s]*)
+colours="\033[38;5;36m","\033[38;5;246m","\033[04;38;5;36m"
+=======
+# [text]
+regexp=\[[-\w\d:/]+\]
+colours="\033[38;5;36m"
+=======
+# root
+regexp=root|wheel(?=\s|$)
+colours="\033[01;38;5;167m"
+=======
+# pts
+regexp=(\s|^)pts/\d+(?=[^\w\d]|$)
+colours="\033[38;5;136m"
+=======
+# tty
+regexp=(\s|^)tty\d+(?=[^\w\d]|$)
+colours="\033[38;5;37m"
+=======
+# Negative NICE (works only in -l)
+regexp=^\d\s+\w\s+\w+\s+\d+\s+\d+\s+\d\s+\d+\s+(-\d+)
+colours=unchanged,"\033[01;38;5;246;48;5;167m"
+=======
+# Neutral NICE (works only in -l)
+regexp=^\d\s+\w\s+\w+\s+\d+\s+\d+\s+\d\s+\d+\s+(\d+)
+colours=unchanged,"\033[38;5;36m"
+=======
+# Positive NICE (works only in -l)
+regexp=^\d\s+\w\s+\w+\s+\d+\s+\d+\s+\d\s+\d+\s+(1\d)
+colours=unchanged,"\033[01;38;5;246;48;5;36m"
+=======
+# Process ZOMBIE
+regexp=^\d\s+([zZ])\s
+colours=unchanged,"\033[01;38;5;246;48;5;167m"
+=======
+# Process RS
+regexp=^\d\s+([sSrR])\s
+colours=unchanged,"\033[38;5;17;48;5;61m"

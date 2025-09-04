@@ -1,0 +1,19 @@
+# STATUS - STALE
+regexp=^(\S+)\s.*(STALE)$
+colours=default,"\033[38;5;124m","\033[01;38;5;166m"
+-
+# STATUS - FAILED
+regexp=^(\S+)\s.*(FAILED)$
+colours=default,"\033[38;5;132m","\033[01;38;5;138m"
+-
+# Status - REACHABLE
+regexp=^(\S+)\s.*(REACHABLE)$
+colours=default,"\033[38;5;100m","\033[38;5;142m"
+-
+# Status - DELAY
+regexp=^(\S+)\s.*(DELAY)$
+colours=default,"\033[38;5;136m","\033[38;5;178m"
+-
+# DEV
+regexp=dev\s(\S+)
+colours=default,"\033[38;5;108m"

@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+"""
+Description: Sets top-level values in a JSON file
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+"""
+import sys, os.path, json
+from jsoncomment import JsonComment
+
+def help():
+	print('''
+set-values-in-json: set top-level values in a JSON file
+Usages:
+set-values-in-json <json-file> <key> <value> [...]
+set-values-in-json <json-file> @<json-value-file> [...]
+set-values-in-json <json-file> --add-to-array <key> <value> [value] [...]
+set-values-in-json <json-file> --add-to-hashtable <hash-key> <key>:<value> [...]
+'''[1:-1])
+	quit()
+
+args = sys.argv[1:]
+if len(args) == 0:
+	help()
+fileName = args.pop(0)
+if len(args) == 0 or fileName in ['--help', '-?', '-h']:
+	help()
+if os.path.exists(fileName):
+	with open(fileName, 'r') as file:
+		parser = JsonComment(json)
+		jsonData = parser.load(file)
+else:
+	jsonData = json.loads('{}')
+arrayKey = None
+hashKey = None
+while len(args) > 0:
+	arg = args.pop(0)
+	if arg.startswith('@'):
+		valueFile = arg[1:]
+		if os.path.exists(valueFile):
+			with open(valueFile, 'r') as file:
+				parser = JsonComment(json)
+				data = parser.load(file)
+			for key in data:
+				jsonData[key] = data[key]
+			continue
+		else:
+			help
+	elif arg == '--add-to-array':
+		arrayKey = args.pop(0)
+		if len(args) == 0:
+			help()
+	elif arg == '--add-to-hashtable':
+		hashKey = args.pop(0)
+		if len(args) == 0:
+			help()
+	elif arrayKey:
+		if not arg in jsonData[arrayKey]:
+			jsonData[arrayKey].append(arg)
+	elif hashKey:
+		valueList = json.loads('{' + arg + '}')
+		if not hashKey in jsonData:
+			jsonData[hashKey] = {}
+		for key in valueList:
+			jsonData[hashKey][key] = valueList[key]
+	else:
+		if len(args) == 0:
+			help()
+		value = args.pop(0)
+		try:
+			jsonData[arg] = json.loads(value)
+		except:
+			jsonData[arg] = value
+with open(fileName, 'w') as file:
+	json.dump(jsonData, file, indent=4)

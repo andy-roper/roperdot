@@ -1,0 +1,31 @@
+#
+# Description: Install script for FileZilla
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+# Last updated for current Ubuntu version on 7 Aug 2022
+
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
+if [[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" = gnome ]]; then
+	print-web-file http://archive.getdeb.net/getdeb-archive.key | sudo apt-key add -
+#	echo "deb http://archive.getdeb.net/ubuntu bionic-getdeb apps" | sudo tee /etc/apt/sources.list.d/getdeb.list
+	echo "deb http://archive.getdeb.net/ubuntu jammy-getdeb apps" | sudo tee /etc/apt/sources.list.d/getdeb.list
+	sudo apt update
+	sudo apt install filezilla -y
+elif [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
+	choco install -y filezilla
+
+	zip_file="${ROPERDOT_DIR}/install-profiles/personal/config-files/FileZilla.zip"
+	if [[ -f "$zip_file" ]]; then
+		. "${ROPERDOT_DIR}/source-scripts/unpack"
+		. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
+		winenv APPDATA
+		dest_dir="$APPDATA/FileZilla"
+		mkdir -p "$dest_dir"
+		cd "$dest_dir"
+		unpack_overwrite "$zip_file"
+	fi
+fi

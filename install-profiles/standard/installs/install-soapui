@@ -1,0 +1,36 @@
+#
+# Description: Install script for SoapUI
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+. "${ROPERDOT_DIR}/source-scripts/input-functions"
+
+# Last updated on 15 Aug 2025
+version=5.9.0
+
+if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+	choco install -y soapui
+elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
+	cd "$(mktemp -d)" || return 1
+	dmg=SoapUI-$version.dmg
+	get-web-file https://dl.eviware.com/soapuios/$version/$dmg
+#	sudo hdiutil attach $dmg
+	hdiutil attach $dmg
+#	open /Volumes/SoapUI/SoapUI\ $version\ Installer.app/Contents/MacOS/JavaApplicationStub
+	pushd /Volumes/SoapUI/SoapUI\ $version\ Installer.app/Contents/MacOS >/dev/null
+	./JavaApplicationStub
+	popd >/dev/null
+	read_key "Press any key to continue after the install has completed" silent
+#	sudo hdiutil detach /Volumes/SoapUI
+	hdiutil detach /Volumes/SoapUI
+	\rm $dmg
+else
+	cd "$(mktemp -d)" || return 1
+	script=SoapUI-x64-$version.sh
+	get-web-file https://dl.eviware.com/soapuios/$version/$script
+	sh $script
+	\rm $script
+fi

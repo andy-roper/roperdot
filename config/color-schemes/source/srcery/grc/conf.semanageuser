@@ -1,0 +1,23 @@
+# r
+regexp=\S+_r
+colours="\033[38;5;215m"
+-
+# u
+regexp=\S+_u
+colours="\033[38;5;71m"
+-
+# t
+regexp=\S+_t
+colours="\033[38;5;37m"
+-
+# s
+regexp=s\d+
+colours="\033[38;5;168m"
+-
+# tcp for ports
+regexp=tcp
+colours="\033[38;5;67m"
+-
+# udp for ports
+regexp=udp
+colours="\033[38;5;215m"

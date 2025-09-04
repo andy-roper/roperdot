@@ -1,0 +1,26 @@
+#
+# Description: Install script for gawk
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+if [[ "$ROPERDOT_OS_TYPE" = "linux" ]]; then
+	if [[ -n "$has_sudo" ]]; then
+		if command -v apt >/dev/null 2>&1; then
+			sudo apt install gawk -y
+		elif command -v yum >/dev/null 2>&1; then
+			sudo yum -y install gawk
+		fi
+	else
+		if ! command -v gcc >/dev/null 2>&1 && ! command -v cc >/dev/null 2>&1; then
+			echo "Error: either gcc or cc is required for installing gawk; aborting install"
+			exit 1
+		fi
+		make-install gawk
+	fi
+elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
+	if command -v brew >/dev/null 2>&1; then
+		brew install gawk
+	fi
+fi

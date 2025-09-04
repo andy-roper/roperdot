@@ -1,0 +1,100 @@
+/* Poorly formatted CSS file for testing formatters */
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+font-family:Arial, sans-serif;background-color:#f5f5f5;
+color:#333
+line-height:1.6
+}
+
+.header    {
+background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+    padding:20px 0;
+color:white;
+  position: relative
+}
+
+.header h1{font-size:2.5rem;text-align:center;margin-bottom:10px
+text-shadow: 2px 2px 4px rgba(0,0,0,0.3)}
+
+.navigation ul{
+list-style: none;
+display:flex;
+justify-content:center;
+gap:30px
+}
+.navigation a{color:white;text-decoration:none;font-weight:bold;
+transition: color 0.3s ease
+}
+.navigation a:hover{color:#ffd700}
+
+.container{max-width:1200px;margin:0 auto;padding:0 20px}
+
+.main-content{
+display:grid;
+grid-template-columns:2fr 1fr;
+gap:30px;
+margin:40px 0
+}
+
+.article{
+background:white;
+border-radius:8px;
+padding:25px;
+box-shadow:0 4px 6px rgba(0,0,0,0.1)
+}
+
+.btn{
+display:inline-block;
+padding:12px 24px;
+border:none;
+border-radius:5px;
+cursor:pointer;
+text-decoration:none;
+font-weight:bold;
+transition:all 0.3s ease
+}
+
+.btn-primary{background-color:#3498db;color:white}
+.btn-primary:hover{background-color:#2980b9;transform:translateY(-2px)}
+
+.form-group input,
+.form-group textarea{
+width:100%;
+padding:12px;
+border:1px solid #bdc3c7;
+border-radius:4px;
+font-size:16px
+}
+
+.form-group input:focus,
+.form-group textarea:focus{
+outline:none;
+border-color:#3498db;
+box-shadow:0 0 5px rgba(52,152,219,0.3)
+}
+
+@media(max-width:768px){
+.main-content{grid-template-columns:1fr;gap:20px}
+.header h1{font-size:2rem}
+}
+
+@keyframes fadeIn{
+0%{opacity:0;transform:translateY(20px)}
+100%{opacity:1;transform:translateY(0)}
+}
+
+.article::before{
+content:"";
+display:block;
+height:4px;
+background:linear-gradient(90deg,#3498db,#9b59b6);
+margin-bottom:20px
+}
+
+input[type="text"],input[type="email"]{
+background-color:#f8f9fa
+}
+
+.text-center{text-align:center}
+.hidden{display:none}

@@ -1,0 +1,27 @@
+# Devices
+regexp=\s\/dev(?:\/([^\/ ]+))+
+colours="\033[38;5;114m","\033[01;38;5;114m"
+-
+# Mount Path
+regexp=(?<=─|-)(?:\/([^\/ ]+))+
+colours=unchanged,"\033[01;38;5;136m"
+-
+# RW
+regexp=(?:\s)rw
+colours="\033[01;38;5;167m"
+-
+# RO
+regexp=(?:\s)ro
+colours="\033[01;38;5;114m"
+-
+# Like comment, leave at end always
+regexp=^.*(?=cgroup|tmpfs).*$
+colours="\033[38;5;30m"
+-
+# Common Types
+regexp=\b(ext\d|xfs|btrfs|nfs)\b
+colours="\033[38;5;36m"
+-
+# MS Types
+regexp=\b(fat|vfat|ntfs|msdos)\b
+colours="\033[38;5;255;48;5;36m"

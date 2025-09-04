@@ -1,0 +1,17 @@
+#
+# Description: Install script for tree
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+if [[ "$ROPERDOT_OS_TYPE" = "linux" ]]; then
+	if [[ -z "$has_sudo" ]]; then
+		echo "User lacks sudo access; aborting install of tree"
+		exit 1
+	elif command -v apt >/dev/null 2>&1; then
+		sudo apt install tree -y
+	fi
+elif command -v brew >/dev/null 2>&1; then
+	brew install tree
+fi

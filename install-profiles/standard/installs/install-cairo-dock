@@ -1,0 +1,30 @@
+#
+# Description: Install script for Cairo Dock
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+add_to_list () {
+	local app
+	for app; do
+		if [[ -e /usr/share/applications/$app.desktop ]]; then
+			appList+=($app)
+			return
+		fi
+	done
+}
+
+if [[ "$ROPERDOT_OS_ENV" = "mint" ]] && [[ "$ROPERDOT_DESKTOP_ENV" = "gnome" ]]; then
+	sudo apt install cairo-dock -y
+	appList=()
+	# Build list of apps, one for each function
+	add_to_list google-chrome firefox
+	add_to_list gnome-terminal
+	add_to_list spacefm nemo
+	add_to_list sublime_text notepadqq atom xed
+	export player_name=Rhythmbox
+	export player_bin=rhythmbox
+	configure-cairo-dock "${appList[*]}"
+	cairo-dock -o >/dev/null 2>&1 &
+fi

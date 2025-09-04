@@ -1,0 +1,31 @@
+#ipv6
+regexp=(([0-9a-fA-F]{1,4})?\:\:?[0-9a-fA-F]{1,4})+
+colours="\033[38;5;71m"
+=======
+#time
+regexp=\s[0-9]{1,6}\s
+colours="\033[38;5;203m"
+=======
+#type
+regexp=[A-Z]{1,4}
+colours="\033[38;5;37m"
+=======
+#in
+regexp=(IN|CH)
+colours="\033[38;5;215m"
+=======
+#domain
+regexp=[a-z0-9-]+\.
+colours="\033[38;5;168m"
+=======
+#ip address
+regexp=\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}
+colours="\033[38;5;71m"
+=======
+#comments
+regexp=^;;\s\w*\s*\w*
+colours="\033[38;5;215m"
+=======
+#Title
+regexp=; <<>> DiG (\d+\.\d+\.\d+).*<<>>\s(\S+)$
+colours=default,"\033[38;5;71m","\033[01;38;5;168m"

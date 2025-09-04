@@ -1,0 +1,11 @@
+#
+# Description: Install script for Windows Terminal
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
+	command -v wt.exe >/dev/null 2>&1 || choco install -y microsoft-windows-terminal
+	
+fi

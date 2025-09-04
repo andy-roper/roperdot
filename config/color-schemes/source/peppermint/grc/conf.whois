@@ -1,0 +1,76 @@
+# field
+regexp=^([\w\s])*:
+colours="\033[01;38;5;251m"
+=======
+# data
+regexp=:\s[\w\s\W\S]*$
+colour=blue
+=======
+# comments
+regexp=^([;%])([\s\w\S\W])*$
+colours="\033[38;5;179m"
+=======
+# comments
+regexp=(^(---)|(>>>))[\s\w\S\W]*$
+colours="\033[38;5;179m"
+=======
+# domain
+regexp=(([\w\d]([\w\d-])+\.){1,})([\w\d-]{2,})
+colours="\033[38;5;114m"
+=======
+# url
+regexp=http[s]?://(([\w\d]([\w\d-])+\.){1,})([\w\d-]{2,})(/[\w\d\S\s]*)*
+colours="\033[01;38;5;114m"
+=======
+# phone
+regexp=\+([\d\.]*)
+colours="\033[01;38;5;179m"
+=======
+# email
+regexp=([\d\w\S])+@(([\w\d]([\w\d-])+\.){1,})([\w\d-]{2,})
+colours="\033[01;38;5;74m"
+=======
+# date
+regexp=([\d]{4}[- ](([\d]{2})|([a-zA-Z]{3,}))[ -][\d]{2})|([\d]{2}[ -](([a-zA-Z]{3,})|([\d]{2}))[ -][\d]{4})
+colours="\033[01;38;5;204m"
+=======
+# time
+regexp=[\d]{2}:[\d]{2}:[\d]{2}((\.[\d]*[Z]?)|(\+[\d]*))?
+colours="\033[38;5;204m"
+=======
+# NOTICE
+regexp=NOTICE
+colours="\033[01;38;5;74m"
+=======
+# TERM OF USE
+regexp=TERMS OF USE
+colours="\033[01;38;5;74m"
+=======
+# registrar
+regexp=(Sponsoring )?[Rr]egistrar([\w\s\S])*:
+colours="\033[01;38;5;109m"
+=======
+# registrant
+regexp=(Registry )?[Rr]egistrant([\w\s\S])*:
+colours="\033[01;38;5;74m"
+=======
+# admin
+regexp=(Registry )?[Aa]dmin([\w\s\S])*:
+colours="\033[01;38;5;176m"
+=======
+# tech
+regexp=(Registry )?[Tt]ech([\w\s\S])*:
+colours="\033[01;38;5;179m"
+=======
+# billing
+regexp=(Registry )?[Bb]illing([\w\s\S])*:
+colours="\033[01;38;5;114m"
+=======
+# NS
+regexp=((nserver)|(Name Server)):
+colours="\033[01;38;5;114m"
+=======
+# domain status
+regexp=(Domain Status)|(status)
+colours="\033[01;38;5;204m"
+

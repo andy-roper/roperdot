@@ -1,0 +1,351 @@
+[
+	{
+		"app": "cURL",
+		"binary": "curl",
+		"package": "curl",
+		"list_prerequisite": "apt-get",
+		"desc": "Tool for transferring data from/to a server"
+	},
+	{
+		"app": "lynx",
+		"binary": "lynx",
+		"package": "lynx",
+		"list_prerequisite": "apt-get",
+		"desc": "Command-line web browser"
+	},
+	{
+		"app": "git",
+		"binary": "git",
+		"package": "git",
+		"list_prerequisite": "apt-get",
+		"desc": "Client for the Git distributed version control system"
+	},
+	{
+		"app": "ruby",
+		"binary": "ruby",
+		"package": "ruby",
+		"list_prerequisite": "apt-get",
+		"desc": "Compiler/interpreter for the Ruby programming language"
+	},
+	{
+		"app": "Linuxbrew",
+		"binary": "brew",
+		"install_prerequisite": "ruby,curl",
+		"install_script": "install-linuxbrew",
+		"desc": "Homebrew package manager for Linux"
+	},
+	{
+		"app": "unzip",
+		"binary": "unzip",
+		"package": "unzip",
+		"list_prerequisite": "apt-get",
+		"desc": "Archive utility for decompressing zip files; extensively used by roperdot"
+	},
+	{
+		"app": "p7zip",
+		"binary": "7z",
+		"install_script": "install-p7zip",
+		"sudo_not_required": true,
+		"desc": "File archiving utility, aport of 7z and 7za for Unix"
+	},
+	{
+		"app": "p7zip-rar",
+		"package": "p7zip-rar",
+		"list_prerequisite": "apt-get",
+		"desc": "Module for p7zip for handling RAR archives"
+	},
+	{
+		"app": "zopfli",
+		"binary": "zopfli",
+		"package": "zopfli",
+		"list_prerequisite": "apt-get",
+		"desc": "Compression library for good but slow deflate or zlib compression"
+	},
+	{
+		"app": "diff-so-fancy",
+		"binary": "diff-so-fancy",
+		"package": "diff-so-fancy",
+		"install_script": "install-diff-so-fancy",
+		"sudo_not_required": true,
+		"desc": "Formats and beautifies diff output"
+	},
+	{
+		"app": "Vim",
+		"binary": "vim",
+		"package": "vim",
+		"list_prerequisite": "apt-get",
+		"desc": "vi clone (text editor)"
+	},
+	{
+		"app": "vimdiff",
+		"binary": "vimdiff",
+		"package": "vimdiff",
+		"list_prerequisite": "apt-get",
+		"desc": "Shows differences between files using vim"
+	},
+	{
+		"app": "git-lfs",
+		"binary": "git-lfs",
+		"package": "git-lfs",
+		"list_prerequisite": "apt-get",
+		"install_command": "sudo apt-get install git-lfs && git lfs install;",
+		"desc": "Replaces large files with text pointers inside Git while storing the contents on a remote server"
+	},
+	{
+		"app": "hub",
+		"binary": "hub",
+		"package": "hub",
+		"install_prerequisite": "brew",
+		"desc": "Tool that wraps git to extend it with extra features and commands"
+	},
+	{
+		"app": "fzf",
+		"binary": "fzf",
+		"install_script": "install-fzf",
+		"sudo_not_required": true,
+		"desc": "Command-line fuzzy finder; extensively used by roperdot"
+	},
+	{
+		"app": "fd-find",
+		"binary": "fdfind",
+		"install_script": "install-fd",
+		"sudo_not_required": true,
+		"desc": "A simple, fast and user-friendly alternative to find"
+	},
+	{
+		"app": "The Silver Searcher",
+		"binary": "ag",
+		"install_script": "install-the-silver-searcher",
+		"sudo_not_required": true,
+		"desc": "Code searching tool similar to ack, with a focus on speed"
+	},
+	{
+		"app": "htop",
+		"binary": "htop",
+		"install_script": "install-htop",
+		"sudo_not_required": true,
+		"desc": "Interactive process viewer for Unix"
+	},
+	{
+		"app": "xclip",
+		"binary": "xclip",
+		"package": "xclip",
+		"list_prerequisite": "apt-get",
+		"desc": "Command-line interface to the X11 clipboard"
+	},
+	{
+		"app": "gawk",
+		"binary": "gawk",
+		"install_script": "install-gawk",
+		"sudo_not_required": true,
+		"desc": "GNU implementation of awk"
+	},
+	{
+		"app": "nvm",
+		"presence_command": "[[ -f ~/.nvm ]]",
+		"install_script": "install-nvm",
+		"sudo_not_required": true,
+		"desc": "Node version manager"
+	},
+	{
+		"app": "Node.js",
+		"binary": "node",
+		"install_script": "install-node",
+		"desc": "JavaScript run-time environment that executes JavaScript code server-side"
+	},
+	{
+		"app": "Python 3 pip",
+		"package": "python3-pip",
+		"list_prerequisite": "apt-get",
+		"desc": "Tool for installing Python 3 packages"
+	},
+	{
+		"app": "Python setuptools",
+		"presence_command": "$python_bin -c 'import setuptools' >/dev/null 2>&1",
+		"install_command": "install-python-package setuptools",
+		"sudo_not_required": true,
+		"desc": "Python module for downloading/building/installing/upgrading/uninstalling packages"
+	},
+	{
+		"app": "jsoncomment",
+		"presence_command": "$python_bin -c 'import jsoncomment' >/dev/null 2>&1",
+		"install_script": "install-jsoncomment",
+		"sudo_not_required": true,
+		"desc": "Python script for wrapping JSON parsing"
+	},
+	{
+		"app": "Java",
+		"binary": "java",
+		"package": "openjdk-8-jdk",
+		"list_prerequisite": "apt-get",
+		"desc": "Compiler and run-time environment for Java"
+	},
+	{
+		"app": "jENV",
+		"binary": "jenv",
+		"package": "jenv",
+		"install_prerequisite": "brew",
+		"desc": "Tool for managing the JAVA_HOME environment variable"
+	},
+	{
+		"app": "jq",
+		"binary": "jq",
+		"install_script": "install-jq",
+		"sudo_not_required": true,
+		"desc": "Utility like sed for JSON data"
+	},
+	{
+		"app": "xml2json-command",
+		"binary": "xml2json",
+		"install_prerequisite": "npm",
+		"install_script": "install-xml2json",
+		"desc": "Utility for converting XML to JSON"
+	},
+	{
+		"app": "colored",
+		"presence_command": "$python_bin -c 'import colored' >/dev/null 2>&1",
+		"install_script": "install-colored",
+		"sudo_not_required": true,
+		"desc": "Python module for color and formatting in terminals; extensively used by roperdot"
+	},
+	{
+		"app": "js-beautify",
+		"presence_command": "command -v js-beautify >/dev/null 2>&1 || $python_bin -c 'import jsbeautifier' >/dev/null 2>&1",
+		"install_script": "install-js-beautify",
+		"sudo_not_required": true,
+		"desc": "Node/Python script for beautifying JavaScript"
+	},
+	{
+		"app": "html5-print",
+		"presence_command": "$python_bin -c 'import html5print' >/dev/null 2>&1",
+		"install_script": "install-html5-print",
+		"sudo_not_required": true,
+		"desc": "Python script for beautifying HTML, CSS and JavaScript"
+	},
+	{
+		"app": "sqlparse",
+		"presence_command": "$python_bin -c 'import sqlparse' >/dev/null 2>&1",
+		"install_command": "install-python-package sqlparse",
+		"sudo_not_required": true,
+		"desc": "Python module for parsing and formatting SQL"
+	},
+	{
+		"app": "tabulate",
+		"presence_command": "$python_bin -c 'import tabulate' >/dev/null 2>&1",
+		"install_command": "install-python-package tabulate",
+		"sudo_not_required": true,
+		"desc": "Python module for pretty-printing for tabular data"
+	},
+	{
+		"app": "wheel",
+		"presence_command": "$python_bin -c 'import wheel' >/dev/null 2>&1",
+		"install_command": "install-python-package wheel",
+		"sudo_not_required": true,
+		"desc": "Python package distribution client"
+	},
+	{
+		"app": "rolldice",
+		"presence_command": "$python_bin -c 'import rolldice' >/dev/null 2>&1",
+		"install_command": "install-python-package py-rolldice",
+		"sudo_not_required": true,
+		"desc": "Python module for evaluating dice notation"
+	},
+	{
+		"app": "generic colouriser",
+		"binary": "grc",
+		"install_script": "install-grc",
+		"sudo_not_required": true,
+		"desc": "Tool for adding color to the output of various Unix commands and to log files; extensively used by roperdot"
+	},
+	{
+		"app": "Pygments",
+		"binary": "pygmentize",
+		"install_script": "install-pygments",
+		"sudo_not_required": true,
+		"desc": "Generic syntax highlighter for prettifying source code; extensively used by roperdot"
+	},
+	{
+		"app": "ydiff",
+		"binary": "ydiff",
+		"install_script": "install-ydiff",
+		"sudo_not_required": true,
+		"desc": "diff colorization tool"
+	},
+	{
+		"app": "shellcheck",
+		"presence_command": "apt list --installed 2>/dev/null | grep shellcheck >/dev/null",
+		"package": "shellcheck",
+		"list_prerequisite": "apt-get",
+		"desc": "Shell script static analysis tool"
+	},
+	{
+		"app": "dos2unix",
+		"binary": "dos2unix",
+		"package": "dos2unix",
+		"list_prerequisite": "apt-get",
+		"desc": "Utilities for converting files with DOS/MAC line breaks to Unix format and vice versa"
+	},
+	{
+		"app": "Midnight Commander",
+		"binary": "mc",
+		"install_script": "install-midnight-commander",
+		"sudo_not_required": true,
+		"desc": "Command-line visual file manager"
+	},
+	{
+		"app": "tree",
+		"binary": "tree",
+		"install_script": "install-tree",
+		"sudo_not_required": true,
+		"desc": "Recursive directory listing program that produces a depth-indented listing"
+	},
+	{
+		"app": "VBinDiff",
+		"binary": "vbindiff",
+		"install_script": "install-vbindiff",
+		"sudo_not_required": true,
+		"desc": "Displays files in hex and ASCII; can show 2 files at once and highlight differences"
+	},
+	{
+		"app": "z",
+		"binary": "_z",
+		"install_script": "install-z",
+		"sudo_not_required": true,
+		"desc": "Tool for changing to directories based on recent usage and frequency of use"
+	},
+	{
+		"app": "speedtest-cli",
+		"binary": "speedtest-cli",
+		"package": "speedtest-cli",
+		"list_prerequisite": "apt-get",
+		"desc": "Command-line interface for testing internet bandwidth with speedtest.net"
+	},
+	{
+		"app": "testssl",
+		"binary": "testssl.sh",
+		"package": "testssl.sh",
+		"list_prerequisite": "apt-get",
+		"desc": "Utility for testing a server's service on any port for TLS/SSL encryption"
+	},
+	{
+		"app": "ssh-copy-id",
+		"binary": "ssh-copy-id",
+		"package": "ssh-copy-id",
+		"install_prerequisite": "brew",
+		"desc": "Used to install an SSH key on a server as an authorized key"
+	},
+	{
+		"app": "entr",
+		"binary": "entr",
+		"package": "entr",
+		"list_prerequisite": "apt-get",
+		"desc": "Utility for running arbitrary commands when files change"
+	},
+	{
+		"app": "NCurses Disk Usage",
+		"binary": "ncdu",
+		"package": "ncdu",
+		"list_prerequisite": "apt-get",
+		"desc": "Disk usage analyzer with an ncurses interface"
+	}
+]

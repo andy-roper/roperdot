@@ -1,0 +1,820 @@
+#
+# Description: App installing script for roperdot dotfiles
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+#DEBUGGING=true
+#. "${ROPERDOT_DIR}/source-scripts/debug"
+
+. "${ROPERDOT_DIR}/source-scripts/install-functions"
+. "${ROPERDOT_DIR}/source-scripts/nice-copy"
+. "${ROPERDOT_DIR}/source-scripts/input-functions"
+. "${ROPERDOT_DIR}/source-scripts/re-match"
+. "${ROPERDOT_DIR}/source-scripts/ask-to-install"
+[[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" = windows ]] && . "${ROPERDOT_DIR}/source-scripts/win-env-functions"
+[[ "$ROPERDOT_DESKTOP_ENV" = windows ]] && . "${ROPERDOT_DIR}/source-scripts/win-path-functions"
+
+if [[ -n "$installs_to_pause" ]]; then
+	if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
+		IFS=',' read -ra install_pause_list <<< "$installs_to_pause"
+	else
+		install_pause_list=("${(@s/,/)installs_to_pause}")
+	fi
+	export install_pause_list
+fi
+
+main () {
+	local do_installs= install_all= yes_opt=
+
+	if [[ -n "$extra_profiles" ]]; then
+		str="$extra_profiles"
+		if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
+			IFS=',' read -ra extra_profiles <<< "$str"
+		else
+			extra_profiles=("${(@s|,|)str}")
+		fi
+	fi
+
+	ask_to_install_app_set () {
+		unset do_installs install_all
+		local install_prompt=$1
+		shift
+		local force_all=$1
+		shift
+		local app_list=("$@")
+		if [[ -n "$force_all" ]]; then
+			do_installs=y
+			ask_yn_n "$install_prompt" y
+			echo
+			echo "You'll be prompted to install these applications:"
+			echo
+			printf '%s\n' "${app_list[@]}"
+			echo
+			ask_yn_n "Install all applications without prompting for each one" y
+			install_all=y
+			return 0
+		elif ask_yn_n "$install_prompt"; then
+			do_installs=y
+			echo
+			echo "You'll be prompted to install these applications:"
+			echo
+			printf '%s\n' "${app_list[@]}"
+			echo
+			ask_yn_n "Install all applications without prompting for each one" && install_all=y
+			return 0
+		else
+			echo
+			return 1
+		fi
+	}
+
+	pause_specified_installations () {
+		[[ -z "$install_pause_list" ]] && return
+		local app="$1"
+		local pattern="^${app}$"
+		if printf '%s\n' "${install_pause_list[@]}" | grep -qP "$pattern"; then
+			local prompt_str="Press a key to continue and install $app"
+			if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
+				echo "${prompt_str} "
+				read -s -n 1
+			else
+				read -s -k "?${prompt_str} "$'\n'
+			fi
+		fi
+	}
+
+	install_app () {
+		while : ; do
+			echo
+			# Don't pipe /dev/null to stdin for Visual Studio Code install on Windows to avoid this error:
+			# EINVAL: invalid argument, uv_pipe_open
+			if [[ -n "$accept_recommended" ]]; then
+				if [[ -n "$disable_null_stdin" ]]; then
+					install_func </dev/tty && echo && return 0
+				else
+					install_func </dev/null && echo && return 0
+				fi
+			else
+				install_func && echo && return 0
+			fi
+			# Ignore exit code 194 (reboot pending notice from Chocolatey, code 3010)
+			[[ $? = 194 ]] && echo && return 0
+			# Ignore false failure from apt-cyg when installing jq
+			[[ $? = 1 && "$app" = "jq" ]] && echo && return 0
+			read_input "Install of $app failed with return code $?. (R)etry, (a)bort installing this app or (c)ancel installing the remaining apps?"
+			echo
+			[[ "$REPLY" =~ ^[aA]$ ]] && return 0
+			[[ "$REPLY" =~ ^[cC]$ ]] && return 1
+		done
+	}
+
+	execute_with_retry () {
+		local message="$1"
+		local executing=true
+		while [[ -n "$executing" ]]; do
+			execute_command && unset executing
+			if [[ -n "$executing" ]]; then
+				read_input "$message (R)etry or (a)bort update?"
+				[[ "$REPLY" =~ ^[aA]$ ]] && unset executing
+			fi
+		done
+	}
+
+	app_is_present () {
+		local app="$1" binary="$2" package="$3" installer="$4" presence_command="$5"
+		if [[ -n "$presence_command" ]]; then
+			eval "$presence_command" && return 0
+			return 1
+		fi
+		# if binary contains a slash, check for the presence of the file/directory to determine
+		# if the app is installed instead of checking for the binary
+		if [[ "$binary" =~ "/" ]]; then
+			[[ -e "$binary" ]] && return 0 || return 1
+		fi
+		if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
+			[[ -z "$binary" ]] && binary="$app"
+			if [[ "$binary" = "java" ]]; then
+				local result="$(/usr/libexec/java_home 2>&1)"
+				[[ "$result" =~ null ]] && return 1 || return 0
+			elif [[ "$binary" = "git" ]]; then
+				xcode-select -p >/dev/null 2>&1 && return 0 || return 1
+			fi
+		fi
+		[[ -z "$binary" ]] && return 1
+		if [[ "$binary" = ruby || "$binary" = perl || "$binary" = python || "$binary" = python3 ]]; then
+			which "$binary" >/dev/null 2>&1
+		elif [[ "$ROPERDOT_OS_FAMILY" = debian && "$binary" = brew ]]; then
+			command brew --version >/dev/null 2>&1 || return 1
+		else
+			command -v "$binary" >/dev/null 2>&1
+		fi
+	}
+
+	# Check for the presence of all apps in the comma-delimited list passed in
+	# For example, Linuxbrew requires ruby and curl so the installPrereq value is "ruby,curl"
+	install_prereq_present () {
+		[[ -z "$1" ]] && return 0
+		if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
+			IFS=',' read -r -a prereqs <<< "$1"
+		else
+			IFS=',' read -r -A prereqs <<< "$1"
+		fi
+		local prereq
+		for prereq in "${prereqs[@]}"; do
+			if [[ "$prereq" = ruby || "$prereq" = perl || "$prereq" = python || "$prereq" = python3 || "$prereq" = curl ]]; then
+				which "$prereq" >/dev/null 2>&1 || return 1
+			elif [[ "$prereq" = "npm" ]]; then
+				command npm version >/dev/null 2>&1 || return 1
+			elif [[ "$ROPERDOT_OS_FAMILY" = debian && "$prereq" = brew ]]; then
+				command brew --version >/dev/null 2>&1 || return 1
+			else
+				command -v "$prereq" >/dev/null 2>&1 || return 1
+			fi
+		done
+		return 0
+	}
+
+	should_install_app() {
+	    local app_name="$1"
+	    local app_groups="$2"           # Comma-separated list from JSON
+	    local exclusion_groups="$3"     # Comma-separated list from JSON  
+	    local disabled_by_default="$4"  # true/false from JSON
+	    local selected_groups="$5"      # Selected groups from command line
+
+	    # Convert comma-separated strings to space-separated for easier searching
+	    local app_groups_list="${app_groups//,/ }"
+	    local exclusion_groups_list="${exclusion_groups//,/ }"
+	    local selected_groups_list="${selected_groups//,/ }"
+
+	    # Exclusion groups take highest precedence
+	    if [[ -n "$exclusion_groups_list" && -n "$selected_groups_list" ]]; then
+	        for selected_group in $selected_groups_list; do
+	            if [[ " $exclusion_groups_list " =~ " $selected_group " ]]; then
+	                return 1  # Explicitly excluded
+	            fi
+	        done
+	    fi
+	    
+	    # If app has groups, it can only be installed if one of its groups is selected
+	    if [[ -n "$app_groups_list" ]]; then
+	        if [[ -n "$selected_groups_list" ]]; then
+	            for selected_group in $selected_groups_list; do
+	                if [[ " $app_groups_list " =~ " $selected_group " ]]; then
+	                    return 0  # Found matching group - install regardless of disabledByDefault
+	                fi
+	            done
+	        fi
+	        return 1  # App has groups but none selected
+	    fi
+	    
+	    # App has no groups - it's an "always available" app
+	    # Don't install if disabled by default
+	    if [[ "$disabled_by_default" = "true" ]]; then
+	        return 1
+	    fi
+
+	    return 0  # Install the app
+	}
+	
+	install_vars=(app app_dir app_name binary desc disabled disable_null_stdin full_app_path include_condition install_command install_prerequisite install_script install_options list_prerequisite package package_manager personal presence_command shortcut_name shortcut_path skip sudo_not_required groups exclusionGroups disabledByDefault)
+
+	install_shell_apps () {
+	    local app_file="$1" default_installer="$2" have_default_installer install_list=() install_desc_list=() app_count
+	    command -v "$default_installer" >/dev/null 2>&1 && local have_default_installer=true
+	    
+	    # Get total number of apps from all profiles
+	    app_count=$(python3 "$ROPERDOT_DIR/bin/json-to-simple-vars" "$app_file" count "$base_profile" --optional "${extra_profiles[@]}")
+
+	    # First pass: determine which apps to install
+	    for ((i=0; i<app_count; i++)); do
+	        # Clear previous variables
+	        for var in "${install_vars[@]}"; do
+	            unset "$var"
+	        done
+
+	        eval "$(python3 "$ROPERDOT_DIR/bin/json-to-simple-vars" "$app_file" "$i" "$base_profile" --optional "${extra_profiles[@]}")"
+
+	        # Skip if no app name
+	        [[ -z "$app" ]] && continue
+	        
+	        if [[ -z "$skip" && -n "$include_condition" ]]; then
+	            eval "$include_condition" || skip=true
+	        fi
+	        [[ -n "$skip" ]] && continue
+	        
+	        should_install_app "$app" "$groups" "$exclusionGroups" "$disabledByDefault" "$install_groups" || continue
+
+	        if [[ -z "$skip" ]]; then
+	            unset sudo_ok
+	            if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
+	            	sudo_ok=true
+	            else
+	            	[[ -n "$has_sudo" || -n "$sudo_not_required" ]] && sudo_ok=true
+	            fi
+	            
+	            if [[ -n "$sudo_ok" ]] && ! app_is_present "$app" "$binary" "$package" "$list_prerequisite" "$presence_command"; then
+	                local prereq_met=
+	                if [[ -n "$sudo_not_required" ]]; then
+	                    prereq_met=true
+	                else
+	                    if [[ -z "$list_prerequisite" || "$list_prerequisite" = "$default_installer" ]]; then
+	                        prereq_met=$have_default_installer
+	                    else
+	                        prereq_met=true
+	                        [[ -n "$list_prerequisite" ]] && ! command -v "$list_prerequisite" >/dev/null 2>&1 && unset prereq_met
+	                    fi
+	                fi
+	                if [[ -n "$prereq_met" ]]; then
+	                    install_list+=("$i")  # Store index
+	                    # Use original app name for display
+	                    [[ -z "$desc" ]] && install_desc_list+=("$app") || install_desc_list+=("$app: $desc")
+	                fi
+	            fi
+	        fi
+	    done
+		
+		[[ "${#install_desc_list[@]}" -eq 0 ]] && return
+		echo
+		if [[ "$force_shell_app_installs" != "none" ]]; then
+			ask_to_install_app_set "Install commonly used shell applications" "$force_shell_app_installs" "${install_desc_list[@]}" || return
+		fi
+
+		if [[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+			echo "This warning can be ignored when applications are being installed by Linuxbrew:"
+			echo "nice: cannot set niceness: Permission denied"
+			echo
+		fi
+
+		# Installation loop
+		for app_index in "${install_list[@]}"; do
+			if [[ -d ~/.nvm ]] && ! command -v node >/dev/null 2>&1; then
+				if [[ $(ls ~/.nvm/versions/node 2>/dev/null | wc -l) -ne 0 ]]; then
+					export NVM_DIR="$HOME/.nvm"
+					[[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
+					# Create symlinks so sudo has access to node and npm
+					if [[ -n "$has_sudo" ]]; then
+						export NVM_VERSION="$(nvm version)"
+						[[ -e /usr/local/bin/node ]] || sudo ln -s "$NVM_DIR/versions/node/$NVM_VERSION/bin/node" /usr/local/bin/node
+						[[ -e /usr/local/bin/npm ]] || sudo ln -s "$NVM_DIR/versions/node/$NVM_VERSION/bin/npm" /usr/local/bin/npm
+					fi
+				fi
+			fi
+			
+			# Clear variables and reload app data
+			for var in "${install_vars[@]}"; do
+				unset "$var"
+			done
+			eval "$(python3 "$ROPERDOT_DIR/bin/json-to-simple-vars" "$app_file" "$app_index" "$base_profile" --optional "${extra_profiles[@]}")"
+			
+			# default profile to standard if not defined
+			export profile=${profile:-standard}
+
+			[[ -z "$binary" ]] && binary="$app"
+			# Use original app name ($app) for user prompts
+			if ! app_is_present "$app" "$binary" "$package" "$list_prerequisite" && ask_to_install "$app" "$desc"; then
+				if install_prereq_present "$install_prerequisite"; then
+					# Reset colors in case the previous install didn't clean up after itself
+					tput sgr0
+					pause_specified_installations "$app"
+					if [[ -n "$install_script" ]]; then
+						eval "install_func() { $ROPERDOT_CURRENT_SHELL \"${ROPERDOT_DIR}/install-profiles/$profile/installs/$install_script\"; }"
+					elif [[ -n "$install_command" ]]; then
+						local re=";\$"
+						[[ "$install_command" =~ $re ]] || install_command="$install_command;"
+						eval "install_func() { $install_command }"
+					else
+						[[ -z "$package" ]] && package="$binary"
+						if [[ "$ROPERDOT_DESKTOP_ENV" = windows && "$list_prerequisite" = choco ]]; then
+							install_func() { if [[ -n "$has_sudo" ]]; then choco install -y --force $package; else install_windows_binary; fi }
+						elif [[ "$ROPERDOT_OS_FAMILY" = debian && "$install_prerequisite" = brew ]]; then
+							install_func() { brew install $package; }
+						elif [[ "$install_prerequisite" = pip3 ]]; then
+							install_func() { pip3 install $package; }
+						else
+							install_func() { standard_install; }
+						fi
+					fi
+					[[ -n "$show_start_times" ]] && echo "Start time: $(date +"%r")"
+
+					[[ -f ~/roperdot/bin-zsh/install-python-package ]] && echo "Script exists"
+
+					install_app || return
+					if [[ "$app" = "Linuxbrew" ]]; then
+						export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin"
+					elif [[ "$app" = "Python" && -z "$python_bin" ]]; then
+						if command -v python >/dev/null 2>&1; then
+							export python_bin=python
+							export python_version=$(python -c 'import sys; print("{}.{}").format(sys.version_info.major, sys.version_info.minor))')
+							if [[ -n "$PYTHONPATH" ]]; then
+								export PYTHONPATH="${PYTHONPATH}:${LOCALUSR}/lib/python${python_version}"
+							else
+								export PYTHONPATH="${LOCALUSR}/lib/python${python_version}"
+							fi
+						fi
+					elif [[ "$app" = "Python 3" && "$python_bin" != "python3" ]]; then
+						if command -v python3 >/dev/null 2>&1; then
+							export python_bin=python3
+							export python_version=$(python3 -c 'import sys; print("{}.{}").format(sys.version_info.major, sys.version_info.minor))')
+							if [[ -n "$PYTHONPATH" ]]; then
+								export PYTHONPATH="${PYTHONPATH}:${LOCALUSR}/lib/python${python_version}"
+							else
+								export PYTHONPATH="${LOCALUSR}/lib/python${python_version}"
+							fi
+						fi
+					elif [[ "$app" = "Node.js" ]]; then
+						[[ "$ROPERDOT_DESKTOP_ENV" = "windows" && -d "${rd_program_files}/nodejs" ]] && export PATH="$PATH:${rd_program_files}/nodejs"
+					fi
+				fi
+			fi
+		done
+	}
+
+	install_gui_apps () {
+	    local app_file="$1" install_list=() install_desc_list=() app_count
+
+	    # default profile to standard if not defined
+	    export profile=${profile:-standard}
+
+	    # Get total number of apps from all profiles
+	    app_count=$(python3 "$ROPERDOT_DIR/bin/json-to-simple-vars" "$app_file" count "$base_profile" --optional "${extra_profiles[@]}")
+
+	    pause_specified_installations "Google Chrome"
+
+	    # First pass: determine which apps to install
+	    for ((i=0; i<app_count; i++)); do
+	        # Clear previous variables
+	        for var in "${install_vars[@]}"; do
+	            unset "$var"
+	        done
+	        
+	        eval "$(python3 "$ROPERDOT_DIR/bin/json-to-simple-vars" "$app_file" "$i" "$base_profile" --optional "${extra_profiles[@]}")"
+
+	        # Skip if no app name
+	        [[ -z "$app" ]] && continue
+	        
+	        should_install_app "$app" "$groups" "$exclusionGroups" "$disabledByDefault" "$install_groups" || continue
+	        
+	        if [[ -n "$app" ]] && ! gui_app_is_present "$app" "$app_dir" "$full_app_path" "$binary" "$package" "$package_manager"; then
+	            install_list+=("$i")  # Store index
+	            [[ -n "$app_name" ]] && name="$app_name" || name="$app"
+	            [[ -z "$desc" ]] && install_desc_list+=("$name") || install_desc_list+=("$name: $desc")
+	        fi
+	    done
+
+		pause_specified_installations "Google Chrome"
+		[[ -z "$install_desc_list" ]] && return
+		if [[ "$force_gui_app_installs" != "none" ]]; then
+			ask_to_install_app_set "Install commonly used GUI applications" "$force_gui_app_installs" "${install_desc_list[@]}" || return
+		fi
+		pause_specified_installations "Google Chrome"
+
+		# Installation loop
+		for app_index in "${install_list[@]}"; do
+			# Clear variables and reload app data
+			for var in "${install_vars[@]}"; do
+				unset "$var"
+			done
+			
+			pause_specified_installations "Google Chrome"
+
+			eval "$(python3 "$ROPERDOT_DIR/bin/json-to-simple-vars" "$app_file" "$app_index" "$base_profile" --optional "${extra_profiles[@]}")"
+			pause_specified_installations "Google Chrome"
+			[[ -n "$app_name" ]] && name="$app_name" || name="$app"
+			# Use original app name for prompting
+			if ask_to_install "$name" "$desc"; then
+				pause_specified_installations "$app"
+				if [[ -n "$install_script" ]]; then
+					if [[ -n "$install_options" ]]; then
+						eval "install_func() { $ROPERDOT_CURRENT_SHELL \"${ROPERDOT_DIR}/install-profiles/$profile/installs/$install_script\" $install_options; }"
+					else
+						eval "install_func() { $ROPERDOT_CURRENT_SHELL \"${ROPERDOT_DIR}/install-profiles/$profile/installs/$install_script\"; }"
+					fi
+				elif [[ -n "$install_command" ]]; then
+					local re=";\$"
+					[[ "$install_command" =~ $re ]] || install_command="$install_command;"
+					eval "install_func() { $install_command }"
+				else
+					case "$ROPERDOT_OS_ENV" in
+						darwin)
+							if [[ -n "$has_sudo" ]]; then
+								install_func() { brew install "$package"; }
+							else
+								install_func() { brew install "$package" --appdir=~/Applications; }
+							fi
+							;;
+						ubuntu|mint|debian)
+							if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
+								# WSL
+								install_func() { choco.exe install -y "$package"; }
+							else
+								if [[ "$package_manager" = apt || "$package_manager" = "apt-get" ]]; then
+									install_func() { sudo apt install "$package" -y; }
+								elif [[ "$package_manager" = snap ]]; then
+									install_func() { sudo snap install "$package"; }
+								fi
+							fi
+							;;
+					esac
+				fi
+				[[ -n "$show_start_times" ]] && echo "Start time: $(date +"%r")"
+				install_app || return
+				if [[ -n "$shortcut_path" ]]; then
+					if [[ -n "$shortcut_name" ]]; then
+						[[ "$(desktop_shortcut_exists "${shortcut_name}")" ]] || create-windows-shortcut "${shortcut_name}" "${shortcut_path}"
+					else
+						[[ "$(desktop_shortcut_exists "${app}")" ]] || create-windows-shortcut "${app}" "${shortcut_path}"
+					fi
+				fi
+			fi
+		done
+	}
+
+	create_wsltty_shortcut () {
+		# $1 example: zsh
+		# $2 (optional) example: /bin/zsh
+		[[ "$(desktop_shortcut_exists "${script}")" = "true" ]] && return
+		def_win_env_win_path_multiple LOCALAPPDATA APPDATA USERPROFILE
+		local wslttyDir="$LOCALAPPDATA\wsltty"
+		local target="$wslttyDir\bin\mintty"
+		local icon="$wslttyDir\wsl.ico"
+		local args="--WSL= --configdir=\" & chr(34) & \"%APPDATA%\wsltty\" & chr(34) & \" ${2:-/bin/$1}"
+		create-windows-shortcut "WSL $1" "$target" --icon-source "$icon" --desc "Terminal" --args "$args" --working-dir "$USERPROFILE"
+	}
+
+	install_wsltty () {
+		pause_specified_installations "Google Chrome"
+		local local_app_dir="$(win_env_linux_path LOCALAPPDATA)/wsltty"
+		pause_specified_installations "Google Chrome"
+		local app_dir="$(win_env_linux_path APPDATA)/wsltty"
+		pause_specified_installations "Google Chrome"
+		if [[ ! -d "$local_app_dir" ]] && ask_yn_y "Install and configure wsltty (mintty terminal for WSL)" y; then
+			local new_install=true
+			pause_specified_installations "Google Chrome"
+			choco.exe install wsltty -y
+			pause_specified_installations "Google Chrome"
+			if [[ $? -eq 0 ]]; then
+				pause_specified_installations "Google Chrome"
+				# cmd.exe /c "cd C:\ProgramData\chocolatey\lib\wsltty\tools\wslttyinstall && install.bat"
+				cd /mnt/c/ProgramData/chocolatey/lib/wsltty/tools/wslttyinstall && cmd.exe /c "install.bat"
+				pause_specified_installations "Google Chrome"
+				[[ -n $PROCESSING_BASH ]] && create_wsltty_shortcut bash
+				pause_specified_installations "Google Chrome"
+				[[ -n $PROCESSING_ZSH ]] && create_wsltty_shortcut zsh
+				pause_specified_installations "Google Chrome"
+			fi
+		fi
+		if [[ -d "$local_app_dir" ]]; then
+			pause_specified_installations "Google Chrome"
+			if [[ -z $new_install ]]; then
+				ask_yn_y "Apply configuration to wsltty" y || return
+			fi
+			pause_specified_installations "Google Chrome"
+			nice_copy "${ROPERDOT_DIR}/config/apps/wsltty/config" "${app_dir}"
+			pause_specified_installations "Google Chrome"
+			if [[ ! -e "${app_dir}/themes/hybrid" ]]; then
+				[[ -d "${app_dir}/themes" ]] || mkdir "${app_dir}/themes"
+				cp "${ROPERDOT_DIR}/config/color-schemes/mintty/"* "${app_dir}/themes"
+			fi
+			pause_specified_installations "Google Chrome"
+		fi
+	}
+
+	[[ -z "$ROPERDOT_OS_ENV" ]] && . "${ROPERDOT_DIR}/source-scripts/detect-os"
+	. "${ROPERDOT_DIR}/source-scripts/copy-scripts"
+	export PATH="${ROPERDOT_DIR}/bin-$ROPERDOT_CURRENT_SHELL:$PATH"
+
+	[[ -d "${ROPERDOT_DIR}/extra-bin" ]] && echo "$PATH" | grep -qv "extra-bin" && export PATH="$PATH:${ROPERDOT_DIR}/extra-bin"
+
+	if command -v python3 >/dev/null 2>&1; then
+		export python_bin=python3
+	elif command -v python >/dev/null 2>&1; then
+		export python_bin=python
+	fi
+
+	case "$ROPERDOT_OS_ENV" in
+		darwin)
+			if command -v brew >/dev/null 2>&1; then
+				export PACKAGE_MANAGER=brew
+				if [[ -z "$brew_updated" && -z "$brew_newly_installed" ]]; then
+					if command -v brew >/dev/null 2>&1; then
+						if ask_yn_n "Update and upgrade brew" y; then
+							echo Updating brew
+							brew update
+							echo Upgrading brew
+							brew upgrade
+							export brew_updated=true
+						fi
+					else
+						if ask_yn_y "${warning_text}Install homebrew (needed to install shells and multiple other apps)${normal_text}" y; then
+							[[ -n "$show_start_times" ]] && echo "Start time: $(date +"%r")"
+							if [[ -n "$has_sudo" ]]; then
+								if [[ -n "$bash_present" ]]; then
+									bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+								else
+									zsh -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+								fi
+							else
+								# Install brew just for the user
+								mkdir ~/homebrew && curl -L https://github.com/Homebrew/brew/tarball/main | tar xz --strip-components 1 -C ~/homebrew
+								eval "$(~/homebrew/bin/brew shellenv)"
+								brew update --force --quiet
+								chmod -R go-w "$(brew --prefix)/share/zsh"
+							fi
+						fi
+						command -v brew >/dev/null 2>&1 && export brew_newly_installed=true
+					fi
+				fi
+				save_resume_point 7
+				if [[ (-z "$resume_step" || "$resume_step" -le 7) && -n $PROCESSING_ZSH && -z "$zsh_newly_installed" ]] && ask_yn_y "Install newer zsh version if available" y; then
+					install_func () {
+						$ROPERDOT_CURRENT_SHELL "${ROPERDOT_DIR}/install-profiles/standard/installs/install-zsh"
+					}
+					install_app || return
+				fi
+				save_resume_point 8
+				if [[ (-z "$resume_step" || "$resume_step" -le 8) && -n $PROCESSING_BASH && -z "$bash_newly_installed" && ${BASH_VERSION%%.*} -lt 4 ]] && ask_yn_y "Install newer bash version if available" y y; then
+					install_func () {
+						brew install bash
+						BASHPATH=$(brew --prefix)/bin/bash
+						[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && default_value=y || default_value=n
+						if ask_yn_n "Make the new bash version the default shell" $default_value; then
+							echo Setting "$BASHPATH" as the default shell
+							chsh -s "$BASHPATH"
+							echo "You should close the terminal window and open a new one after the install to use the new bash version."
+						fi
+					}
+					install_app || return
+				fi
+				save_resume_point 9
+				if [[ -z "$resume_step" || "$resume_step" -le 9 ]] && ask_yn_y "Install GNU command line tools and update pre-packaged apps" y; then
+					install_func () {
+						declare -a install_list
+						declare -a upgrade_list
+						declare -a package_list=(coreutils moreutils findutils vim gnu-tar gnu-sed nano grep openssh screen)
+						[[ -n "$PROCESSING_BASH" ]] && package_list+=(bash-completion@2)
+						[[ -n "$PROCESSING_ZSH" ]] && package_list+=(zsh-completions)
+						for package in "${package_list[@]}"; do
+							brew list "$package" >/dev/null 2>&1 && upgrade_list+=( "$package" ) || install_list+=( "$package" )
+						done
+
+						# Only install python3 if it's not present; otherwise externally-managed-environment issues will occur
+						! command -v python3 >/dev/null 2>&1 && install_list+=( "python3" )
+
+						[[ ${#install_list[@]} -gt 0 ]] && brew install "${install_list[@]}"
+						[[ ${#upgrade_list[@]} -gt 0 ]] && brew upgrade "${upgrade_list[@]}"
+						cat << EOT >> ~/.extra
+MANPATH="/usr/local/opt/coreutils/libexec/gnuman:\$MANPATH"
+[[ \$ROPERDOT_CURRENT_SHELL = bash && -f /usr/local/etc/bash_completion ]] && . /usr/local/etc/bash_completion
+if [[ \$ROPERDOT_CURRENT_SHELL = zsh ]]; then
+	zsh_completion_path=\$(brew --prefix)/share/zsh-completions
+	[[ -d \$zsh_completion_path ]] && fpath=(\$zsh_completion_path \$fpath)
+fi
+EOT
+					}
+					install_app || return
+				fi
+#				brew tap homebrew/cask
+#				brew tap homebrew/cask-fonts
+			fi
+			save_resume_point 10
+			if [[ -z "$resume_step" || "$resume_step" -le 10 ]] && ! command -v python3 >/dev/null 2>&1; then
+				if ask_yn_y "Python 3 is required by this installer; install it" y; then
+					brew install python3
+				fi
+			fi
+			if [[ -z "$python_bin" ]]; then
+				export python3_bin=$(command -v python3 2>/dev/null || echo "")
+				export pip3_bin=$(command -v pip3 2>/dev/null || echo "")
+			fi
+			standard_install () { brew install "$package"; }
+			save_resume_point 11
+			[[ -z "$resume_step" || "$resume_step" -le 11 ]] && install_shell_apps "macOS-shell-apps.json" brew
+			save_resume_point 12
+
+			[[ -z "$resume_step" || "$resume_step" -le 13 ]] && resume_test_value=true
+			command -v brew >/dev/null 2>&1 && brew_test_value=true
+			brew_which_value=$(which brew)
+
+			[[ -z "$resume_step" || "$resume_step" -le 12 ]] && command -v brew >/dev/null 2>&1 && install_gui_apps "macOS-gui-apps.json"
+			;;
+		ubuntu|debian)
+			export PACKAGE_MANAGER=apt-get
+			if [[ -n "$has_sudo" ]]; then
+				echo "Updating apt-get"
+				execute_command () { sudo apt-get -y update; }
+				execute_with_retry "Update of apt-get failed."
+				
+				echo "Installing libgconf-2-4"
+				execute_command () { sudo apt-get -y install gconf2-common libgconf-2-4; }
+				execute_with_retry "Install of libgconf-2-4 failed."
+				
+				echo
+				if ask_yn_n "build-essential is required for building the installs of several applications; install it" y; then
+					execute_command () { sudo apt-get -y install build-essential; }
+					execute_with_retry "Install of build-essential failed."
+				fi
+
+				if ! command -v python3 >/dev/null 2>&1 && ask_yn_y "Python 3 is required by this installer; install it" y; then
+					execute_command () { sudo apt-get -y install python3; }
+					execute_with_retry "Install of Python 3 failed."
+				fi
+			
+				# vim-gui-common is required for supporting syntax highlighting using definitions in
+				# roperdot/config/apps/vim/.vim/colors/hybrid.vim
+				# Only ask about vim-gui-common if vi has termguicolors installed
+#				if [[ -n "$(vi --version | grep "+termguicolors")" ]]; then
+#					if ! $(apt_install_check vim-gui-common); then
+#						echo
+#						if ask_yn_n "Install vim-gui-common and vim-runtime to enable syntax highlighting in vim" y; then
+#							sudo apt-get -y install vim-gui-common vim-runtime
+#						fi
+#					fi
+#				fi
+			fi
+			
+			standard_install () { sudo apt-get -y install "$package"; }
+			
+			echo
+			install_shell_apps "${ROPERDOT_OS_ENV}-shell-apps.json" apt-get
+			pause_specified_installations "Google Chrome"
+			
+			# Install mtr as part of non-shell apps since it has a GUI			
+			if [[ -n "$ROPERDOT_DESKTOP_ENV" ]]; then
+				if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+					# Windows Subsystem for Linux (WSL)
+					if [[ -n "$HAS_ADMIN_RIGHTS" ]]; then
+						if command -v choco.exe >/dev/null 2>&1; then
+							pause_specified_installations "Google Chrome"
+							install_wsltty
+							pause_specified_installations "Google Chrome"
+							install_gui_apps "windows-gui-apps.json"
+						else
+							cat <<EOT
+${warning_text}Chocolatey (https://chocolatey.org/) must be installed before GUI applications
+Skipping installation of GUI applications.${normal_text}
+EOT
+						fi
+					else
+						cat <<EOT
+${warning_text}You must start your shell as an administrator in order to install GUI
+applications. Skipping installation of GUI applications.${normal_text}
+EOT
+					fi
+				else
+					install_gui_apps "${ROPERDOT_OS_ENV}-gui-apps.json"
+				fi
+			fi
+			;;
+		mint)
+			export PACKAGE_MANAGER=apt-get
+			if [[ -n "$has_sudo" ]]; then
+				echo "Updating apt-get"
+				execute_command () { sudo apt-get -y update; }
+				execute_with_retry "Update of apt-get failed."
+				
+				execute_command () { sudo apt-get -y install gconf2-common libgconf-2-4; }
+				execute_with_retry "Install of libgconf-2-4 failed."
+				
+				echo
+				if ask_yn_n "build-essential is required for building the installs of several applications; install it" y; then
+					execute_command () { sudo apt-get -y install build-essential; }
+					execute_with_retry "Install of build-essential failed."
+				fi
+
+				if ! command -v python3 >/dev/null 2>&1 && ask_yn_y "Python 3 is required by this installer; install it" y; then
+					execute_command () { sudo apt-get -y install python3; }
+					execute_with_retry "Install of Python 3 failed."
+				fi
+
+				# vim-gui-common is required for supporting syntax highlighting using definitions in
+				# roperdot/config/apps/vim/.vim/colors/hybrid.vim
+				# Only ask about vim-gui-common if vi has termguicolors installed
+#				if [[ -n "$(vi --version | grep "+termguicolors")" ]]; then
+#					if ! $(apt_install_check vim-gui-common); then
+#						echo
+#						if ask_yn_n "Install vim-gui-common and vim-runtime to enable syntax highlighting in vim" y; then
+#							sudo apt-get -y install vim-gui-common vim-runtime
+#						fi
+#					fi
+#				fi
+			fi
+
+			standard_install () { sudo apt-get -y install "$package"; }
+			
+			echo
+			install_shell_apps "mint-shell-apps.json" apt-get
+
+			# Install mtr as part of non-shell apps since it has a GUI			
+			if [[ -n "$ROPERDOT_DESKTOP_ENV" ]]; then
+				install_gui_apps "mint-gui-apps.json"
+				if command -v docky >/dev/null 2>&1 && [[ ! -d "${LOCALUSR}/share/docky" ]]; then
+					echo Configuring Docky
+					configure-docky
+				fi
+			fi
+			
+			ask_yn_n "Move launch panel to the top of the screen?" && gsettings set org.cinnamon panels-enabled "['1:0:top']"
+			;;
+		raspbian)
+			# remember to install 7za instead of 7z !
+			;;
+		centos-gnome)
+			;;
+		centos)
+			export PACKAGE_MANAGER=yum
+			if [[ -n "$has_sudo" ]]; then
+				echo "Updating yum"
+				execute_command () { sudo yum -y update; }
+				execute_with_retry "Update of yum failed."
+				echo
+				if ! command -v dnf >/dev/null 2>&1; then
+					echo "Installing dnf"
+					pushd "$(mktemp -d)" >/dev/null || return 1
+					sudo yum -y install epel-release
+					wget http://springdale.math.ias.edu/data/puias/unsupported/7/x86_64//dnf-0.6.4-2.sdl7.noarch.rpm
+					wget http://springdale.math.ias.edu/data/puias/unsupported/7/x86_64/dnf-conf-0.6.4-2.sdl7.noarch.rpm
+					wget http://springdale.math.ias.edu/data/puias/unsupported/7/x86_64/python-dnf-0.6.4-2.sdl7.noarch.rpm
+					sudo yum -y install dnf-0.6.4-2.sdl7.noarch.rpm dnf-conf-0.6.4-2.sdl7.noarch.rpm python-dnf-0.6.4-2.sdl7.noarch.rpm
+					\rm ./*.rpm >/dev/null
+					popd >/dev/null || return 1
+				fi
+				echo "Updating dnf"
+				sudo dnf update
+				if ask_yn_n "Install development tools required for building applications" y; then
+#					if command -v dnf >/dev/null 2>&1; then
+#						execute_command () { dnf install @development-tools; }
+#					else
+#						execute_command () { sudo yum -y install make automake gcc gcc-c++ kernel-devel; }
+#					fi
+					execute_command () { sudo yum -y install make automake gcc gcc-c++ kernel-devel; }
+					execute_with_retry "Install of development tools failed."
+				fi
+			fi
+			standard_install () { sudo yum -y install "$package"; }
+			install_shell_apps "centos-shell-apps.json" yum
+			if [[ -n "$ROPERDOT_DESKTOP_ENV" ]]; then
+				install_gui_apps "centos-gui-apps.json" yum
+			fi
+			;;
+		rhel)
+			export PACKAGE_MANAGER=yum
+			standard_install () { sudo yum -y install "$package"; }
+			install_shell_apps "centos-shell-apps.json" yum
+			if [[ -n "$ROPERDOT_DESKTOP_ENV" ]]; then
+				install_gui_apps "centos-gui-apps.json" yum
+			fi
+			;;
+		debian-gnome)
+			;;
+		kubuntu)
+			;;
+		*)
+			;;
+	esac
+
+}
+
+main
+exit $?

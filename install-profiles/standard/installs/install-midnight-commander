@@ -1,0 +1,69 @@
+#
+# Description: Install script for Midnight Commander
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+. "${ROPERDOT_DIR}/source-scripts/install-deb"
+. "${ROPERDOT_DIR}/source-scripts/nice-copy"
+
+# [[ -e /tmp/make-install-prepare ]] && \rm /tmp/make-install-prepare >/dev/null
+
+# Use the first procedure if in Linux or in WSL
+if [[ "$ROPERDOT_OS_TYPE" = "linux" ]]; then
+	if [[ -n "$has_sudo" && -z "$restricted_internet" ]]; then
+		if command -v apt >/dev/null 2>&1; then
+			sudo apt install mc -y
+		elif command -v yum >/dev/null 2>&1; then
+			sudo yum -y install mc
+		fi
+	else
+		if [[ "$ROPERDOT_OS_FAMILY" = debian ]]; then
+			if install_deb_packages mc_ mc-data libssh2-1; then
+				[[ -d "${LOCALUSR}/share/mc" ]] && cp "${ROPERDOT_DIR}/config/apps/mc/sfs.ini" "${LOCALUSR}/share/mc"
+			fi
+		else
+			echo "Midnight Commander must be installed manually"
+			exit 1
+#			if ! command -v gcc >/dev/null 2>&1 && ! command -v cc >/dev/null 2>&1; then
+#				echo "Error: either gcc or cc is required for installing Midnight Commander; aborting install"
+#				exit 1
+#			fi
+#			cat << EOT >> /tmp/make-install-prepare
+#make-install-prepare() {
+#	if [[ $ROPERDOT_KERNEL_ARCH = 64 ]]; then
+#		rpmdir="\$INSTALLSOURCE/packages/centos/mc-dependencies/x86_64"
+#	else
+#		rpmdir="\$INSTALLSOURCE/packages/centos/mc-dependencies/i686"
+#	fi
+#    unpack_rpm "\$rpmdir" "glib2-devel"
+#    unpack_rpm "\$rpmdir" "pcre-devel"
+#    unpack_rpm "\$rpmdir" "slang-devel"
+#	fix-lib-links  # fixes bad links in ~/.local/usr/lib64
+#	ln -s "$HOME/.local/usr/lib/glib-2.0/include/glibconfig.h" "$HOME/.local/usr/include/glib-2.0/glibconfig.h"
+#	export PKG_CONFIG_PATH="\$LOCALUSR/lib64/pkgconfig"
+#	export GLIB_CFLAGS="-I\$LOCALUSR/include/glib-2.0 -I\$LOCALUSR/lib64/glib-2.0/include"
+#	export GMODULE_CFLAGS="-pthread -I\$LOCALUSR/include/glib-2.0 -I\$LOCALUSR/lib64/glib-2.0/include"
+#	export PATH="\$PATH:\$LOCALUSR/bin"
+#	export LD_LIBRARY_PATH="\$LOCALUSR/lib64"
+#	export CPATH="\$LOCALUSR/include"
+#	./configure --prefix="\$LOCAL" --exec-prefix="\$LOCAL" CFLAGS=-I"\$LOCALUSR/include" CPPFLAGS=-I"\$LOCALUSR/include" CXXFLAGS=-L"\$LOCALUSR/#include" LDFLAGS=-L"\$LOCALUSR/lib64"
+#}
+#EOT
+#			make-install mc
+		fi
+	fi
+elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
+	if command -v brew >/dev/null 2>&1; then
+		brew install mc
+	fi
+fi
+
+if [[ $? -eq 0 ]]; then
+	mkdir -p ~/.config/mc
+	nice_copy "${ROPERDOT_DIR}/config/apps/mc/mc.ext" "${ROPERDOT_DIR}/config/apps/mc/filehighlight.ini" ~/.config/mc
+	mkdir -p ~/.local/share/mc/skins
+	nice_copy "${ROPERDOT_DIR}/config/apps/mc/roperdot"* "${ROPERDOT_DIR}/config/apps/mc/filehighlight.ini" ~/.local/share/mc/skins
+fi

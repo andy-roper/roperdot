@@ -1,0 +1,23 @@
+Black (0): #28292c
+Red (1): #994845
+Green (2): #8d934c
+Yellow (3): #d39667
+Blue (4): #66809a
+Magenta (5): #80688c
+Cyan (6): #688b86
+White (7): #71777f
+Bright Black (8): #373a40
+Bright Red (9): #be6b68
+Bright Green (10): #b6bc72
+Bright Yellow (11): #e9c77f
+Bright Blue (12): #87a1bb
+Bright Magenta (13): #ad95b8
+Bright Cyan (14): #94bcb6
+Bright White (15): #c5c7c6
+
+SPECIAL COLORS:
+Background: #1d1e20
+Foreground/Text: #c5c7c6
+Bold Text: #c5c7c6
+Cursor: #c5c7c6
+Selection: #c5c7c6

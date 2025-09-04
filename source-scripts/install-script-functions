@@ -1,0 +1,112 @@
+[[ $ROPERDOT_CURRENT_SHELL = bash ]] && shopt -s extglob || setopt ksh_glob
+
+command -v choco.exe >/dev/null 2>&1 && choco () { choco.exe $@; }
+command -v unpack >/dev/null 2>&1 || . "${ROPERDOT_DIR}/source-scripts/unpack"
+command -v nice_copy >/dev/null 2>&1 || . "${ROPERDOT_DIR}/source-scripts/nice-copy"
+
+get_from_git () {
+	local return_code=0
+	local git_url=$1
+	local project=$2
+
+	pushd "$(temp_dir)" >/dev/null || return 1
+	
+#	re="\"Recent Commits to [^\"]+:([^\"]+)\""
+#	if [[ "$(print-web-file "$git_url")" =~ $re ]]; then
+#		branch="${BASH_REMATCH[1]}"
+#		get-web-file "$git_url/archive/$branch.zip" "$branch.zip"
+#		if [[ -f "$branch.zip" ]]; then
+#			unpack "$branch.zip"
+#			cd "$project-$branch" || return 1
+#			install_app_from_git || return_code=1
+#		fi
+#	else
+#		echo Unable to download zip of Git project from $git_url
+#	fi
+	get-web-file "$git_url/archive/refs/heads/master.zip" master.zip
+	if [[ -f master.zip ]]; then
+		unpack master.zip
+		rm master.zip >/dev/null
+#		cd "$project-$branch" || return 1
+		cd "${project}-master" || return 1
+		install_app_from_git || return_code=1
+	else
+		echo Unable to download zip of Git project from $git_url
+	fi
+	popd >/dev/null || return 1
+	return $return_code
+}
+
+declare -a temp_dirs
+export temp_dirs
+
+temp_dir () {
+	tempdir=$(mktemp -d)
+	temp_dirs+=( "$tempdir" )
+	echo "$tempdir"
+}
+
+cleanup_temp_dirs () {
+    for d in "${temp_dirs[@]}"; do
+        rm -rf "$d" >/dev/null
+    done
+}
+
+trap cleanup_temp_dirs EXIT
+
+unpack_rpm () {
+	pushd "$LOCAL" || return 1
+	rpm="$(find "$1" -maxdepth 1 -type f -regextype posix-awk -regex "^.*$2.*")"
+	rpm2cpio "$rpm" | cpio -idm
+	popd || return 1
+}
+
+copy_man_pages () {
+	if [[ -n "$has_sudo" && "$ROPERDOT_OS_ENV" != darwin ]]; then
+		if [[ -d /usr/share/man/man1 ]]; then
+			mandir=/usr/share/man/man1
+		elif [[ -d /usr/local/share/man/man1 ]]; then
+			mandir=/usr/local/share/man/man1
+		elif [[ -d /usr/local/man/man1 ]]; then
+			mandir=/usr/local/man/man1
+		elif [[ -d /usr/local/man ]]; then
+			sudo mkdir /usr/local/man/man1
+			mandir=/usr/local/man/man1
+		fi
+		if [[ -z "$mandir" ]]; then
+			echo "Unable to find directory $MANDIR/man1 to install manpage."
+			return
+		fi
+		for f; do
+			sudo cp "$f" $mandir
+			sudo chmod 644 "$mandir/$f"
+		done
+	else
+		[[ -d "$LOCAL/man/man1" ]] || mkdir -p "$LOCAL/man/man1"
+		for f; do
+			nice_copy "$f" "$LOCAL/man/man1"
+		done
+	fi		
+}
+
+print_important_message () {
+    echo "$1" | tee -a "${ROPERDOT_DIR}/important-install-messages.txt"
+    echo "" >> "${ROPERDOT_DIR}/important-install-messages.txt"
+}
+
+if [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
+	array_contains () {
+		local value="$1"
+		shift
+		[[ "$@[(Ie)$value]" -eq 0 ]] && return 1 || return 0
+	}
+else
+	array_contains () {
+		local x value="$1"
+		shift
+		for x; do
+			[[ "$x" = "$value" ]] && return 0
+		done
+		return 1
+	}
+fi

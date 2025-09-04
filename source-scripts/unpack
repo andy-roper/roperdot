@@ -1,0 +1,35 @@
+unpack () {
+	if [[ "$1" =~ \.tar\.gz$ || "$1" =~ \.tgz$ ]]; then
+		tar xvf "$1" >/dev/null
+	elif [[ "$1" =~ \.deb$ ]]; then
+		dpkg -x "$1" . >/dev/null
+	elif [[ "$1" =~ \.rpm$ ]]; then
+		rpm2cpio "$1" | cpio -idm >/dev/null
+	elif command -v unzip >/dev/null 2>&1; then
+		unzip "$1" >/dev/null
+	elif command -v 7z >/dev/null 2>&1; then
+		7z x "$1" >/dev/null
+	elif command -v 7za >/dev/null 2>&1; then
+		7za x "$1" >/dev/null
+	else
+		return 1
+	fi
+}
+
+unpack_overwrite () {
+	if [[ "$1" =~ \.tar\.gz$ || "$1" =~ \.tgz$ ]]; then
+		tar xvf "$1" --overwrite >/dev/null
+	elif [[ "$1" =~ \.deb$ ]]; then
+		dpkg -x "$1" . >/dev/null
+	elif [[ "$1" =~ \.rpm$ ]]; then
+		rpm2cpio "$1" | cpio -idm >/dev/null
+	elif command -v unzip >/dev/null 2>&1; then
+		unzip -o "$1" >/dev/null
+	elif command -v 7z >/dev/null 2>&1; then
+		7z -aoa x "$1" >/dev/null
+	elif command -v 7za >/dev/null 2>&1; then
+		7za -aoa x "$1" >/dev/null
+	else
+		return 1
+	fi
+}

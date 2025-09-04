@@ -1,0 +1,27 @@
+#
+# Description: Install script for ydiff
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+package=ydiff
+
+if [[ "$ROPERDOT_OS_ENV" = "centos" || "$ROPERDOT_OS_ENV" = "rhel" ]]; then
+	dnf install "$package"
+else
+	if [[ "$ROPERDOT_OS_ENV" = "darwin" ]] && command -v brew >/dev/null 2>&1; then
+		brew install "$package"
+		exit $?
+	fi
+	if command -v pipx >/dev/null 2>&1; then
+		pipx install "$package"
+		exit $?
+	fi
+	. "${ROPERDOT_DIR}/source-scripts/find-pip"
+	if [[ -n "$pip_bin" ]]; then
+		$pip_bin install --user "$package"
+	else
+		echo "Could not find a suitable installer; aborting installation of "$package""
+	fi
+fi

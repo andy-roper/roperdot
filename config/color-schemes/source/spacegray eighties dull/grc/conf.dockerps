@@ -1,0 +1,37 @@
+# HEADERS
+regexp=(?:\s|^)(CONTAINER ID|IMAGE|COMMAND|CREATED|STATUS|PORTS|NAMES)(?:\s|$)
+colours=default,underline
+======
+# IMAGE NAME (as docker image)
+regexp=\s{2,}(?:([a-z\-_0-9]+)\/)*([a-z\-_0-9]+)(:\S+)?\s{2,}\"
+colours=unchanged,"\033[38;5;173m","\033[38;5;231m","\033[38;5;116m"
+======
+# IMAGE
+regexp=^(?!CONTAINER)(\w+)\s+([^\s]+)\s+(".*")\s+(.*(?=(?:Up|Exited|Created|Restarting)))
+colours=unchanged,"\033[38;5;242m",unchanged,"\033[38;5;242m","\033[38;5;116m"
+======
+# Statuses - Created
+regexp=\sCreated\s
+colours="\033[38;5;109m"
+======
+# Statuses
+# https://github.com/docker/docker/blob/e5a3f86e447dd659da3c2e759f3c088a0bfcfe3d/container/state.go#L40
+# Up
+regexp=(?:\s{2}|^)(?:Up|Restarting)(?:(?:\s[\w,\d,(,)]+)+)?
+colours="\033[01;38;5;144m"
+======
+# Statuses - Exited
+regexp=Exited\s.(\d+).+?(?=\s{2,})
+colours="\033[01;38;5;131m","\033[38;5;131m"
+======
+# Statuses - Restarting
+regexp=Restarting\s.(\d+).+?(?=\s{2,})
+colours="\033[01;38;5;109m"
+======
+# Ip Addresses / Ports
+regexp=(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\:)?(\d{1,5}))?(?:->)?(\d{1,5}(\/)\w+)
+colours=default,"\033[38;5;109m",default,"\033[38;5;114m","\033[38;5;68m",default
+======
+# NAMES
+regexp=(?:([a-z\-_0-9]+)\/)*([a-z\-_0-9]+)$
+colours=default,"\033[38;5;173m","\033[38;5;251;48;5;109m"

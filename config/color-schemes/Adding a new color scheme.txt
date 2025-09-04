@@ -1,0 +1,34 @@
+Adding a new theme:
+
+Select the scheme in the terminal
+Create a directory for the new scheme, e.g. roperdot/config/color-schemes/source/newscheme
+Run gen-color-source on the scheme's .Xresources file and redirect the output to roperdot/config/color-schemes/source/newscheme/color-defs.txt
+Run compare-color-scheme on color-defs.txt to see the derived colors for the scheme compared to the terminal colors
+Run show-all-256-colors.py to see all 256 available colors (https://github.com/mgedmin/scripts/blob/master/show-all-256-colors)
+Import the .Xresources data at http://terminal.sexy for comparison
+For colors that weren't matched well, run compare-colors to find the best color, e.g. compare-colors black 16 232 233 234 235 236
+Update color-defs.txt and repeat until the set looks good
+Run gen-color-files to generate the color files for the scheme, e.g. gen-color-files newscheme
+Use http://terminal.sexy to export mintty and iTerm2 themes and place the contents for each in theme files in directories under roperdot/config/color-schemes
+
+
+
+If colors need to be changed in the terminal color-scheme files:
+
+Find the RGB value for the ANSI colors here: https://jonasjacek.github.io/colors/
+Update the .Xresources file
+Go to http://terminal.sexy
+Select the Import tab
+Paste the contents of the .Xresources file
+Click Import
+Select the Export tab
+Select iTerm2
+Click Export
+Copy the text
+Update the file in roperdot/config/color-schemes/iTerm2
+Select MinTTY
+Click Export
+Copy the text
+Update the file in roperdot/config/color-schemes/mintty
+Copy the updated mintty file to ~/.mintty/themes
+Run compare-color-scheme again to compare and verify

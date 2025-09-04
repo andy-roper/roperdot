@@ -1,0 +1,56 @@
+#!/usr/bin/env perl
+# Description: (Windows) Prints ipconfig address information in a format similar to ifconfig
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+
+use strict;
+
+my $arg1 = $ARGV[0];
+if ($arg1 eq "-h" || $arg1 eq "--help" || $arg1 eq "-?") {
+	print <<EOT;
+winip: print ipconfig information in a format similar to ifconfig
+Usage: winip
+EOT
+	exit 1;
+}
+
+my %indexHash = (
+	"Media State" => "state",
+	"Link-local IPv6 Address" => "inet6",
+	"IPv4 Address" => "inet",
+	"Subnet Mask" => "netmask",
+	"Default Gateway" => "gateway",
+	"Physical Address" => "ether"
+);
+my $output = `ipconfig.exe`;
+my %data;
+foreach (split(/\r\n/, $output)) {
+	if ($_ =~ /^(\S.*):$/) {
+		printInterface();
+		%data = ( name => $1, active => 1 );
+	}
+	elsif ($data{active} && $_ =~ /^\s*([^\.]*?) ?(?:\. )*: (.*)$/) {
+		my $index = $indexHash{$1};
+		if ($index eq "state") {
+			$data{active} = 0 if ($2 eq "Media disconnected");
+		}
+		else {
+			$data{$index} = $2 if ($index);
+		}
+	}
+}
+printInterface();
+
+sub printInterface {
+	return if (!$data{active});
+	print "$data{name}\n\tinet $data{inet}  netmask $data{netmask}";
+	if ($data{gateway}) {
+		print "  gateway $data{gateway}\n";
+	}
+	else {
+		print "\n";
+	}
+	print "\tinet6 $data{inet6}\n" if ($data{inet6});
+	print "\tether $data{ether}\n" if ($data{ether});
+	print "\n";
+}

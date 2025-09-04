@@ -1,0 +1,53 @@
+wslwinpath () {
+	if [[ "$1" = "-m" ]]; then
+		shift
+		wslpath -m -w "$@"
+	else
+		wslpath -w "$@"
+	fi
+}
+
+win_env () {
+	local value="$(cd /mnt/c && cmd.exe /c echo %$1% 2>/dev/null | tr -d '\r')"
+	echo "${value//\\/\\\\}"
+}
+
+win_env_linux_path () {
+	local winpath="$(cd /mnt/c && cmd.exe /c echo %$1% 2>/dev/null | tr -d '\r')"
+	echo $(wslpath "$winpath")
+}
+
+def_win_env_win_path () {
+	local value="$(cd /mnt/c && cmd.exe /c echo %$1% 2>/dev/null | tr -d '\r')"
+	value="${value//\\/\\\\}"
+	export "${2:-$1}="$value""
+}
+
+def_win_env_linux_path () {
+	local winpath="$(cd /mnt/c && cmd.exe /c echo %$1% 2>/dev/null | tr -d '\r')"
+	export "${2:-$1}=$(wslpath "$winpath")"
+}
+
+def_win_env_win_path_multiple () {
+	while [[ $# -gt 0 ]]; do
+		local value="$(cd /mnt/c && cmd.exe /c echo %$1% 2>/dev/null | tr -d '\r')"
+		value="${value//\\/\\\\}"
+		export "$1="$value""
+		shift
+	done
+}
+
+def_win_env_linux_path_multiple () {
+	while [[ $# -gt 0 ]]; do
+		local winpath="$(cd /mnt/c && cmd.exe /c echo %$1% 2>/dev/null | tr -d '\r')"
+		export "$1=$(wslpath "$winpath")"
+		shift
+	done
+}
+
+def_win_env_paths () {
+	local var_name="${2:-$1}"
+	var_name="$(echo $var_name | tr '[:upper:]' '[:lower:]')"
+	def_win_env_win_path $1 "${var_name}_win"
+	def_win_env_linux_path $1 "${var_name}_linux"
+}

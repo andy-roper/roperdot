@@ -1,0 +1,41 @@
+#
+# Description: Install script for JS Beautify
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+#DEBUGGING=true
+#. "${ROPERDOT_DIR}/source-scripts/debug"
+#debug start
+
+copy_script() {
+	cp "${ROPERDOT_DIR}/install-profiles/standard/app-scripts/js-beautify" "${ROPERDOT_DIR}/extra-bin"
+	chmod u+x "${ROPERDOT_DIR}/extra-bin/js-beautify"
+}
+
+if [[ -n "$has_sudo" ]] && command -v npm >/dev/null 2>&1; then
+	sudo npm -g install js-beautify editorconfig
+	js_beautify_installed=true
+else
+	if command -v pipx >/dev/null 2>&1; then
+	    pipx install jsbeautifier # && copy_script
+	    js_beautify_installed=true
+	else
+		. "${ROPERDOT_DIR}/source-scripts/find-pip"
+		if [[ -n "$pip_bin" ]]; then
+			$pip_bin install --user jsbeautifier # && copy_script
+			js_beautify_installed=true
+		else
+			echo "Could not find a suitable installer; aborting installation of js-beautify"
+		fi
+	fi
+fi
+if [[ -n "$js_beautify_installed" && ! -f ~/.jsbeautifyrc ]]; then
+	cat << EOT > ~/.jsbeautifyrc
+{
+    "indent_char": " ",
+    "indent_size": 4
+}
+EOT
+fi

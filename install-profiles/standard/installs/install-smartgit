@@ -1,0 +1,17 @@
+#
+# Description: Install script for SmartGit
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+# Last updated for current version on 15 Aug 2025
+# https://www.smartgit.dev/download/
+
+if [[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" = gnome ]]; then
+	! command -v smartgit >/dev/null 2>&1 && sudo apt install gdebi -y
+	cd "$(mktemp -d)" || return 1
+	get-web-file https://download.smartgit.dev/smartgit/smartgit-24_1_4.deb
+	yes | sudo gdebi smartgit-24_1_4.deb
+	rm smartgit-24_1_4.deb
+fi

@@ -1,0 +1,145 @@
+[
+	{
+		"app": "Neovim",
+		"presence_command": "command -v nvim >/dev/null 2>&1 || command -v nvim.appimage >/dev/null 2>&1",
+		"install_script": "install-neovim",
+		"desc": "Enhanced Vim editor",
+		"sudo_not_required": true
+	},
+	{
+		"app": "p7zip",
+		"binary": "7z",
+		"install_script": "install-p7zip",
+		"sudo_not_required": true,
+		"desc": "File archiving utility, aport of 7z and 7za for Unix"
+	},
+	{
+		"app": "fzf",
+		"binary": "fzf",
+		"install_script": "install-fzf",
+		"sudo_not_required": true,
+		"desc": "Command-line fuzzy finder; extensively used by roperdot"
+	},
+	{
+		"app": "fd",
+		"binary": "fd",
+		"install_script": "install-fd",
+		"sudo_not_required": true,
+		"desc": "A simple, fast and user-friendly alternative to find"
+	},
+	{
+		"app": "htop",
+		"binary": "htop",
+		"install_script": "install-htop",
+		"sudo_not_required": true,
+		"desc": "Interactive process viewer for Unix"
+	},
+	{
+		"app": "gawk",
+		"binary": "gawk",
+		"install_script": "install-gawk",
+		"sudo_not_required": true,
+		"desc": "GNU implementation of awk"
+	},
+	{
+		"app": "jq",
+		"binary": "jq",
+		"install_script": "install-jq",
+		"sudo_not_required": true,
+		"desc": "Utility like sed for JSON data"
+	},
+	{
+		"app": "xmllint",
+		"binary": "xmllint",
+		"install_script": "install-xmllint",
+		"sudo_not_required": true,
+		"desc": "Tool for parsing and beautifying XML"
+	},
+	{
+		"app": "sqlparse",
+		"presence_command": "python3 -c 'import sqlparse' >/dev/null 2>&1",
+		"install_command": "install-python-package sqlparse",
+		"sudo_not_required": true,
+		"desc": "Python module for parsing and formatting SQL"
+	},
+	{
+		"app": "js-beautify",
+		"presence_command": "command -v js-beautify >/dev/null 2>&1 || python3 -c 'import jsbeautifier' >/dev/null 2>&1",
+		"install_script": "install-js-beautify",
+		"sudo_not_required": true,
+		"desc": "Node/Python script for beautifying JavaScript"
+	},
+	{
+		"app": "jsoncomment",
+		"presence_command": "$python_bin -c 'import jsoncomment' >/dev/null 2>&1",
+		"install_script": "install-jsoncomment",
+		"sudo_not_required": true,
+		"desc": "Python script for wrapping JSON parsing"
+	},
+	{
+		"app": "html5-print",
+		"presence_command": "python3 -c 'import html5print' >/dev/null 2>&1",
+		"install_script": "install-html5-print",
+		"sudo_not_required": true,
+		"desc": "Python script for beautifying HTML, CSS and JavaScript"
+	},
+	{
+		"app": "xml2json-command",
+		"binary": "xml2json",
+		"install_prerequisite": "npm",
+		"install_script": "install-xml2json",
+		"sudo_not_required": true,
+		"desc": "Utility for converting XML to JSON"
+	},
+	{
+		"app": "generic colouriser",
+		"binary": "grc",
+		"package": "grc",
+		"install_script": "install-grc",
+		"desc": "Tool for adding color to the output of various Unix commands and to log files; extensively used by roperdot",
+		"sudo_not_required": true
+	},
+	{
+		"app": "Pygments",
+		"binary": "pygmentize",
+		"install_script": "install-pygments",
+		"desc": "Generic syntax highlighter for prettifying source code; extensively used by roperdot",
+		"sudo_not_required": true
+	},
+	{
+		"app": "ydiff",
+		"binary": "ydiff",
+		"install_script": "install-ydiff",
+		"sudo_not_required": true,
+		"desc": "diff colorization tool"
+	},
+	{
+		"app": "Midnight Commander",
+		"binary": "mc",
+		"install_script": "install-midnight-commander",
+		"sudo_not_required": true,
+		"desc": "Command-line visual file manager"
+	},
+	{
+		"app": "tree",
+		"binary": "tree",
+		"install_script": "install-tree",
+		"sudo_not_required": true,
+		"desc": "Recursive directory listing program that produces a depth-indented listing"
+	},
+	{
+		"app": "VBinDiff",
+		"binary": "vbindiff",
+		"install_script": "install-vbindiff",
+		"sudo_not_required": true,
+		"desc": "Displays files in hex and ASCII; can show 2 files at once and highlight differences",
+		"disabled": true
+	},
+	{
+		"app": "z",
+		"binary": "_z",
+		"install_script": "install-z",
+		"sudo_not_required": true,
+		"desc": "Tool for changing to directories based on recent usage and frequency of use"
+	}
+]

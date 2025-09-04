@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+# Script to create a simple git repo with a commit
+
+set -e  # Exit on any error
+
+REPO_NAME="git-test-repo-clean"
+
+# Clean up existing repo if it exists
+if [ -d "$REPO_NAME" ]; then
+    echo "Removing existing $REPO_NAME directory..."
+    rm -rf "$REPO_NAME"
+fi
+
+# Create and enter the test repository
+echo "Creating test repository: $REPO_NAME"
+mkdir "$REPO_NAME"
+cd "$REPO_NAME"
+
+# Initialize git repo
+git init

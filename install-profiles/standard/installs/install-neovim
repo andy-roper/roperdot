@@ -1,0 +1,77 @@
+#
+# Description: Install script for Neovim
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+. "${ROPERDOT_DIR}/source-scripts/input-functions"
+
+echo "Neovim must be installed manually"
+exit 1
+
+if [[ "$ROPERDOT_OS_ENV" = "centos" || "$ROPERDOT_OS_ENV" = "rhel" ]]; then
+	[[ -d "${ROPERDOT_DIR}/neovim-runtime" ]] && echo neovim-runtime directory exists
+	if [[ -n "$ROPERDOT_ON_SERVER" && ! -d "${ROPERDOT_DIR}/neovim-runtime" ]]; then
+		if yum list installed fuse >/dev/null 2>&1; then
+			echo "fuse present; linking to nvim.appimage"
+			chmod u+x "${INSTALLSOURCE}/nvim.appimage"
+			ln -fs "${INSTALLSOURCE}/nvim.appimage" "${ROPERDOT_DIR}/extra-bin/nvim"
+		else
+			if [[ -n "$has_sudo" ]]; then
+				if yum repolist | grep epel; then
+					epel_present=true
+				else
+					echo "Enabling EPEL repository..."
+					pushd "$(mktemp -d)" >/dev/null || return 1
+					if [[ "$ROPERDOT_OS_VERSION" = "7" ]]; then
+						epel_present=true
+						wget http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+						sudo rpm -ivh epel-release-latest-7.noarch.rpm
+						rm epel-release-latest-7.noarch.rpm
+					elif [[ "ROPERDOT_KERNEL_ARCH" = "64" ]]; then
+						epel_present=true
+						wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+						sudo rpm -ivh epel-release-6-8.noarch.rpm
+						rm epel-release-6-8.noarch.rpm
+					else
+						epel_present=true
+						wget http://dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
+						sudo rpm -ivh epel-release-6-8.noarch.rpm
+						rm epel-release-6-8.noarch.rpm
+					fi
+					popd >/dev/null || return 1
+				fi
+				if [[ -n "$epel_present" ]]; then
+					echo "Installing FUSE..."
+					sudo yum --enablerepo=epel -y install fuse-sshfs
+					sudo modprobe fuse
+					sudo groupadd fuse
+					user="$(whoami)"
+					sudo usermod -a -G fuse "$user"
+					ln -fs "${INSTALLSOURCE}/nvim.appimage" "${ROPERDOT_DIR}/extra-bin/nvim"
+					chmod u+x "${ROPERDOT_DIR}/extra-bin/nvim"
+				fi
+			fi
+			if ! yum list installed fuse >/dev/null 2>&1; then
+				echo "FUSE not present and/or user doesn't have sudo rights; extracting nvim..."
+				#'
+				pushd "${INSTALLSOURCE}" >/dev/null || return 1
+				chmod u+x "${INSTALLSOURCE}/nvim.appimage"
+				"${INSTALLSOURCE}/nvim.appimage" --appimage-extract
+				ln -fs "${INSTALLSOURCE}/squashfs-root/usr/bin/nvim" "${ROPERDOT_DIR}/extra-bin/nvim"
+				popd >/dev/null || return 1
+			fi
+		fi
+		if command -v nvim >/dev/null 2>&1; then
+			ln -s ~/.vim ~/.config/nvim
+			ln -s ~/.vimrc ~/.vim/init.vim
+		fi
+	fi
+	
+	if [[ -z "$ROPERDOT_DESKTOP_ENV" && "$EDITOR" != "nvim" ]]; then
+		if ask_yn_y "Use nvim as the default text editor" y; then
+			sed -i 's/^\(.*export EDITOR=\).*/\1nvim/' ~/roperdot-loader
+		fi
+	fi
+fi

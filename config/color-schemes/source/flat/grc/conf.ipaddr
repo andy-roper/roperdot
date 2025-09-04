@@ -1,0 +1,51 @@
+# IP4
+regexp=inet\s([^\/]+)\/(\d+)
+colours=default,"\033[01;38;5;214m","\033[01;38;5;133m"
+=====
+# broadcast
+regexp=brd\s([^}s]+)
+colours=default,"\033[38;5;m"
+=====
+# IP6
+regexp=inet6\s([^\/]+)\/(\d+)
+colours=default,"\033[38;5;214m","\033[38;5;133m"
+=====
+# MAC
+regexp=link\/ether\s(\S+)\s
+colours=default,"\033[38;5;133m"
+=====
+# State UP
+regexp=(\d+):\s(\S+):.+state (UP)
+colours=default,"\033[38;5;231m","\033[01;38;5;35m","\033[01;38;5;35m"
+=====
+# State DOWN
+regexp=(\d+):\s(\S+):.+state (DOWN)
+colours=default,"\033[38;5;231m","\033[01;38;5;167m","\033[01;38;5;167m"
+=====
+# State UNKNOWN
+regexp=(\d+):\s(\S+):.+state (UNKNOWN)
+colours=default,"\033[38;5;231m","\033[01;38;5;36m","\033[38;5;36m"
+=====
+# State DORMANT
+regexp=(\d+):\s(\S+):.+state (DORMANT)
+colours=default,"\033[38;5;231m","\033[01;38;5;36m","\033[38;5;36m"
+=====
+# < >
+regexp=\s<([^>]+)>
+colours=default,"\033[38;5;36m"
+=====
+# Master dev
+regexp=\smaster\s(\S+)\s
+colours=default,"\033[38;5;188;48;5;68m"
+=====
+# on
+regexp=\son\s
+colours="\033[38;5;35m"
+=====
+# off
+regexp=\soff\s
+colours="\033[38;5;167m"
+=====
+# link/none
+regexp=link\/(none)
+colours=unchanged,"\033[38;5;167m"

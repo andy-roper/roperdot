@@ -1,0 +1,216 @@
+#!/usr/bin/env python3
+
+# Derived from git-blame-colored here:
+# https://gist.github.com/mplewis/11dfac41bad93aeaa2ec
+
+# The MIT License (MIT)
+# 
+# Copyright © 2021 Matt Lewis
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+import os, re, sys
+from datetime import datetime
+
+def envColor(colorName, default):
+	color = os.environ.get(colorName)
+	if color:
+		return "#" + color
+	return default
+	
+color_groups = [
+    [('red', None), ('green', None), ('yellow', None), ('magenta', None),
+     ('cyan', None)],
+    [('black', 'light_red'), ('black', 'light_green'),
+     ('black', 'light_yellow'), ('black', 'light_magenta'),
+     ('black', 'light_cyan')]
+]
+cmd = ['git', 'blame', '--line-porcelain']
+
+
+from pygments.style import Style
+from pygments.token import Keyword, Name, Comment, String, Error, Text, \
+     Number, Operator, Generic, Whitespace, Punctuation, Other, Literal
+
+class RoperdotStyle(Style):
+		
+    def envColor(colorName, default):
+        color = os.environ.get(colorName)
+        if color:
+            return '#' + color
+        return default
+
+    GREEN = envColor("COLOR_GREEN_RGB", "#7a8431")
+    YELLOW = envColor("COLOR_YELLOW_RGB", "#d4804d")
+    BRCYAN = envColor("COLOR_BRCYAN_RGB", "#79b2a8")
+    BRBLUE = envColor("COLOR_BRBLUE_RGB", "#6f90b0")
+    BRGREEN = envColor("COLOR_BRGREEN_RGB", "#a6b255")
+    BRMAGENTA = envColor("COLOR_BRMAGENTA_RGB", "#a27fad")
+    BRYELLOW = envColor("COLOR_BRYELLOW_RGB", "#ebbb61")
+
+    styles = {
+        # No corresponding class for the following:
+        Text:                      "", # class:  ''
+        Whitespace:                "",        # class: 'w'
+        Error:                     "", # class: 'err'
+        Other:                     "",        # class 'x'
+
+        Comment:                   GREEN, # class: 'c'
+        Comment.Multiline:         "",        # class: 'cm'
+        Comment.Preproc:           "",        # class: 'cp'
+        Comment.Single:            "",        # class: 'c1'
+        Comment.Special:           "",        # class: 'cs'
+
+        Keyword:                   BRMAGENTA, # class: 'k'
+        Keyword.Constant:          "",        # class: 'kc'
+        Keyword.Declaration:       BRBLUE,        # class: 'kd'
+        Keyword.Namespace:         "", # class: 'kn'
+        Keyword.Pseudo:            "",        # class: 'kp'
+        Keyword.Reserved:          BRBLUE,        # class: 'kr'
+        Keyword.Type:              BRGREEN,        # class: 'kt'
+
+        Operator:                  "", # class: 'o'
+        Operator.Word:             "",        # class: 'ow' - like keywords
+
+        Punctuation:               "", # class: 'p'
+
+        Name:                      BRCYAN, # class: 'n'
+        Name.Attribute:            BRCYAN, # class: 'na' - to be revised
+        Name.Builtin:              BRGREEN,        # class: 'nb'
+        Name.Builtin.Pseudo:       "",        # class: 'bp'
+        Name.Class:                "", # class: 'nc' - to be revised
+        Name.Constant:             "", # class: 'no' - to be revised
+        Name.Decorator:            "", # class: 'nd' - to be revised
+        Name.Entity:               "",        # class: 'ni'
+        Name.Exception:            "", # class: 'ne'
+        Name.Function:             "", # class: 'nf'
+        Name.Property:             "",        # class: 'py'
+        Name.Label:                "",        # class: 'nl'
+        Name.Namespace:            "",        # class: 'nn' - to be revised
+        Name.Other:                "", # class: 'nx'
+        Name.Tag:                  BRBLUE, # class: 'nt' - like a keyword
+        Name.Variable:             "",        # class: 'nv' - to be revised
+        Name.Variable.Class:       "",        # class: 'vc' - to be revised
+        Name.Variable.Global:      "",        # class: 'vg' - to be revised
+        Name.Variable.Instance:    "",        # class: 'vi' - to be revised
+
+        Number:                    "", # class: 'm'
+        Number.Float:              "",        # class: 'mf'
+        Number.Hex:                "",        # class: 'mh'
+        Number.Integer:            "",        # class: 'mi'
+        Number.Integer.Long:       "",        # class: 'il'
+        Number.Oct:                "",        # class: 'mo'
+
+        Literal:                   "", # class: 'l'
+        Literal.Date:              "", # class: 'ld'
+
+        String:                    YELLOW, # class: 's'
+        String.Backtick:           YELLOW,        # class: 'sb'
+        String.Char:               YELLOW,        # class: 'sc'
+        String.Doc:                "",        # class: 'sd' - like a comment
+        String.Double:             "",        # class: 's2'
+        String.Escape:             "", # class: 'se'
+        String.Heredoc:            "",        # class: 'sh'
+        String.Interpol:           "",        # class: 'si'
+        String.Other:              "",        # class: 'sx'
+        String.Regex:              "",        # class: 'sr'
+        String.Single:             "",        # class: 's1'
+        String.Symbol:             "",        # class: 'ss'
+
+        Generic:                   "",        # class: 'g'
+        Generic.Deleted:           "", # class: 'gd',
+        Generic.Emph:              "italic",  # class: 'ge'
+        Generic.Error:             "",        # class: 'gr'
+        Generic.Heading:           "",        # class: 'gh'
+        Generic.Inserted:          "", # class: 'gi'
+        Generic.Output:            "",        # class: 'go'
+        Generic.Prompt:            "",        # class: 'gp'
+        Generic.Strong:            "bold",    # class: 'gs'
+        Generic.Subheading:        "", # class: 'gu'
+        Generic.Traceback:         "",        # class: 'gt'
+    }
+
+from pygments import highlight
+from pygments.lexers import guess_lexer
+from pygments.formatters import Terminal256Formatter
+from tabulate import tabulate
+from colored import fg, bg, attr
+
+import subprocess
+from sys import argv
+
+
+def lines_starting_with(all_lines, prefix, splitRE = '', matchRE = ''):
+    if not splitRE:
+        splitRE = prefix
+    p1 = re.compile(prefix)
+    grepped = [l for l in all_lines if p1.match(l)]
+    if matchRE:
+        p2 = re.compile(matchRE)
+        stripped = [p2.match(l).group(1) for l in grepped]
+    else:
+        p2 = re.compile(splitRE)
+        stripped = [re.split(p2, l)[1] for l in grepped]
+    return stripped
+
+
+def help():
+    print('''
+git-blame-colored: print git blame information for a file
+Usage: git-blame-colored <filespec>
+
+Calls "git blame" for a file and colorizes the results so that each author
+corresponds to a color. Syntax highlighting is applied to the displayed
+code using Pygments.
+'''[1:-1])
+    quit()
+
+
+def main():
+    if len(sys.argv) == 1 or sys.argv[1] in ['--help', '-?', '-h']:
+        help()
+    cmd.extend(argv[1:])
+
+    gbl_raw = (subprocess.run(cmd, stdout=subprocess.PIPE).stdout
+                .decode().split('\n'))
+    code = '\n'.join(lines_starting_with(gbl_raw, '^\t', '^\t'))
+    authors_by_line = lines_starting_with(gbl_raw, '^author ')
+    authors_unique = sorted(list(set(authors_by_line)))
+    hashes = lines_starting_with(gbl_raw, '^[0-9a-f]{40}', '', '^(.{7})')
+    times = lines_starting_with(gbl_raw, '^author-time ')
+
+    formatter = Terminal256Formatter(style=RoperdotStyle)
+    highlighted_raw = highlight(code, guess_lexer(code), formatter)
+    highlighted = highlighted_raw.split('\n')
+
+    color_codes = []
+    for group in color_groups:
+        for fg_color, bg_color in group:
+            color_code = fg(fg_color)
+            if bg_color:
+                color_code += bg(bg_color)
+            color_codes.append(color_code)
+
+    author_color_codes = {author: color_codes.pop(0)
+                          for author in authors_unique}
+
+    pretty_blame = []
+    for i in range(min(len(authors_by_line), len(highlighted))):
+        author = authors_by_line[i]
+        hash = hashes[i]
+        pretty_blame.append((
+            author_color_codes[author] + hash,
+            author,
+            datetime.fromtimestamp(int(times[i])),
+            fg('light_gray') + str(i),
+            attr('reset') + highlighted[i]
+        ))
+
+    print(tabulate(pretty_blame, tablefmt='plain'))
+
+if __name__ == '__main__':
+    main()

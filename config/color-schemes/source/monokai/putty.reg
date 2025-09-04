@@ -1,0 +1,49 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\Software\SimonTatham\PuTTY\Sessions\MySessionName]
+"Font"="Hack Nerd Font"
+"FontHeight"=dword:0000000b
+; Default Foreground
+"Colour0"="241,235,235"
+; Default Bold Foreground
+"Colour1"="241,235,235"
+; Default Background
+"Colour2"="39,40,34"
+; Default Background
+"Colour3"="39,40,34"
+; Cursor Text
+"Colour4"="241,235,235"
+; Cursor Color
+"Colour5"="241,235,235"
+; ANSI Black
+"Colour6"="72,72,62"
+; ANSI Black Bold
+"Colour7"="118,113,94"
+; ANSI Red
+"Colour8"="220,37,102"
+; ANSI Red Bold
+"Colour9"="250,39,114"
+; ANSI Green
+"Colour10"="143,192,41"
+; ANSI Green Bold
+"Colour11"="167,226,46"
+; ANSI Yellow
+"Colour12"="212,201,110"
+; ANSI Yellow Bold
+"Colour13"="231,219,117"
+; ANSI Blue
+"Colour14"="85,188,206"
+; ANSI Blue Bold
+"Colour15"="102,217,238"
+; ANSI Magenta
+"Colour16"="147,88,254"
+; ANSI Magenta Bold
+"Colour17"="174,130,255"
+; ANSI Cyan
+"Colour18"="86,183,165"
+; ANSI Cyan Bold
+"Colour19"="102,239,213"
+; ANSI White
+"Colour20"="172,173,161"
+; ANSI White Bold
+"Colour21"="207,208,194"

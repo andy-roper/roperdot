@@ -1,0 +1,345 @@
+#!/usr/bin/env perl
+# Description: Syncs the files in a source directory with a target directory
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+
+use strict;
+use utf8;
+
+# TO DO
+# Get Unicode/UTF-8 printing working: still printing bad characters like for
+# Comedy/'Allo 'Allo!/'Allo 'Allo! - s05e10 - René - Under an Assumed Nose.avi
+# Science Fiction/Star Trek - The Next Generation/Star Trek - The Next Generation - s03e13 - D?j? Q.mkv
+
+# Process dir listing differently for Windows vs Mac OS/Linux
+# Maybe need to eval require?  eval { require Win32::LongPath }
+
+use File::Spec;
+use File::Path;
+use File::Copy "cp";
+use Getopt::Long;
+
+my $windows = ($^O =~ /win/i && $ENV{'ROPERDOT_OS_ENV'} ne "msys");
+eval { require Win32::LongPath; } if ($windows);
+
+binmode(STDOUT, ":utf8");
+
+my $verbose = 0;
+my $displayOnly = 0;
+my $forceCopy = 0;
+my $disableRecursion = 0;
+my @excludeDirArgs;
+my $excludePattern;
+my $printing = 0;
+my $targetDataFile;
+my $srcDir;
+my $targetDir;
+my $outputDir;
+my @excludeDirs;
+my $processFile;
+my $help;
+my $volumeName;
+my %targetHash;
+my @srcFiles;
+
+GetOptions(
+	'disable'    => \$disableRecursion,
+	'force'      => \$forceCopy,
+	'help|?'     => \$help,
+	'verbose'    => \$verbose,
+	'nocopy'     => \$displayOnly,
+	'xdir=s'     => \@excludeDirArgs,
+	'xpattern=s' => \$excludePattern,
+	'print=s'    => \$volumeName,
+	'target=s'   => \$targetDataFile,
+	'output=s'   => \$outputDir
+);
+
+help() if ($help);
+
+$printing = 1 if ($volumeName);
+$verbose = 1 if ($displayOnly);
+
+my $recursing = !($disableRecursion);
+
+foreach my $dir (@excludeDirArgs) {
+	push @excludeDirs, lc(fixPath($dir));
+}
+
+printFileDataForDir(shift) if ($printing);
+
+($srcDir, $targetDir) = @ARGV;
+$srcDir = fixPath($srcDir);
+$targetDir = fixPath($targetDir);
+help() if ($targetDir eq "" or $srcDir eq "");
+if (!(-d $targetDir)) {
+	print "Error: $targetDir does not exist";
+	exit 1;
+}
+if (!(-e $srcDir)) {
+	print "Error: $srcDir does not exist";
+	exit 1;
+}
+
+push @excludeDirs, "$srcDir/system volume information";
+push @excludeDirs, "$srcDir/\$recycle.bin";
+
+processDataFile($targetDataFile, \%targetHash) if ($targetDataFile);
+
+$processFile = \&processSourceFile;
+my $strOffset = length($srcDir) + 1;
+processDir($srcDir);
+
+$processFile = \&processTargetFile;
+$strOffset = length($targetDir) + 1;
+my $inOutputDir = 0;
+processDir($targetDir);
+
+if ($outputDir) {
+	$outputDir = fixPath($outputDir);
+	$strOffset = length($outputDir) + 1;
+	$inOutputDir = 1;
+#	print "\n\n\n\n\n\noutputDir: $outputDir\n" if ($verbose);
+	processDir($outputDir);
+}
+
+
+#print "\n\n\n\n\n";
+#print "srcDir: $srcDir\ntargetDir: $targetDir\noutputDir: $outputDir\n\n\n\n\n";
+#foreach my $f (sort @srcFiles) {
+#	print "srcFiles: $f\n";
+#}
+#print "\n\n\n\n\n";
+#foreach my $f (sort keys %targetHash) {
+#	print "targetHash file: $f\n";
+#	print "targetHash inOutputDir: " . $targetHash{$f}->{inOutputDir} . "\n";
+#}
+#print "\n\n\n\n\n";
+
+#print "targetHash:\n";
+#foreach my $f (sort keys %targetHash) {
+#	print "$f\n";
+#}
+
+foreach my $f (@srcFiles) {
+	my $target = $targetHash{$f};
+	if ($target) {
+		my $srcFile = "$srcDir/$f";
+		my $targetFile =  ($target->{inOutputDir} ? $outputDir: $targetDir) . "/$f";
+		my $targetVolume = $target->{volume};
+		my $targetModTime = $target->{modTime};
+		$targetModTime = getModTime($targetFile) if (!$targetModTime);
+		my $srcModTime = getModTime($srcFile);
+		if ($srcModTime > $targetModTime) {
+#			print "srcModTime: $srcModTime, targetModTime: $targetModTime\n" if ($verbose);
+			if ($targetVolume) {
+				print "Need to copy \"$srcFile\" to $targetVolume and update the target data file\n";
+			}
+			else {
+				copyFileToTarget($f);
+			}
+		}
+		delete $targetHash{$f};
+	}
+	else {
+#		print "$f not in targetHash\n" if ($verbose);
+		copyFileToTarget($f, 1);
+	}
+}
+for my $f (keys %targetHash) {
+	my $data = $targetHash{$f};
+	if ($targetHash{$f}->{volume}) {
+		print "Need to delete \"$srcDir/$f\" from " . $targetHash{$f}->{volume} . " and update the target data file\n";
+	}
+	else {
+		my $targetFile = "$targetDir/$f";
+		print "Deleting $targetFile\n" if ($verbose);
+		unlink "$targetFile" if (!$displayOnly);
+	}
+}
+
+exit 0;
+
+sub copyFileToTarget {
+	my ($f, $newFile) = @_;
+	my $dir = ($outputDir ? $outputDir : $targetDir);
+	my $targetFile = "$dir/$f";
+#	print "copyFileToTarget dir: $dir\n" if ($verbose);
+#	print "copyFileToTarget targetFile: $targetFile\n" if ($verbose);
+	if ($newFile) {
+		my @dirs = split /\//, $f;
+		my $path = $dir;
+		for (my $i = 0; $i < scalar @dirs - 1; $i++) {
+			$path .= "/" . $dirs[$i];
+			if (!(-d $path)) {
+				print "Creating directory $path\n" if ($verbose);
+				mkdir $path if (!$displayOnly);
+			}
+		}
+	}
+	print "Copying to $targetFile\n" if ($verbose);
+	return if ($displayOnly);
+	my $srcFile = "$srcDir/$f";
+	if ($windows) {
+		$srcFile =~ s/\//\\/g;
+		$targetFile =~ s/\//\\/g;
+	}
+	cp($srcFile, $targetFile);
+}
+
+sub fixPath {
+	my $path = shift;
+	$path = File::Spec->rel2abs($path);
+	$path =~ s/\\/\//g;
+	$path =~ s/\/+$//;
+	return $path;
+}
+
+sub getModTime {
+	my $x = shift;
+	my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime,
+	 $mtime, $ctime, $blksize, $blocks) = stat $x;
+	return $mtime;
+}
+
+sub processDir {
+	my $path = shift;
+
+	my $pathToProcess = (length($path) == 2 ? "$path/" : $path);
+
+	my @files;
+	my @dirs;
+
+	if ($windows) {
+		my $dir = Win32::LongPath->new();
+		$dir->opendirL($pathToProcess);
+		foreach my $f ($dir->readdirL()) {
+			next if ($f =~ /^\.{1,2}$/);
+			push @files, $f;
+		}
+		$dir->closedirL();
+	}
+	else {
+		opendir(DIR, $pathToProcess) or die "Unable to open $pathToProcess: $!";
+		@files = grep { !/^\.{1,2}$/ } readdir(DIR);
+		closedir(DIR);
+	}
+
+	@files = map { $path . '/' . $_ } @files;
+
+	for my $f (@files) {
+		if (-d $f) {
+			if ($recursing) {
+				my $skipDir = 0;
+				foreach my $dir (@excludeDirs) {
+					if ($dir eq lc($f)) {
+						$skipDir = 1;
+						last;
+					}
+				}
+				processDir($f) if (!$skipDir);
+			}
+		}
+		else {
+			if ($f !~ /\.db$/i) {
+				&$processFile($f) if (!$excludePattern || $f !~ $excludePattern);
+			}
+		}
+	}
+}
+
+sub printFileDataForDir {
+	$targetDir = shift;
+	help() if ($targetDir eq "");
+	if (!(-d $targetDir)) {
+		print "Error: $targetDir does not exist";
+		exit 1;
+	}
+	$targetDir =~ s/\\/\//g;
+	$targetDir =~ s/\/$//g;
+	$processFile = \&printFileData;
+	processDir($targetDir);
+	exit 0;
+}
+
+sub printFileData {
+	my $f = shift;
+	my $relPath = substr($f, length($targetDir) + 1);
+	my $modTime = getModTime($f);
+	print "$volumeName\t$relPath\t$modTime\n";
+}
+
+sub processDataFile {
+	my $targetDataFile = shift;
+	my $targetFileHash = shift;
+	open hFile, "<:encoding(utf8)", $targetDataFile;
+	while (<hFile>) {
+		chomp;
+#		print "line: $_\n" if ($verbose);
+		$_ =~ /^(.*)\t(.*)\t(.*)$/;
+		my ($volumeName, $relPath, $modTime) = ($1, $2, $3);
+		my %hashValue = (
+			volume => $volumeName,
+			modTime => $modTime
+		);
+#	print "processDataFile $relPath\n" if ($verbose);
+		$targetFileHash->{$relPath} = \%hashValue;
+	}
+	close hFile;
+}
+
+sub processSourceFile {
+	my $srcFile = shift;
+	$srcFile = substr($srcFile, $strOffset);
+#	print "processSourceFile $srcFile\n" if ($verbose);
+	push @srcFiles, $srcFile;
+}
+
+sub processTargetFile {
+	my $targetFile = shift;
+	$targetFile = substr($targetFile, $strOffset);
+#	print "processTargetFile $targetFile\n" if ($verbose);
+	my %hashValue = (
+		volume => "",
+		inOutputDir => $inOutputDir
+	);
+	$targetHash{$targetFile} = \%hashValue;
+}
+
+sub help {
+	print <<EOT;
+syncdir: synchronize source and target directories
+Usage:
+syncdir [-dfnv] [-xd <dir>] [-xp <pattern>] [-t <dataFile>] [-o <outputDir>] <srcDir> <targetDir>
+syncdir -p <volumeName> [-dv] [-xd <dir>] [-xp <pattern>] <targetDir>
+
+Options:
+-d or --disable    disable directory recursion
+-f or --force      force copy: when a file exists in both directories, force a
+                   copy of the file from the source to the target
+-n or --nocopy     display only
+-p or --print      print data to be used in a target data file by future
+                   syncdir executions; the next argument will be the volume
+                   name for the volume
+-o or --output     specify the directory in which to place new and changed
+                   files from the source
+-t or --target     specify a target data file; this file will contain data for
+                   files that can span multiple volumes
+-v or --verbose    enable verbose output
+-xd or --xdir      specify a directory to exclude
+-xp or --xpattern  specify a file pattern to exclude
+
+syncdir will synchronize the directory targetDir with the directory srcDir such
+that targetDir will contain the same files that are in the srcDir.
+
+Files which are in targetDir that are not in srcDir will be deleted from
+targetDir.
+
+Files which are in srcDir which are not in targetDir will be copied to
+targetDir.
+
+Files which exist in both directories but are newer in srcDir will be copied to
+targetDir.
+EOT
+	exit 1;
+}

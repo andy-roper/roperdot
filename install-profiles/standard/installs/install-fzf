@@ -1,0 +1,99 @@
+#
+# Description: Install script for fzf
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+. "${ROPERDOT_DIR}/source-scripts/input-functions"
+. "${ROPERDOT_DIR}/source-scripts/nice-copy"
+
+# ~/.local/usr/share/man
+manual_setup() {
+	mkdir -p ~/.local/usr
+	\cp -r "${INSTALLSOURCE}/fzf"/* ~/.local/usr
+	local fzf_base=$HOME/.local/usr/local/opt/fzf
+	ask_yn_y "Do you want to enable fuzzy auto-completion" y && local comment_completion="# "
+	ask_yn_y "Do you want to enable key bindings" y && local comment_key_bindings="# "
+	if [[ -n $PROCESSING_BASH ]]; then
+		cat << EOT > ~/.fzf.bash
+# Auto-completion
+# ---------------
+${comment_completion}[[ \$- == *i* ]] && source "$fzf_base/shell/completion.bash" 2> /dev/null
+
+# Key bindings
+# ------------
+${comment_key_bindings}source "$fzf_base/shell/key-bindings.bash"
+EOT
+	fi
+	if [[ -n $PROCESSING_ZSH ]]; then
+		cat << EOT > ~/.fzf.zsh
+# Setup fzf
+# ---------
+if [[ ! "\$PATH" == "*$fzf_base/bin*" ]]; then
+	export PATH="\${PATH:+\${PATH}:}$fzf_base/bin"
+fi
+
+# Auto-completion
+# ---------------
+${comment_completion}[[ \$- == *i* ]] && source "$fzf_base/shell/completion.zsh" 2> /dev/null
+
+# Key bindings
+# ------------
+${comment_key_bindings}source "$fzf_base/shell/key-bindings.zsh"
+EOT
+	fi
+}
+
+# Use the first procedure if in Linux or in WSL
+if [[ "$ROPERDOT_OS_TYPE" = "linux" ]]; then
+	if [[ -n "$has_sudo" ]] && command -v brew >/dev/null 2>&1; then
+#		if [[ -n "$accept_recommended" ]]; then
+#			brew install fzf </dev/null
+#		else
+#			brew install fzf
+#		fi
+# Added export of HOMEBREW_CURLRC on 14 Sep 21 due to self-signed cert in chain at client
+		export HOMEBREW_CURLRC=1
+		brew install fzf
+		if [[ $? -eq 0 ]]; then
+			install_path="$(brew --prefix)/opt/fzf/install"
+			[[ -f "$install_path" ]] && bash "$install_path"
+			exit_code=0
+		else
+			exit_code=$?
+		fi
+	else
+		[[ -d "${ROPERDOT_DIR}/extra-bin" ]] || mkdir "${ROPERDOT_DIR}/extra-bin"
+		cd "${ROPERDOT_DIR}/extra-bin" || return 1
+		# fzf binaries are here: https://github.com/junegunn/fzf-bin/releases
+		archive="$(find "$INSTALLSOURCE" -maxdepth 1 -type f -name "fzf*")"
+		if [[ -n "$archive" ]]; then
+			unpack "$archive"
+#			path="${ROPERDOT_DIR}/extra-bin/fzf"
+			manual_setup
+			exit_code=0
+		else
+			echo "binary not found in INSTALLSOURCE; aborting fzf install"
+			exit_code=1
+		fi
+	fi
+else
+	if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
+#		if [[ -n "$accept_recommended" ]]; then
+#			brew install fzf </dev/null
+#		else
+#			brew install fzf
+#		fi
+		brew install fzf
+		if [[ $? -eq 0 ]]; then
+			[[ -f /usr/local/opt/fzf/install ]] && bash /usr/local/opt/fzf/install
+			# Added to avoid spurious error thrown when installing key bindings and fuzzy completion
+			exit_code=0
+		fi
+	fi
+#	path="/usr/local/opt/fzf"
+fi
+
+[[ -n "$exit_code" ]] && exit $exit_code

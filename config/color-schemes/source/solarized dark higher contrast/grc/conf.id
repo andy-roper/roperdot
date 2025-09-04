@@ -1,0 +1,11 @@
+# Groups
+regexp=(\d+)\((\w+)\)
+colours=unchanged,"\033[38;5;136m","\033[01;38;5;136m"
+-
+# User
+regexp=uid.(\d+)\((\w+)\)
+colours=unchanged,"\033[38;5;114m","\033[01;38;5;114m"
+-
+# SELinux
+regexp=(\w+_u):(\w+_r):(\w+_t):([\w\-.:]+)
+colours=unchanged,"\033[38;5;114m","\033[38;5;136m","\033[38;5;36m","\033[38;5;168m"

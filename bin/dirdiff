@@ -1,0 +1,208 @@
+#!/usr/bin/env perl
+# Description: Compares two directories for differing and unique files
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+
+# TO DO
+# Need to add error handling/retry to this line:
+# my $md5 = Digest::MD5->new->addfile(*hFile)->hexdigest;
+
+use strict;
+
+use Cwd;
+use Digest::MD5;
+use Getopt::Long;
+use File::Spec;
+use File::Path;
+
+my ($fullPaths, $ignoreErrors, $recursing, $suppressErrors, $trim, $uniqueOnly, $verbose, $help);
+
+my $windows = ($^O =~ /mswin/i);
+
+GetOptions(
+	'full'     => \$fullPaths,
+	'ignore'   => \$ignoreErrors,
+	'recurse'  => \$recursing,
+	'suppress' => \$suppressErrors,
+	'trim'     => \$trim,
+	'unique=s' => \$uniqueOnly,
+	'verbose'  => \$verbose,
+	'help|?'   => \$help
+);
+
+help() if ($help);
+
+my $dir_1 = shift;
+my $dir_2 = shift;
+if ($dir_2 eq "") {
+	$dir_2 = cwd();
+}
+else {
+	help() if ($dir_1 eq "" || scalar @ARGV != 0);
+}
+
+$dir_1 = fixPath($dir_1);
+$dir_2 = fixPath($dir_2);
+
+my %files_1;
+my %files_2;
+my @diffFiles;
+my $dirIndex;
+
+$dirIndex = 1;
+processDir($dir_1);
+$dirIndex = 2;
+processDir($dir_2);
+
+# Build difference list
+foreach my $f (keys %files_1) {
+	if ($files_2{$f}) {
+		if (!$uniqueOnly) {
+			my $f1 = $files_1{$f};
+			my $f2 = $files_2{$f};
+			my $f1Full = "$dir_1/$f1";
+			my $f2Full = "$dir_2/$f2";
+			if (-s $f1Full eq -s $f2Full) {
+				print "Comparing $f1Full and $f2Full\n" if ($verbose);
+#				print STDERR "fnord Comparing $f1Full and $f2Full\n";
+				my $md5_1 = getMD5($f1Full);
+				if ($md5_1 ne "ioerror") {
+					my $md5_2 = getMD5($f2Full);
+					push @diffFiles, $f1 if ($md5_2 ne "ioerror" && $md5_1 ne $md5_2);
+				}
+			}
+			else {
+				push @diffFiles, $f1;
+			}
+		}
+		delete $files_1{$f};
+		delete $files_2{$f};
+	}
+}
+
+if (scalar @diffFiles && !$uniqueOnly) {
+	print "Files differing between directories:\n";
+	foreach (sort {lc($a) cmp lc($b)} @diffFiles) {
+		print "$_\n";
+	}
+	print "\n";
+}
+
+if (keys %files_1 && $uniqueOnly != 2) {
+	print "Files unique to $dir_1\n" if (!$trim || !$uniqueOnly);
+	my $prefix = ($fullPaths ? "$dir_1/" : "");
+	foreach (sort keys %files_1) {
+		print $prefix . $files_1{$_} . "\n";
+	}
+	print "\n" if (!$uniqueOnly);
+}
+
+if (keys %files_2 && $uniqueOnly != 1) {
+	print "Files unique to $dir_2\n" if (!$trim || !$uniqueOnly);
+	my $prefix = ($fullPaths ? "$dir_2/" : "");
+	foreach (sort keys %files_2) {
+		print $prefix . $files_2{$_} . "\n";
+	}
+	print "\n" if (!$uniqueOnly);
+}
+exit 0;
+
+sub processDir {
+	my $path = shift;
+
+	print "dir: $path\n" if ($verbose);
+#	print STDERR "fnord dir: $path\n";
+	if ($ignoreErrors || $suppressErrors) {
+		opendir(DIR, $path) or return;
+	}
+	else {
+		opendir(DIR, $path) or do {
+			print STDERR "Unable to open $path: $!\n";
+			return;
+		}
+	}
+	my @files = grep { !/^\.{1,2}$/ } readdir(DIR);
+	closedir(DIR);
+
+	@files = map { $path . '/' . $_ } @files;
+
+	for my $f (@files) {
+		if (-d $f) {
+			processDir($f) if ($recursing);
+		}
+		else {
+			if ($dirIndex == 1) {
+				my $fileName = substr($f, length($dir_1) + 1);
+				my $key = ($windows ? lc($fileName) : $fileName);
+				$files_1{$key} = $fileName;
+				print "file in dir 1: $fileName\n" if ($verbose);
+			}
+			else {
+				my $fileName = substr($f, length($dir_2) + 1);
+				my $key = ($windows ? lc($fileName) : $fileName);
+				$files_2{$key} = $fileName;
+				print "file in dir 2: $fileName\n" if ($verbose);
+			}
+		}
+	}
+}
+
+sub fixPath {
+	my $path = shift;
+	$path = File::Spec->rel2abs($path);
+	$path =~ s/\\/\//g;
+	$path =~ s/\/+$//;
+	return $path;
+}
+
+# getMD5:
+# returns an MD5 hashcode for a file
+# if $ignoreErrors is 1 and an error occurs reading the file, a warning will
+# be displayed and execution will continue with the function returning a value
+# of "ioerror"
+# if $suppressErrors is 1 and an error occurs reading the file, the function
+# will return "ioerror"
+sub getMD5 {
+	my $f = shift;
+	if ($suppressErrors) {
+		open(hFile, $f) or return "ioerror";
+	}
+	elsif ($ignoreErrors) {
+		my $errorFlag = 0;
+		open(hFile, $f) or $errorFlag = 1;
+		if ($errorFlag) {
+			warn "Error opening '$f': $!";
+			return "ioerror";
+		}
+	}
+	else {
+		open(hFile, $f) or die "Error opening '$f': $!";
+	}
+	binmode(hFile);
+	my $md5 = Digest::MD5->new->addfile(*hFile)->hexdigest;
+	close(hFile);
+	return $md5;
+}
+
+sub help {
+	print <<EOT;
+dirdiff: compare two directories for differing and unique files
+Usage: dirdiff [-ir] [-u <dir_number>] <dir_1> [dir_2]
+
+dirdiff compares two directories and returns information on files that differ
+and files that are unique to each directory.  If the second directory is
+omitted then it will default to the current directory.
+
+Options
+-i or --ignore      ignore file i/o errors
+-f or --full        print full paths for unique files (relative paths are
+                    printed by default)
+-r or --recurse     recurse subdirectories
+-s or --suppress    ignore and suppress file i/o errors
+-t or --trim        trim output, i.e. no headings
+-u # or --unique #  list only unique entries for the specified directory,
+                    1 or 2
+-v or --verbose     enable verbose output
+EOT
+	exit 1;
+}

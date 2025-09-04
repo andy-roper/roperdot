@@ -1,0 +1,32 @@
+# ip number
+regexp=\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}
+colours="\033[38;5;168m"
+=======
+# ***
+regexp=\*\*\*
+colours="\033[01;38;5;71m"
+=======
+# +++
+regexp=\+\+\+
+colours="\033[38;5;71m"
+=======
+# mail address
+regexp=\S+\@[\w\-\.]+
+colours="\033[01;38;5;215m"
+=======
+# Signoff
+regexp=Signoff
+colours="\033[01;38;5;203m"
+=======
+# Signon
+regexp=Signon
+colours="\033[01;38;5;71m"
+=======
+# everything in parentheses
+regexp=\(.+?\)
+colours="\033[38;5;71m"
+count=more
+=======
+# channel name
+regexp=\#[\w\-\.]+
+colours="\033[01;38;5;67m"

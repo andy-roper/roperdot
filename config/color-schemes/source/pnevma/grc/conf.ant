@@ -1,0 +1,46 @@
+# ant grc colorizer configuration
+# BUILD FAILED
+regexp=BUILD FAILED
+colours="\033[01;38;5;138m"
+count=more
+==============
+# BUILD SUCCESSFUL
+regexp=^BUILD SUCCESSFUL
+colours="\033[01;38;5;144m"
+count=more
+==============
+# Total time
+regexp=^(Total time: )([\d]+.*)$
+colours="\033[38;5;180m","\033[01;38;5;182m"
+count=more
+===============
+# some error
+regexp=[\d]+ error[s]?
+colours="\033[38;5;138m"
+count=more
+==============
+# some warning
+regexp=[\d]+ warning[s]?
+colours="\033[38;5;180m"
+count=more
+===============
+# some error
+regexp=[Ee]rror:
+colours="\033[38;5;138m"
+count=more
+==============
+# some warning
+regexp=[Ww]arning:
+colours="\033[38;5;180m"
+count=more
+==============
+# project name
+regexp=^[^:\s]+:$
+colours="\033[38;5;144m"
+count=more
+==============
+# products
+regexp=[^/]+\.[ewrj]ar$
+colours="\033[38;5;110m"
+count=more
+

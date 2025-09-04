@@ -1,0 +1,47 @@
+# DateTime
+regexp=\s(\w{3})\s(\w{3})\s+(\d{1,2})\s(\d+:\d+)\s
+colours=default,default,default,default,"\033[38;5;37m"
+=====
+# DateTime end
+regexp=\s-\s(\d+:\d+)
+colours=default,"\033[38;5;168m"
+=====
+# DateTime - down
+regexp=\s-\s(down)
+colours=default,"\033[38;5;203m"
+=====
+# DateTime - crash
+regexp=\s-\s(crash)
+colours=default,"\033[38;5;248;48;5;203m"
+=====
+# still logged in
+regexp=still logged in
+colours="\033[01;38;5;248;48;5;37m"
+=====
+# still running
+regexp=still running
+colours="\033[38;5;149m"
+=====
+# Time
+regexp=\((\d+\+)?(\d+):(\d+)\)
+colours=default,"\033[38;5;203m","\033[38;5;215m","\033[38;5;71m"
+=====
+# pts
+regexp=\s(pts[\S]+)
+colours=default,"\033[38;5;71m"
+=====
+# tty
+regexp=\s(tty\d)
+colours=default,"\033[38;5;67m"
+=====
+# reboot
+regexp=^reboot\s+system boot
+colours="\033[38;5;203m"
+=====
+# Third column IP
+regexp=(?:\s|\()(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(?:\s|\))
+colours=default,"\033[01;38;5;203m"
+=====
+# Third column local
+regexp=(?:\s|\()(\:0)(?:\s|\))
+colours=default,"\033[38;5;37m"

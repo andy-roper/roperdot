@@ -1,0 +1,35 @@
+#
+# Description: Install script for Starship
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+. "${ROPERDOT_DIR}/source-scripts/input-functions"
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
+if [[ -e ~/.zshrc ]]; then
+	if grep starship ~/.zshrc >/dev/null; then
+		:
+	else
+		askstarship=true
+	fi
+else
+	askstarship=true
+fi
+if [[ -n $askstarship ]] && ask_yn_n "Install starship and use recommended prompt" y; then
+	install_script="$(mktemp ${TMPDIR:-/tmp}/tempXXXXXX)"
+	mv "$install_script" "$install_script.sh"
+	install_script="$install_script.sh"
+    get-web-file https://starship.rs/install.sh "${install_script}"
+    chmod +x "${install_script}"
+    [[ -d ~/.local/bin ]] || mkdir -p ~/.local/bin
+    sh "${install_script}" -y -b ~/.local/bin
+    rm "${install_script}"
+    [[ -d ~/.config/starship ]] || mkdir -p ~/.config/starship
+    cp "${ROPERDOT_DIR}/config/apps/starship/"* ~/.config/starship
+    
+    if ! grep -q "starship init zsh" ~/.zshrc 2>/dev/null; then
+        echo 'eval "$(starship init zsh)"' >> ~/.zshrc
+    fi
+fi

@@ -1,0 +1,12 @@
+#
+# Description: Install script for Python 3 setuptools
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+if [[ -n "$has_sudo" ]] && command -v python3 >/dev/null 2>&1 && command -v apt >/dev/null 2>&1; then
+	sudo apt install python3-setuptools -y
+else
+	echo "User lacks sudo and/or python3 or apt aren't present; aborting install of python3-setuptools"
+fi

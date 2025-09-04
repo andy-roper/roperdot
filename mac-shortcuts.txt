@@ -1,0 +1,243 @@
+⌘C: Copy selected item
+⌘V: Paste from clipboard
+⌘X: Cut selected item
+⌘Z: Undo last action
+⌘⇧Z: Redo last undone action
+⌘A: Select all items
+⌘S: Save current document
+⌘O: Open file or document
+⌘N: Create new document or window
+⌘W: Close current window or tab
+⌘Q: Quit application
+⌘T: Open new tab
+⌘⇧T: Reopen recently closed tab
+⌘R: Refresh or reload
+⌘P: Print current document
+⌘F: Find in current document or page
+⌘G: Find next occurrence
+⌘⇧G: Find previous occurrence
+⌘H: Hide current application
+⌘⌥H: Hide all other applications
+⌘M: Minimize current window
+⌘⌥M: Minimize all windows
+⌘`: Switch between windows of current application
+⌘⇥: Switch between applications
+⌘⇧⇥: Switch between applications in reverse order
+⌘⌃Q: Lock screen immediately
+⌘⌃⏏: Restart computer
+⌘⌥⏏: Sleep computer
+⌘⌃⌥⏏: Shutdown computer
+⌘⇧3: Take screenshot of entire screen
+⌘⇧4: Take screenshot of selected area
+⌘⇧4 then Spacebar: Take screenshot of specific window
+⌘⇧5: Open screenshot and screen recording options
+⌘⇧3⌃: Copy screenshot of entire screen to clipboard
+⌘⇧4⌃: Copy screenshot of selected area to clipboard
+⌘⇧4⌃ then Spacebar: Copy screenshot of window to clipboard
+⌘Space: Open Spotlight search
+⌘⌥Space: Open Finder search window
+⌘⇧A: Open Applications folder in Finder
+⌘⇧U: Open Utilities folder in Finder
+⌘⇧H: Open Home folder in Finder
+⌘⇧D: Open Desktop folder in Finder
+⌘⇧O: Open Documents folder in Finder
+⌘⇧K: Open Network in Finder
+⌘⇧C: Open Computer view in Finder
+⌘⇧G: Go to folder dialog in Finder
+⌘↑: Go to parent folder in Finder
+⌘↓: Open selected item in Finder
+⌘[: Go back in Finder
+⌘]: Go forward in Finder
+⌘1: View as icons in Finder
+⌘2: View as list in Finder
+⌘3: View as columns in Finder
+⌘4: View as gallery in Finder
+⌘⌥T: Toggle toolbar in Finder
+⌘/: Toggle status bar in Finder
+⌘J: Show View Options in Finder
+⌘⇧.: Toggle hidden files and folders in Finder
+⌘I: Get info for selected item
+⌘⌥I: Show Inspector for selected item
+⌘D: Duplicate selected item
+⌘L: Make alias of selected item
+⌘R: Show original of alias
+⌘⌫: Move to Trash
+⌘⇧⌫: Empty Trash
+⌘⇧⌫⌥: Empty Trash without confirmation
+⌘Y: Quick Look selected item
+⌘⌃F: Enter full screen mode
+⌘F3: Show Desktop
+F3: Show Mission Control
+F4: Show Launchpad
+F11: Show Desktop (alternative)
+F12: Show Dashboard (if enabled)
+⌃←: Move to left Space/Desktop
+⌃→: Move to right Space/Desktop
+⌃↑: Show Mission Control
+⌃↓: Show application windows
+⌃F2: Move focus to menu bar
+⌃F3: Move focus to Dock
+⌃F4: Move focus to active window or next window
+⌃F5: Move focus to window toolbar
+⌃F6: Move focus to floating window
+⌃F7: Move focus to any control
+⌃F8: Move focus to status menu in menu bar
+⌘⌥D: Show or hide Dock
+⌘⌥⌃T: Add selected item to Dock (Finder)
+⌘,: Open application preferences
+⌘⇧?: Open Help menu
+⌘K: Connect to server (Finder)
+⌘⇧K: Go to Network (Finder)
+⌘E: Eject selected disk or volume
+⌘⇧E: Eject all removable media
+⌘⌥Esc: Force quit applications dialog
+⌘⇧⌥Esc: Force quit front application
+⌘⇧Q: Log out current user
+⌘⇧⌥Q: Log out current user without confirmation
+⌘B: Bold text
+⌘I: Italic text
+⌘U: Underline text
+⌘T: Show/hide Character Viewer
+⌘⌥T: Show/hide Special Characters
+⌘;: Check spelling and grammar
+⌘': Find misspelled word
+⌘⌥↑: Move to beginning of current paragraph
+⌘⌥↓: Move to end of current paragraph
+⌘←: Move to beginning of current line
+⌘→: Move to end of current line
+⌘↑: Move to beginning of document
+⌘↓: Move to end of document
+⌘⇧←: Select to beginning of current line
+⌘⇧→: Select to end of current line
+⌘⇧↑: Select to beginning of document
+⌘⇧↓: Select to end of document
+⌘⌫: Delete to beginning of line
+⌘⌦: Delete to end of line
+⌥⌫: Delete previous word
+⌥⌦: Delete next word
+⌘+: Zoom in
+⌘-: Zoom out
+⌘0: Actual size/reset zoom
+⌘=: Zoom in (alternative)
+⌘⇧=: Zoom in (alternative)
+Fn→: Forward delete
+Fn←: Home
+Fn→: End
+Fn↑: Page up
+Fn↓: Page down
+⌘⌥F5: VoiceOver on/off
+⌘F5: Turn VoiceOver on/off (alternative)
+⌥⌘8: Zoom on/off
+⌥⌘+: Zoom in
+⌥⌘-: Zoom out
+⌃⌥⌘8: Invert colors
+⌘⌥5: Turn Switch Control on/off
+⌘⌥F5: Accessibility Options
+⌘⌃Space: Show Character Viewer
+⌘⌃A: Show Accessibility options
+⌘⌃D: Look up word definition
+⌘⌃T: Add to Reading List (Safari)
+⌘⌃1: Sort by name (Finder)
+⌘⌃2: Sort by kind (Finder)
+⌘⌃3: Sort by date last opened (Finder)
+⌘⌃4: Sort by date added (Finder)
+⌘⌃5: Sort by date modified (Finder)
+⌘⌃6: Sort by size (Finder)
+⌘Enter: Rename selected item (Finder)
+⌘⇧N: Create new folder (Finder)
+⌘⌥N: Create new Smart Folder (Finder)
+⌘⇧⌫: Empty Trash
+⌘⌥⇧⌫: Empty Trash without confirmation
+⌘⌥V: Move (cut and paste)
+⌘⌥C: Copy pathname
+⌘⌥⇧C: Copy pathname as POSIX path
+⌘⌥W: Close all windows
+⌘⌥N: New document in same application
+⌘⌥S: Save As
+⌘⌥⇧S: Export As
+⌘⇧P: Page setup
+⌘⌥P: Print options and supplies
+⌘⇧⌥P: PDF options
+⌥Click: Detailed information (various contexts)
+⌘Click: Open in new tab/window (various contexts)
+⇧Click: Open in new window (various contexts)
+⌘⇧Click: Open in new window and make active
+⌘⌥Click: Download linked file (Safari)
+⌘Return: Open in new tab (Safari)
+⌘⇧Return: Open in new window (Safari)
+⌘L: Go to address bar (Safari)
+⌘R: Reload page (Safari)
+⌘⇧R: Reload page ignoring cache (Safari)
+⌘D: Add bookmark (Safari)
+⌘⇧D: Add all tabs to bookmarks (Safari)
+⌘⇧L: Show sidebar (Safari)
+⌘⌥B: Show bookmarks (Safari)
+⌘⌥1: Show Top Sites (Safari)
+⌘⌥2: Show History (Safari)
+⌘Y: Show History (Safari)
+⌘⇧H: Show home page (Safari)
+⌘.: Stop loading page (Safari)
+⌘[: Back (Safari)
+⌘]: Forward (Safari)
+⌘⇧[: Previous tab (Safari)
+⌘⇧]: Next tab (Safari)
+⌘1-9: Switch to tab number (Safari)
+⌘9: Switch to last tab (Safari)
+⌘⇧\: Show all tabs (Safari)
+⌘⌥F: Search page (Safari)
+⌘E: Use selection for find (Safari)
+⌘J: Jump to selection (Safari)
+⌘⌥E: Empty caches (Safari)
+⌘⇧Delete: Clear history (Safari)
+⌘⇧K: Enable Private Browsing (Safari)
+⌃Tab: Move to next control
+⌃⇧Tab: Move to previous control
+⌥F4: Close window (Windows-style)
+⌃A: Move to beginning of line (command line)
+⌃E: Move to end of line (command line)
+⌃K: Delete from cursor to end of line (command line)
+⌃U: Delete entire line (command line)
+⌃W: Delete word before cursor (command line)
+⌃L: Clear screen (command line)
+⌃C: Cancel current command (command line)
+⌃D: Exit shell or delete character (command line)
+⌃R: Search command history (command line)
+⌃P: Previous command (command line)
+⌃N: Next command (command line)
+⌃T: Transpose characters (command line)
+⌃Y: Paste previously cut text (command line)
+⌃Z: Suspend process (command line)
+⌃⇧U: Speak selected text
+⌃⌥⌘S: Turn screen sharing on/off
+⌘⇧5⌃: Start screen recording
+⌘⇧A: Open Applications folder
+⌘⇧L: Open Downloads folder
+⌘⇧F: Open Recents
+⌘⇧T: Add to Dock
+⌃⌥⌘T: Hide/show toolbar
+⌘⌥S: Hide/show sidebar
+⌘⇧⌥V: Paste and Match Style
+⌘⌥⇧N: New document with current selection
+⌘⌥⇧⌫: Secure empty trash
+⌃⇧⏏: Put displays to sleep
+F1: Decrease brightness
+F2: Increase brightness
+F3: Mission Control
+F4: Launchpad
+F5: Decrease keyboard brightness
+F6: Increase keyboard brightness
+F7: Previous track/rewind
+F8: Play/pause
+F9: Next track/fast forward
+F10: Mute
+F11: Decrease volume
+F12: Increase volume
+⌘⌥⇧V: Paste without formatting
+⌘⌥L: Downloads folder
+⌘⌥⇧D: Show/hide Dock
+⌘⌃Space: Character Viewer
+⌥Space: Spotlight search in Finder
+⌥⌘Space: Finder search window
+⌃⇧⌘3: Screenshot to clipboard
+⌃⇥: Forward through controls
+⌃⇧⇥: Backward through controls

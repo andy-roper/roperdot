@@ -1,0 +1,487 @@
+#!/usr/bin/env perl
+# Description: Generates color files for a color scheme
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+
+use strict;
+use File::Copy "cp";
+use File::Path qw(make_path);
+
+my $scheme = $ARGV[0];
+help() if (!$scheme);
+my $backgroundMode = $ARGV[1];
+if ($backgroundMode eq "") {
+	$backgroundMode = "dark";
+}
+elsif ($backgroundMode ne "dark" && $backgroundMode ne "light") {
+	help();
+}
+$scheme =~ s/^.*\///g;
+my $roperdotdir = $ENV{'ROPERDOT_DIR'};
+my $schemedir = "$roperdotdir/config/color-schemes/source/$scheme";
+if (! -d $schemedir) {
+	print "Error: directory $schemedir not found\n";
+	exit 1;
+}
+print "Generating $scheme scheme\n";
+my $term = $ENV{'TERM'};
+my @colorNames = ("BLACK", "RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN", "WHITE");
+my %ansiColorValue;
+my %rgbColorValue;
+my %decRGBColorValue;
+
+my $colorDefFile = "${schemedir}/color-defs.txt";
+open hFile, $colorDefFile;
+while (<hFile>) {
+	chomp;
+	next if ($_ !~ /^(\S+)\s+(\d+)/);
+	my $name = uc($1);
+	my $color = $2;
+	$ansiColorValue{$name} = $color;
+}
+close hFile;
+my $xresourcesFile = "${schemedir}/.Xresources";
+open hFile, $xresourcesFile;
+while (<hFile>) {
+	chomp;
+	next if ($_ !~ /^\*\.(.*):\s*#(.{6})/);
+	my $name = $1;
+	my $color = $2;
+	if ($name =~ /^color(\d+)/) {
+		my $index = $1;
+		if ($index > 7) {
+			$name = "BR" . $colorNames[$index - 8];
+		}
+		else {
+			$name = $colorNames[$index];
+		}
+	}
+	elsif ($name eq "foreground" || $name eq "background" || $name eq "cursorColor") {
+		$name = uc $name;
+	}
+	else {
+		next;
+	}
+	$rgbColorValue{$name} = $color;
+	$color =~ /^(..)(..)(..)$/;
+	$decRGBColorValue{$name} = hex($1) . "," . hex($2) . "," . hex($3);
+}
+close hFile;
+make_path("$schemedir/grc");
+generateDircolors();
+generateGrcConfigs();
+generateColorEnvFile();
+generatePygmentizeColorEnvFile();
+generateGitColors();
+generateInitialize();
+generateVSCodeSettings();
+generatePuttyReg();
+generateDconf();
+exit 0;
+
+sub parseDircolorString {
+	my $str = shift;
+	my $fg;
+	if ($str =~ /^COLOR_(.*)\s+on\s+COLOR_(.*)$/) {
+		my $fgName = $1;
+		my $bgName = $2;
+		$fg = $ansiColorValue{$fgName};
+		if (!$fg) {
+			print "Color $fgName not defined\n";
+			exit 1;
+		}
+		my $bg = $ansiColorValue{$bgName};
+		if (!$bg) {
+			print "Color $bgName not defined\n";
+			exit 1;
+		}
+		return "38;5;$fg;48;5;$bg";
+	}
+	elsif ($str =~ /^COLOR_(.*)/) {
+		my $fgName = $1;
+		$fg = $ansiColorValue{$fgName};
+		if (!$fg) {
+			print "Color $fgName not defined\n";
+			exit 1;
+		}
+	}
+	else {
+		$fg = $str;
+	}
+	if ($fg < 10) {
+		return $fg;
+	}
+	return "38;5;$fg";
+}
+
+sub printExtColor {
+	my $ext = shift;
+	my $color = shift;
+	print outputFile "$ext $color\n";
+	my $ucext = uc($ext);
+	if ($ext ne $ucext) {
+		print outputFile "$ucext $color\n";
+	}
+	my $lcext = lc($ext);
+	if ($ext ne $lcext) {
+		print outputFile "$lcext $color\n";
+	}
+}
+
+# Read ~/roperdot/dircolors_source.txt and create ~/roperdot/config/color-schemes/<scheme>/.dircolors from it
+sub generateDircolors {
+	open outputFile, ">$schemedir/.dircolors";
+	print outputFile "# $term\n# ROPERDOT\n";
+	open hFile, "$roperdotdir/dircolors_source.txt";
+	my $color;
+	while (<hFile>) {
+		chomp;
+		next if ($_ =~ /^\s*(#|category)/);
+		$_ =~ s/^\s+|\s+$//g;
+		next if ($_ eq "");
+		# pass as-is
+		if ($_ =~ /^\s*(COLOR|TERM|OPTIONS|EIGHTBIT)/) {
+			print outputFile "$_\n";
+		}
+		# text color definition
+		elsif ($_ =~ /^\s*color\s*:\s*"(.*)"/) {
+			$color = parseDircolorString($1);
+		}
+		# numeric color definition
+		elsif ($_ =~ /^\s*color\s*:\s*(\d+)/) {
+			$color = $1;
+		}
+		# inline color
+		elsif ($_ =~ /^(\S+)\s+color="(.*)"/) {
+			printExtColor($1, parseDircolorString($2));
+		}
+		# process entries like "NORMAL 00"
+		elsif ($_ =~ /^(\S+)\s*+"([^#]*)"/ || $_ =~ /^(\S+)\s+([^# ]+)/) {
+			my $str = $1;
+			my $thisColor = parseDircolorString($2);
+			print outputFile "$str $thisColor\n";
+		}
+		else {
+			$_ =~ s/\s*#.*//g;
+			printExtColor($_, $color);
+		}
+	}
+	close hFile;
+	close outputFile;
+}
+
+sub addToColorStr {
+	if ($_[0] eq "") {
+		$_[0] = $_[1];
+	}
+	else {
+		$_[0] .= ";" . $_[1];
+	}
+}
+
+# Read config files in ~/roperdot/config/apps/grc and create file for each in ~/roperdot/config/color-schemes/<scheme>/grc
+# Example colors to process:
+# default
+# previous
+# unchanged
+# bold magenta
+# bright_green
+# bold white on_red
+# on_cyan bold white
+# dark cyan
+# underline
+# underline green
+# blink bold red
+sub generateGrcConfigs {
+	my $dir = "$roperdotdir/config/apps/grc";
+	cp("$dir/grc.conf", "$schemedir/grc/grc.conf");
+	opendir(DIR, $dir);
+	my $f;
+	while ($f = readdir(DIR)) {
+		next if ($f !~ /^conf\./);
+		open outputFile, ">$schemedir/grc/$f";
+		open hFile, "$dir/$f";
+		while (<hFile>) {
+			chomp;
+			if ($_ =~ /^\s*colours=\s*(.*?)\s*$/) {
+				my @colors = split(/\s*,\s*/, $1);
+				my $colours = "";
+				foreach my $color (@colors) {
+					if ($color ne "default" && $color ne "previous" && $color ne "unchanged" && $color ne "underline") {
+						my $colorStr = "";
+						$color =~ s/dark//g;
+						if ($color =~ /bold/) {
+							$color =~ s/bold//g;
+							addToColorStr($colorStr, "01");
+						}
+						if ($color =~ /underline/) {
+							$color =~ s/underline//g;
+							addToColorStr($colorStr, "04");
+						}
+						if ($color =~ /blink/) {
+							$color =~ s/blink//g;
+							addToColorStr($colorStr, "05");
+						}
+						my $bgColor;
+						if ($color =~ /on_(\S+)/) {
+							# Making assumption that background isn't bright
+							$bgColor = "48;5;" . $ansiColorValue{uc($1)};
+							$color =~ s/on_\S+//g;
+						}
+						$color =~ s/^\s+|\s+$//g;
+						if ($color =~ /bright_(.*)/) {
+							addToColorStr($colorStr, "38;5;" . $ansiColorValue{"BR" . uc($1)});
+						}
+						else {
+							addToColorStr($colorStr, "38;5;" . $ansiColorValue{uc($color)});
+						}
+						if ($bgColor) {
+							addToColorStr($colorStr, $bgColor);
+						}
+						$color = "\"\\033[${colorStr}m\"";
+					}
+					$colours .= ($colours ? "," : "") . $color;
+				}
+				print outputFile "colours=$colours\n";
+			}
+			else {
+				print outputFile "$_\n";
+			}
+		}
+		close hFile;
+		close outputFile;
+	}
+	closedir(DIR);
+}
+
+# Create ~/roperdot/config/color-schemes/<scheme>/color-env-vars
+sub generateColorEnvFile {
+	open hFile, ">$schemedir/color-env-vars";
+	print hFile "# Env vars used by the prompt\n";
+	# Env vars for bash prompt: COLOR_blah="\\e[<ansi-color-def>m"
+	for my $colorName (keys %ansiColorValue) {
+		next if ($colorName eq "BACKGROUND" || $colorName eq "FOREGROUND");
+		print hFile "export COLOR_${colorName}=\"\\e[38;5;" . $ansiColorValue{$colorName} . "m\"\n";
+		print hFile "export COLOR_BG_${colorName}=\"\\e[48;5;" . $ansiColorValue{$colorName} . "m\"\n";
+	}
+	# Env vars for LESS_TERMCAP: COLOR_blah_CODE=<ansi-color-def>
+	print hFile "\n# Env vars used by LESS_TERMCAP\n";
+	for my $colorName (keys %ansiColorValue) {
+		next if ($colorName eq "BACKGROUND" || $colorName eq "FOREGROUND");
+		print hFile "export COLOR_${colorName}_CODE=\"38;5;" . $ansiColorValue{$colorName} . "\"\n";
+	}
+	close hFile;
+	# Env vars for pygmentize: COLOR_blah_RGB=rrggbb
+	print hFile "\n# Env vars used by pygmentize\n";
+	for my $colorName (keys %rgbColorValue) {
+		next if ($colorName eq "BACKGROUND" || $colorName eq "FOREGROUND");
+		print hFile "export COLOR_${colorName}_RGB=\"" . $rgbColorValue{$colorName} . "\"\n";
+	}
+	close hFile;
+}
+
+# Create ~/roperdot/config/color-schemes/<scheme>/common-color-env-vars
+sub generatePygmentizeColorEnvFile {
+	open hFile, ">$schemedir/common-color-env-vars";
+	print hFile "# Env vars used by pygmentize\n";
+	for my $colorName (keys %rgbColorValue) {
+		next if ($colorName eq "BACKGROUND" || $colorName eq "FOREGROUND");
+		print hFile "export COLOR_${colorName}_RGB=\"" . $rgbColorValue{$colorName} . "\"\n";
+	}
+	close hFile;
+}
+
+# Create ~/roperdot/config/color-schemes/<scheme>/.git-colors
+# Example colors:
+# green
+# bold red
+# bold white green
+# yellow reverse
+sub generateGitColors {
+	open hFile, "$roperdotdir/config/color-schemes/source/default/.git-colors";
+	open outputFile, ">$schemedir/.git-colors";
+	while (<hFile>) {
+		chomp;
+		if ($_ =~ /^(git config --global color.*?)\s+(.*?)\s*$/) {
+			my $command = $1;
+			my $str = $2;
+			$str =~ s/^"|"$//g;
+			$str =~ s/\s+/ /g;
+			my $reverse;
+			if ($str =~ /^(.*)(\s+reverse)$/i) {
+				$str = $1;
+				$reverse = $2;
+			}
+			my $processing = 1;
+			my $colorStr;
+			while ($processing) {
+				$str =~ s/^\s+|\s+$//g;
+				if ($str =~ /^(bold )?(\S+)(\s+.*)?$/) {
+					my $colorName = ($1 eq "" ? "" : "BR") . uc($2);
+					$str = $3;
+					$colorStr .= ($colorStr eq "" ? "" : " ") . $ansiColorValue{$colorName};
+				}
+				else {
+					$processing = 0;
+				}				
+			}
+			print outputFile "$command \"${colorStr}${reverse}\"\n"
+		}
+		else {
+			print outputFile "$_\n";
+		}
+	}
+	close hFile;
+	close outputFile;
+}
+
+sub generateInitialize() {
+	open hFile, ">$schemedir/initialize";
+	print hFile "export ROPERDOT_MC_SCHEME=$backgroundMode\n";
+	print hFile "export ROPERDOT_VI_BACKGROUND=$backgroundMode\n";
+	print hFile "BACKGROUND_COLOR=" . hexAndDec($rgbColorValue{"BACKGROUND"}) . "\n";
+	print hFile "FOREGROUND_COLOR=" . hexAndDec($rgbColorValue{"FOREGROUND"}) . "\n";
+	close hFile;
+}
+
+sub generateVSCodeSettings() {
+	make_path("$schemedir/VSCode");
+	open hFile, ">$schemedir/VSCode/settings.json";
+print hFile <<EOT;
+{
+	"workbench.colorCustomizations": {
+		"terminal.background": "#$rgbColorValue{'BACKGROUND'}",
+		"terminal.foreground": "#$rgbColorValue{'FOREGROUND'}",
+		"terminal.ansiBlack": "#$rgbColorValue{'BLACK'}",
+		"terminal.ansiRed": "#$rgbColorValue{'RED'}",
+		"terminal.ansiGreen": "#$rgbColorValue{'GREEN'}",
+		"terminal.ansiYellow": "#$rgbColorValue{'YELLOW'}",
+		"terminal.ansiBlue": "#$rgbColorValue{'BLUE'}",
+		"terminal.ansiMagenta": "#$rgbColorValue{'MAGENTA'}",
+		"terminal.ansiCyan": "#$rgbColorValue{'CYAN'}",
+		"terminal.ansiWhite": "#$rgbColorValue{'WHITE'}",
+		"terminal.ansiBrightBlack": "#$rgbColorValue{'BRBLACK'}",
+		"terminal.ansiBrightRed": "#$rgbColorValue{'BRRED'}",
+		"terminal.ansiBrightGreen": "#$rgbColorValue{'BRGREEN'}",
+		"terminal.ansiBrightYellow": "#$rgbColorValue{'BRYELLOW'}",
+		"terminal.ansiBrightBlue": "#$rgbColorValue{'BRBLUE'}",
+		"terminal.ansiBrightMagenta": "#$rgbColorValue{'BRMAGENTA'}",
+		"terminal.ansiBrightCyan": "#$rgbColorValue{'BRCYAN'}",
+		"terminal.ansiBrightWhite": "#$rgbColorValue{'BRWHITE'}"
+	},
+	"terminal.integrated.fontFamily": "Hack Nerd Font",
+	"terminal.integrated.fontSize": 13
+}
+EOT
+	close hFile;
+}
+
+sub generatePuttyReg() {
+	open hFile, ">$schemedir/putty.reg";
+print hFile <<EOT;
+Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\\Software\\SimonTatham\\PuTTY\\Sessions\\MySessionName]
+"Font"="Hack Nerd Font"
+"FontHeight"=dword:0000000b
+; Default Foreground
+"Colour0"="$decRGBColorValue{'FOREGROUND'}"
+; Default Bold Foreground
+"Colour1"="$decRGBColorValue{'FOREGROUND'}"
+; Default Background
+"Colour2"="$decRGBColorValue{'BACKGROUND'}"
+; Default Background
+"Colour3"="$decRGBColorValue{'BACKGROUND'}"
+; Cursor Text
+"Colour4"="$decRGBColorValue{'CURSORCOLOR'}"
+; Cursor Color
+"Colour5"="$decRGBColorValue{'FOREGROUND'}"
+; ANSI Black
+"Colour6"="$decRGBColorValue{'BLACK'}"
+; ANSI Black Bold
+"Colour7"="$decRGBColorValue{'BRBLACK'}"
+; ANSI Red
+"Colour8"="$decRGBColorValue{'RED'}"
+; ANSI Red Bold
+"Colour9"="$decRGBColorValue{'BRRED'}"
+; ANSI Green
+"Colour10"="$decRGBColorValue{'GREEN'}"
+; ANSI Green Bold
+"Colour11"="$decRGBColorValue{'BRGREEN'}"
+; ANSI Yellow
+"Colour12"="$decRGBColorValue{'YELLOW'}"
+; ANSI Yellow Bold
+"Colour13"="$decRGBColorValue{'BRYELLOW'}"
+; ANSI Blue
+"Colour14"="$decRGBColorValue{'BLUE'}"
+; ANSI Blue Bold
+"Colour15"="$decRGBColorValue{'BRBLUE'}"
+; ANSI Magenta
+"Colour16"="$decRGBColorValue{'MAGENTA'}"
+; ANSI Magenta Bold
+"Colour17"="$decRGBColorValue{'BRMAGENTA'}"
+; ANSI Cyan
+"Colour18"="$decRGBColorValue{'CYAN'}"
+; ANSI Cyan Bold
+"Colour19"="$decRGBColorValue{'BRCYAN'}"
+; ANSI White
+"Colour20"="$decRGBColorValue{'WHITE'}"
+; ANSI White Bold
+"Colour21"="$decRGBColorValue{'BRWHITE'}"
+EOT
+	close hFile;
+}
+
+sub generateDconf() {
+	open hFile, ">$schemedir/gnome-terminal.dconf";
+print hFile <<EOT;
+[:a7f25ec1-eb5f-464a-a475-1c2cb924d54f]
+visible-name='roperdot'
+foreground-color='rgb($decRGBColorValue{'FOREGROUND'})'
+background-color='rgb($decRGBColorValue{'BACKGROUND'})'
+use-theme-colors=false
+palette=['rgb($decRGBColorValue{'BLACK'})', 'rgb($decRGBColorValue{'RED'})', 'rgb($decRGBColorValue{'GREEN'})', 'rgb($decRGBColorValue{'YELLOW'})', 'rgb($decRGBColorValue{'BLUE'})', 'rgb($decRGBColorValue{'MAGENTA'})', 'rgb($decRGBColorValue{'CYAN'})', 'rgb($decRGBColorValue{'WHITE'})', 'rgb($decRGBColorValue{'BRBLACK'})', 'rgb($decRGBColorValue{'BRRED'})', 'rgb($decRGBColorValue{'BRGREEN'})', 'rgb($decRGBColorValue{'BRYELLOW'})', 'rgb($decRGBColorValue{'BRBLUE'})', 'rgb($decRGBColorValue{'BRMAGENTA'})', 'rgb($decRGBColorValue{'BRCYAN'})', 'rgb($decRGBColorValue{'BRWHITE'})']
+use-system-font=false
+font='Hack Nerd Font 11'
+use-theme-transparency=false
+use-transparent-background=true
+background-transparency-percent=3
+default-size-rows=36
+default-size-columns=132
+
+[/]
+list=['a7f25ec1-eb5f-464a-a475-1c2cb924d54f']
+default='a7f25ec1-eb5f-464a-a475-1c2cb924d54f'
+EOT
+	close hFile;
+}
+
+sub hexAndDec() {
+	my $value = shift;
+	if ($value =~ /^(..)(..)(..)$/) {
+		$value .= " (" . hex($1) . " " . hex($2) . " " . hex($3) . ")";
+	}
+	return '"' . $value . '"';
+}
+
+sub help {
+	print <<EOT;
+gen-color-files: generate files for a color scheme
+Usage: gen-color-files <scheme-name> [dark|light]
+
+gen-color-files will read the .Xresources and color-defs.txt files in the named
+scheme directory in roperdotdir/config/color-schemes/source and create color
+configuration files based on them including:
+
+* initialize, which is sourced by choose-scheme
+* color-env-vars, which is used by initialize_colors
+* .dircolors
+* grc configuration files
+* common-color-env-vars
+* .git-colors
+* Visual Studio Code settings.json
+* gnome-terminal.dconf
+* putty.reg
+EOT
+	exit 0;
+}

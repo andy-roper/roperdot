@@ -1,0 +1,40 @@
+# Fields
+regexp=(?:IO\s)?\S+:\s
+colours="\033[38;5;37m"
+-
+# Filename
+regexp=File: ‘(\S+)’
+colours=unchanged,"\033[01;38;5;m"
+-
+# File Type
+regexp=IO\sBlock:\s\d+\s+(.*)$
+colours=unchanged,"\033[01;38;5;144m"
+-
+# SELinux from conf.ls
+regexp=(\w+_u):(\w+_r):(\w+_t):(\w\d)
+colours=default,"\033[38;5;144m","\033[38;5;222m","\033[38;5;37m","\033[38;5;189m"
+-
+# Permission Numbers
+regexp=\((\d)(\d)(\d)(\d)\/
+colours=default,"\033[01;38;5;254m","\033[38;5;187m","\033[38;5;222m","\033[38;5;217m"
+-
+# -rwxrwxrwx ============================ from conf.ls
+# File Type
+regexp=(-|([bcCdDlMnpPs?]))(?=[-r][-w][-xsStT][-r][-w][-xsStT][-r][-w][-xsStT])
+colours=unchanged,unchanged,"\033[01;38;5;254m"
+-
+# owner rwx
+regexp=(?<=[-bcCdDlMnpPs?])(-|(r))(-|(w))(-|([xsStT]))(?=[-r][-w][-xsStT][-r][-w][-xsStT])
+colours=unchanged,unchanged,"\033[38;5;187m",unchanged,"\033[38;5;187m",unchanged,"\033[38;5;187m"
+-
+# group rwx
+regexp=(?<=[-bcCdDlMnpPs?][-r][-w][-xsStT])(-|(r))(-|(w))(-|([xsStT]))(?=[-r][-w][-xsStT])
+colours=unchanged,unchanged,"\033[38;5;222m",unchanged,"\033[38;5;222m",unchanged,"\033[38;5;222m"
+-
+# other rwx
+regexp=(?<=[-bcCdDlMnpPs?][-r][-w][-xsStT][-r][-w][-xsStT])(-|(r))(-|(w))(-|([xsStT]))
+colours=unchanged,unchanged,"\033[38;5;217m",unchanged,"\033[38;5;217m",unchanged,"\033[38;5;217m"
+-
+# sStT all
+regexp=(?<=[-bcCdDlMnpPs?])[-r][-w]([sStT])[-r][-w]([sStT])[-r][-w]([sStT])
+colours=unchanged,"\033[01;38;5;144m","\033[01;38;5;222m","\033[01;38;5;174m"

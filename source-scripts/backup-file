@@ -1,0 +1,15 @@
+backup_file () {
+	if [[ -f "$1" ]]; then
+		if [[ -f "$1.bak" ]]; then
+			local num=1
+			while [[ -e "$1.bak${num}" ]]; do
+				(( ++num ))
+			done
+			echo "Backing up $1 to $1.bak${num}"
+			mv -f "$1" "$1.bak${num}" >/dev/null
+		else
+			echo "Backing up $1 to $1.bak"
+			mv -f "$1" "$1.bak" >/dev/null
+		fi
+	fi
+}

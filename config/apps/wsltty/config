@@ -1,0 +1,7 @@
+BoldAsFont=-1
+ThemeFile=hybrid
+Font=Hack Nerd Font
+Columns=150
+Rows=45
+FontHeight=11
+Term=xterm-256color

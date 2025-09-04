@@ -1,0 +1,24 @@
+#
+# Description: Install script for nvm
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+source "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
+# Back up profile files
+# roperdot-bootstrap will manage initializing nvm instead of the profile
+profile_files=(.profile .bashrc .bash_profile .zshrc)
+for f in "${profile_files[@]}"; do
+	[[ -f "$HOME/$f" ]] && cp -f "$HOME/$f" "$HOME/$f.bak"
+done
+
+print-web-file https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh > /tmp/install-nvm.sh
+bash /tmp/install-nvm.sh
+rm /tmp/install-nvm.sh >/dev/null
+
+# restore profile files
+for f in "${profile_files[@]}"; do
+	[[ -f "$HOME/$f.bak" ]] && mv -f "$HOME/$f.bak" "$HOME/$f"
+done

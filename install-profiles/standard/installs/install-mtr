@@ -1,0 +1,30 @@
+#
+# Description: Install script for mtr
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+# http://www.bitwizard.nl/mtr/
+
+if [[ -z "$has_sudo" ]]; then
+	echo "mtr requires sudo authority; aborting install"
+	exit 1
+fi
+LATEST_VERSION=$(brew info mtr | head -1 | sed 's/.*: \([0-9][^ ]*\).*/\1/')
+brew install mtr
+mtrlocation=$(brew info mtr | grep Cellar | sed -e 's/ (.*//')
+sudo chmod 4755 $mtrlocation/sbin/mtr
+sudo chown root $mtrlocation/sbin/mtr
+binpath=$(command -v mtr)
+mkdir -p "$HOME/.local/share/applications"
+cat << EOT > "$HOME/.local/share/applications/mtr.desktop"
+[Desktop Entry]
+Encoding=UTF-8
+Version=$LATEST_VERSION
+Name=mtr
+Type=Application
+Exec=${binpath}
+Terminal=false
+Categories=Internet;Network
+EOT

@@ -1,0 +1,27 @@
+# Alternative approach
+# [[ -n $(vim --version | grep "+TERMGUICOLORS") ]] && ROPERDOT_VI_TERMGUICOLORS_SUPPORTED=true || ROPERDOT_VI_TERMGUICOLORS_SUPPORTED=false
+case $ROPERDOT_OS_ENV in
+	darwin)
+		ROPERDOT_VI_BIN=$(command -v vim)
+		if [[ -n $ROPERDOT_VI_BIN ]]; then
+			[[ "$ROPERDOT_VI_BIN" = /usr/local/bin/vim ]] && ROPERDOT_VI_TERMGUICOLORS_SUPPORTED=true || ROPERDOT_VI_TERMGUICOLORS_SUPPORTED=false
+		else
+			ROPERDOT_VI_BIN=$(command -v vi)
+			ROPERDOT_VI_TERMGUICOLORS_SUPPORTED=false
+		fi
+		;;
+	mint|ubuntu)
+		ROPERDOT_VI_BIN=$(readlink -f /usr/bin/vim)
+		[[ $ROPERDOT_VI_BIN = /usr/bin/vim.basic ]] && ROPERDOT_VI_TERMGUICOLORS_SUPPORTED=true || ROPERDOT_VI_TERMGUICOLORS_SUPPORTED=false
+		;;
+	centos|rhel)
+		ROPERDOT_VI_BIN=$(command -v nvim)
+		if [[ -n $ROPERDOT_VI_BIN ]]; then
+			ROPERDOT_VI_TERMGUICOLORS_SUPPORTED=true
+		else
+			ROPERDOT_VI_BIN=$(command -v vi)
+			ROPERDOT_VI_TERMGUICOLORS_SUPPORTED=false
+		fi
+		;;
+esac
+export ROPERDOT_VI_BIN ROPERDOT_VI_TERMGUICOLORS_SUPPORTED

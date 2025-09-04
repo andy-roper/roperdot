@@ -1,0 +1,119 @@
+#!/usr/bin/env python3
+"""
+Description: Generates random numbers using dice notation
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+"""
+
+import sys, rolldice
+
+def help():
+	print('''
+roll: generate random numbers using dice notation
+Usage: roll [-n <repetitions>] <expression>
+
+roll uses the py-rolldice module to evaluate dice notation strings from the
+command prompt.
+
+py-rolldice: https://github.com/Fiona1729/py-rolldice
+CritDice: https://www.critdice.com/roll-advanced-dice/
+
+If the -n switch is used, the dice notation expression will be evaluated
+the number of times indicated by the switch.
+
+Note: expressions containing "<" or ">" must be quoted to prevent redirection.
+
+Sample expressions using CritDice syntax:
+d6: roll a 6-sided die
+d% or d100: roll percentile dice
+4d8+12: roll 4 8-sided dice and add 12
+d10+d8: roll a 10-sided die plus an 8-sided die
+d10**3: roll a d10 and cube the result
+
+Fate/Fudge Dice (F)
+dF: roll a Fate/Fudge die
+6dF: roll 6 Fate/Fudge dice
+
+Keep Highest (K)
+2d20K: roll 2 d20s and keep the highest roll
+4d6K3: roll 4 d6s and keep the highest 3 rolls
+
+Keep Lowest (k)
+2d20k: roll 2 d20s and keep the lowest roll
+10d6k4: roll 10 d6s and keep the lowest 4 rolls
+
+Drop Highest (X)
+2d12X: roll 2 d12s and drop the highest roll
+8d100X4: roll 8 d100s and drop the highest 4 rolls
+
+Drop Lowest (x)
+3d12x: roll 3 d12s and drop the lowest roll
+6d100x3: roll 6 d100s and drop the lowest 3 rolls
+
+Reroll (R, r)
+R: reroll a die any number of times until the condition is no longer true
+r: reroll a die only once if the condition is not met
+4d6R: roll 4d6 and reroll any 1s
+4d6R6: roll 4d6 and reroll any 6s
+8d12R<4: roll 8d12 and reroll any dice that roll 4 or lower
+6d6r: roll 6d6 and reroll any 1s once
+
+Exploding Dice (!)
+When a die explodes, its value gets added to the total and then it\'s rolled again.
+Each roll is added to the final result and a die can explode multiple times.
+3d6!: roll 3d6 and explode when a 6 is rolled
+3d6!>5: roll 3d6 and explode when a 5 or 6 is rolled
+
+Compounding Dice (!!)
+This is similar to exploding dice, except any additional exploding rolls for a die
+will be added together and presented as a single roll in the results.
+3d6!!: roll 3d6 and compound every time a 6 is rolled
+3d6!!>5: roll 3d6 and explode when a 5 or 6 is rolled
+
+Penetrating Dice (!p)
+This is similar to exploding dice, except each additional exploding roll is added
+with a -1 modifier.
+3d6!p: roll 3d6 and penetrate every time a 6 is rolled
+3d6!p>5: roll 3d6 and penetrate everything a 5 or 6 is rolled
+
+Count Successes (<, >)
+Specify criteria for counting successes on rolled dice. Instead of the dice rolls
+being added together for the total result, the number of successes will be shown.
+8d6>4: roll 8d6 and count one success for each roll of 4 or higher
+10d12<6: roll 10d12 and count one success for each roll of 6 or lower
+
+Count Failures (f)
+If an f and an expression follows a success criterion, then each failure will
+subtract 1 from the success count.
+8d6>4f<1: roll 8 d6s; count one success for each roll of 4 or higher and subtract
+one failure for each roll of 1
+10d12<6f>10: roll 10 d12s and count one success for each roll of 6 or lower and
+subtract one failire for each roll of 10 or higher
+
+Individual Modifers (a, s, m):
+Add, subtract or multiply each individual dice roll.
+2d20a3: add three to each roll
+4d12s4: subtract four from each roll
+6d4m3: multiply each roll by 3
+'''[1:-1])
+	quit()
+
+args = sys.argv[1:]
+if len(args) == 0 or args[0] in ['--help', '-?', '-h']:
+	help()
+
+count = 1
+if args[0] == '-n':
+	args.pop(0)
+	if len(args) == 0:
+		help()
+	count = int(args.pop(0))
+
+argStr = ''
+while len(args) > 0:
+	argStr += ' ' + args.pop(0)
+while (count > 0):
+	result, explanation = rolldice.roll_dice(argStr)
+	print(result)
+	count -= 1

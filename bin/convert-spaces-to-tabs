@@ -1,0 +1,49 @@
+#!/usr/bin/env perl
+# Description: Converts pairs of spaces to tabs or vice versa
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+
+sub help {
+	print <<EOT;
+convert-spaces-to-tabs: convert pairs of spaces to tabs or vice versa
+
+convert-spaces-to-tabs will translate piped text. If the text contains lines
+that begin with spaces, pairs of leading spaces will be converted to tabs.
+If the text contains lines that begin with tabs, each leading tab will be
+converted to two spaces.
+EOT
+	exit 0;
+}
+
+sub spaceToTab {
+	while (/^(\t*)  /) {
+		s/^(\t*)  /\1\t/;
+	}
+	return $_;
+}
+
+sub tabToSpace {
+	while (/^((?:  )*)\t/) {
+		s/^((?:  )*)\t/\1  /;
+	}
+	return $_;
+}
+
+help() if (-t STDIN);
+my $convert;
+while (<STDIN>) {
+	if (!$convert) {
+		if (/^\t/) {
+			$convert = \&tabToSpace;
+		}
+		elsif (/^  /) {
+			$convert = \&spaceToTab
+		}
+	}
+	if ($convert) {
+		print &$convert($_);
+	}
+	else {
+		print;
+	}
+}

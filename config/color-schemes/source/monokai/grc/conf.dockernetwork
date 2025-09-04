@@ -1,0 +1,23 @@
+# HEADERS
+regexp=(?:\s|^)(NETWORK ID|NAME|DRIVER|SCOPE)(?:\s|$)
+colours=default,underline
+-
+# Line
+regexp=^(?!NETWORK)(\S+)\s+(\S+)
+colours=unchanged,"\033[38;5;243m","\033[38;5;81m"
+-
+# Driver BRIDGE
+regexp=^\S+\s+\S+\s+(bridge)
+colours=unchanged,"\033[38;5;86m"
+-
+# Driver HOST
+regexp=^\S+\s+\S+\s+(host)
+colours=unchanged,"\033[38;5;73m"
+-
+# Driver OVERLAY
+regexp=^\S+\s+\S+\s+(overlay)
+colours=unchanged,"\033[38;5;99m"
+-
+# Driver NULL
+regexp=^\S+\s+\S+\s+(null)
+colours=unchanged,"\033[38;5;145;48;5;161m"

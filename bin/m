@@ -1,0 +1,14 @@
+#!/usr/bin/env perl
+# Description: Evaluates a mathematical expression
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+
+if (scalar @ARGV < 1 || $ARGV[0] eq '--help' || $ARGV[0] eq '-h' || $ARGV[0] eq '-?') {
+	print <<EOT;
+m: Evaluate a mathematical expression
+Usage: m <expression>
+EOT
+	exit 0;
+}
+my $x = eval qq(@ARGV);
+print "$x\n";

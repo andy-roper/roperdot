@@ -1,0 +1,25 @@
+# Intended for colouring 'mount' output
+# written by Emanuele Aina
+
+regexp=^(.*) on (.*) type (.*) \((.*)\)
+colours=default,"\033[38;5;144m","\033[38;5;173m","\033[38;5;109m","\033[38;5;139m"
+-
+# Devices
+regexp=^(\/[^\/ ]+)+
+colours="\033[01;38;5;144m","\033[38;5;234;48;5;144m"
+-
+# Mount Path
+regexp=(?<=on )(\/[^\/ ]+)+
+colours=unchanged,"\033[04;38;5;173m"
+-
+# RW
+regexp=(?<=\()rw
+colours="\033[01;38;5;131m"
+-
+# RO
+regexp=(?<=\()ro
+colours="\033[01;38;5;144m"
+-
+# Like comment, leave at end always
+regexp=^(cgroup|tmpfs).*
+colours="\033[38;5;242m"

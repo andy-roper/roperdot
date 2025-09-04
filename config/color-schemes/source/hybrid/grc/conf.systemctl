@@ -1,0 +1,41 @@
+# Name
+regexp=\.service\s
+colours="\033[38;5;145m"
+-
+regexp=\.mount\s
+colours="\033[38;5;96m"
+-
+regexp=\.device\s
+colours="\033[38;5;60m"
+-
+regexp=\.socket\s
+colours="\033[38;5;66m"
+-
+regexp=\.slice\s
+colours="\033[38;5;131m"
+-
+regexp=\.path\s
+colours="\033[38;5;101m"
+-
+regexp=\.target\s
+colours="\033[38;5;96m"
+-
+regexp=\.timer\s
+colours="\033[38;5;66m"
+-
+regexp=\.swap\s
+colours="\033[38;5;139m"
+-
+regexp=\sloaded\s
+colours="\033[38;5;66m"
+-
+regexp=\sactive\s
+colours="\033[38;5;101m"
+-
+# exited
+regexp=exited
+colours="\033[38;5;131m"
+-
+# running
+regexp=running
+colours="\033[38;5;101m"

@@ -1,0 +1,21 @@
+#
+# Description: Install script for foobar2000
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
+	choco.exe install -y foobar2000
+
+	zip_file="${ROPERDOT_DIR}/install-profiles/personal/config-files/foobar2000.zip"
+	if [[ -f "$zip_file" ]]; then
+		. "${ROPERDOT_DIR}/source-scripts/unpack"
+		. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
+		winenv APPDATA
+		dest_dir="$APPDATA/foobar2000"
+		mkdir -p "$dest_dir"
+		cd "$dest_dir"
+		unpack_overwrite "$zip_file"
+	fi
+fi

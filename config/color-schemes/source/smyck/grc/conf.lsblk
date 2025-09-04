@@ -1,0 +1,59 @@
+# Main HD
+regexp=^[a-z]+\d?\s
+colours="\033[01;38;5;250m"
+======
+# Partition
+regexp=([├└─│]+|[\|\`\-]+)(\S+)
+colours="\033[38;5;192m"
+======
+# Partition - LVM
+regexp=\s+([├└─│]+|[\|\`\-]+)(\S+)
+colours=default,default,"\033[38;5;116m"
+======
+# Type crypt
+regexp=(?<=\s)crypt\b
+colours="\033[38;5;250;48;5;182m"
+======
+# Type disk
+regexp=(?<=\s)disk\b
+colours="\033[38;5;182m"
+======
+# Type lvm
+regexp=(?<=\s)lvm\b
+colours="\033[01;38;5;31m"
+======
+# Type part
+regexp=(?<=\s)part\b
+colours="\033[38;5;31m"
+======
+# Type loop
+regexp=(?<=\s)loop\b
+colours="\033[38;5;181m"
+======
+# Size 'K'
+regexp=\s\d*[.,]?\dKi?\s
+colours="\033[38;5;143m"
+======
+# Size 'M'
+regexp=\s\d*[.,]?\dMi?\s
+colours="\033[38;5;179m"
+======
+# Size 'G'
+regexp=\s\d*[.,]?\dGi?\s
+colours="\033[38;5;167m"
+======
+# Size 'T'
+regexp=\s\d*[.,]?\dTi?\s
+colours="\033[01;38;5;167m"
+======
+# Mount Path
+regexp=(?<=\s)(\/[^\/ ]*)+$
+colours="\033[38;5;179m","\033[01;38;5;179m"
+======
+# Mount [SWAP]
+regexp=\s\[(SWAP)\]
+colours=default,"\033[38;5;219m"
+======
+# UUID
+regexp=(?<=\s)\b([0-9a-fA-F-]{4,}|[\w-]{38})\b
+colours=default,"\033[38;5;31m"

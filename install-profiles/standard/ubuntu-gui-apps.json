@@ -1,0 +1,209 @@
+[
+	{
+		"app": "Notepadqq",
+		"binary": "notepadqq",
+		"install_script": "install-notepadqq",
+		"desc": "Developers' text editor"
+	},
+	{
+		"app": "Sublime Text",
+		"package": "sublime-text",
+		"package_manager": "apt",
+		"install_script": "install-sublime-text",
+		"desc": "Developers' text editor"
+	},
+	{
+		"app": "LibreOffice",
+		"package": "libreoffice",
+		"binary": "libreoffice",
+		"package_manager": "apt",
+		"install_command": "sudo apt install libreoffice;",
+		"desc": "Office productivity suite",
+		"comment": "I removed libreoffice-help-en from the install on 4 Nov 2018 because it's no longer available via apt"
+	},
+	{
+		"app": "Google Chrome",
+		"package": "google-chrome-stable",
+		"package_manager": "apt",
+		"install_script": "install-google-chrome",
+		"desc": "Web browser"
+	},
+	{
+		"app": "Remmina",
+		"package": "remmina remmina-plugin-rdp",
+		"package_manager": "apt",
+		"desc": "Remote desktop client"
+	},
+	{
+		"app": "Ghostwriter",
+		"package": "ghostwriter",
+		"package_manager": "apt",
+		"desc": "Markdown editor"
+	},
+	{
+		"app": "NixNote 2",
+		"package": "nixnote2",
+		"package_manager": "apt",
+		"desc": "Clone of Evernote for Linux"
+	},
+	{
+		"app": "Slack",
+		"binary": "slack",
+		"install_script": "install-slack",
+		"desc": "Team messaging app"
+	},
+	{
+		"app": "Docker",
+		"package": "docker.io",
+		"package_manager": "apt",
+		"desc": "Virtualization platform"
+	},
+	{
+		"app": "Dropbox",
+		"package": "dropbox",
+		"package_manager": "apt",
+		"install_script": "install-dropbox",
+		"desc": "Secure file sharing and storage solution",
+		"skip": true,
+		"comment": "As of 4 Nov 2018 Dropbox isn't available via apt"
+	},
+	{
+		"app": "Bless",
+		"package": "bless",
+		"package_manager": "apt",
+		"desc": "Hex editor"
+	},
+	{
+		"app": "Galculator",
+		"package": "galculator",
+		"package_manager": "apt",
+		"desc": "Algebraic and RPN calculator"
+	},
+	{
+		"app": "Visual Studio Code",
+		"package": "vscode",
+		"package_manager": "apt",
+		"binary": "code",
+		"install_script": "install-vscode",
+		"desc": "Free extensible IDE"
+	},
+	{
+		"app": "Eclipse for Java",
+		"binary": "eclipse",
+		"install_script": "install-eclipse",
+		"desc": "Java IDE with built-in CVS client, Git client, XML editor, etc."
+	},
+	{
+		"app": "SmartGit",
+		"binary": "smartgit",
+		"install_script": "install-smartgit",
+		"desc": "Git client with support for GitHub Pull Requests+Comments and SVN"
+	},
+	{
+		"app": "P4Merge",
+		"binary": "p4merge",
+		"install_script": "install-p4merge",
+		"desc": "Visual diff and merge tool"
+	},
+	{
+		"app": "pgAdmin 4",
+		"binary": "pgadmin4",
+		"install_script": "install-pgadmin4",
+		"desc": "Administration and development platform for PostgreSQL"
+	},
+	{
+		"app": "Postman",
+		"binary": "postman",
+		"install_script": "install-postman",
+		"desc": "REST client"
+	},
+	{
+		"app": "SoapUI",
+		"install_script": "install-soapui",
+		"install_prerequisite": "java",
+		"desc": "REST client"
+	},
+	{
+		"app": "PeaZip",
+		"binary": "peazip",
+		"install_script": "install-peazip",
+		"desc": "File archiver utility"
+	},
+	{
+		"app": "SpaceFM",
+		"package": "spacefm",
+		"package_manager": "apt",
+		"desc": "Multi-panel tabbed file and desktop manager"
+	},
+	{
+		"app": "VirtualBox",
+		"package": "virtualbox",
+		"package_manager": "apt",
+		"desc": "Hypervisor for virtualization"
+	},
+	{
+		"app": "My Traceroute (MTR)",
+		"package": "mtr",
+		"binary": "mtr",
+		"package_manager": "apt",
+		"desc": "Diagnostic tool combining the functions of ping and traceroute"
+	},
+	{
+		"app": "FileZilla",
+		"package": "filezilla",
+		"package_manager": "apt",
+		"install_script": "install-filezilla",
+		"desc": "FTP client"
+	},
+	{
+		"app": "Totem",
+		"package": "totem",
+		"package_manager": "apt",
+		"desc": "Movie player"
+	},
+	{
+		"app": "VLC",
+		"package": "vlc",
+		"package_manager": "apt",
+		"desc": "Multimedia player"
+	},
+	{
+		"app": "Rhythmbox",
+		"package": "rhythmbox",
+		"package_manager": "apt",
+		"desc": "Music player and organizer"
+	},
+	{
+		"app": "Clementine",
+		"package": "clementine",
+		"package_manager": "apt",
+		"install_script": "install-clementine",
+		"desc": "Music player"
+	},
+	{
+		"app": "GIMP",
+		"package": "gimp",
+		"package_manager": "apt",
+		"install_script": "install-gimp",
+		"desc": "Graphics editor"
+	},
+	{
+		"app": "Calibre",
+		"package": "calibre",
+		"package_manager": "apt",
+		"desc": "e-book reader/manager"
+	},
+	{
+		"app": "YACReader",
+		"package": "yacreader",
+		"package_manager": "apt",
+		"install_script": "install-yacreader",
+		"desc": "Comic reader and manager"
+	},
+	{
+		"app": "Gyazo",
+		"binary": "gyazo",
+		"install_command": "get-web-file https://packagecloud.io/install/repositories/gyazo/gyazo-for-linux/script.deb.sh | sudo bash;",
+		"desc": "Screen capture utility"
+	}
+]

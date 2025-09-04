@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+"""
+Description: Outputs key/value pairs from JSON (used by the roperdot installation)
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+"""
+
+import sys, os, json
+
+def help():
+    print('''
+json-to-simple-vars: output simple key=value pairs from JSON
+Usage: json-to-simple-vars <json-file> [app-index] <profile> [--optional] [profile2] [...]
+
+Arguments:
+  json-file: JSON file to process
+  app-index: App index to output (or pass a non-integer to get a count)
+  profile: Base profile name
+
+Special cases:
+  app-index -1: Output total number of apps
+  app-index >= count: Exit with code 1 (no more apps)
+'''[1:-1])
+    quit()
+
+args = sys.argv[1:]
+if len(args) == 0 or args[0] in ['--help', '-?', '-h']:
+    help()
+
+fileName = args.pop(0)
+app_index = args.pop(0) if args else 0
+optional = False
+all_apps = []
+
+# Process all profiles and collect apps
+while len(args) > 0:
+    profile = args.pop(0)
+    if profile == '--optional':
+        optional = True
+        continue
+    
+    filePath = os.environ.get('ROPERDOT_DIR') + '/install-profiles/' + profile + '/' + fileName
+    if not os.path.exists(filePath):
+        if optional:
+            continue
+        print(f'Error: file {filePath} does not exist', file=sys.stderr)
+        exit(1)
+    
+    with open(filePath, 'r') as file:
+        appInstallData = json.load(file)
+        all_apps.extend(appInstallData)
+
+# Handle special case: return count if app_index is not an integer
+try:
+    app_index = int(app_index)
+except ValueError:
+    print(len(all_apps))
+    exit(0)
+
+# Check bounds
+app_index = int(app_index);
+if app_index >= len(all_apps):
+    exit(1)  # No more apps
+
+# Output variables for the requested app
+app = all_apps[app_index]
+for key, value in app.items():
+    if isinstance(value, bool):
+        value = str(value).lower()
+    elif isinstance(value, list):
+        # Convert JSON array to comma-separated string
+        value = ','.join(str(item) for item in value)
+    else:
+        value = str(value).replace('"', '\\"')  # escape quotes
+    print(f'{key}="{value}"')

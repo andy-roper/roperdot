@@ -1,0 +1,19 @@
+#
+# Description: (Mac) Mounts a dmg file
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+if [[ $# -eq 0 || "$1" = "--help" || "$1" = "-h" || "$1" = "-?" ]]; then
+    cat <<EOT
+mount-dmg: mount a dmg file
+Usage: mount-dmg <dmg file>
+
+This script will attach a dmg file using hdiutil and then print the path to the
+mount point in /Volumes.
+EOT
+    exit 0
+fi
+
+hdiutil attach "$1" | perl -n000e 'print $& while /(\/Volumes\/[^\/]+)$/mg'

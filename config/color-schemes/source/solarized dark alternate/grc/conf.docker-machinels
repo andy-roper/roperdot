@@ -1,0 +1,23 @@
+# IMAGE
+regexp=^(?!NAME|error)(\S+)\s+(\S+)\s+(\S+)
+colours=default,"\033[01;38;5;136m","\033[01;38;5;60m","\033[38;5;36m"
+======
+# Running
+regexp=\sRunning\s
+colours="\033[01;38;5;100m"
+======
+# Stopped
+regexp=\sStopped\s
+colours="\033[01;38;5;167m"
+======
+# Error
+regexp=\sError\s
+colours="\033[38;5;167m"
+======
+# PORTS
+regexp=((?:\d{1,3}\.){3}\d{1,3}):(\d+)
+colours=default,"\033[38;5;32m","\033[01;38;5;32m"
+======
+# Error Line
+regexp=^error\s(?:\w+\s)+([a-z\-_0-9]+):(.*)$
+colours="\033[38;5;167m","\033[38;5;136m","\033[01;38;5;167m"

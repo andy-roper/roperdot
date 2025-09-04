@@ -1,0 +1,16 @@
+#
+# Description: Install script for Clementine
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+if [[ "$ROPERDOT_OS_ENV" = "ubuntu" && "$ROPERDOT_DESKTOP_ENV" = "gnome" ]]; then
+	sudo add-apt-repository -y ppa:me-davidsansome/clementine
+	sudo apt update
+	sudo apt install clementine -y
+elif [[ "$ROPERDOT_OS_ENV" = "mint" && "$ROPERDOT_DESKTOP_ENV" = "gnome" ]]; then
+#	sudo add-apt-repository -y ppa:me-davidsansome/clementine
+	sudo apt update
+	sudo apt install clementine -y
+fi

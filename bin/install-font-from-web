@@ -1,0 +1,316 @@
+#!/usr/bin/env bash
+#
+# Description: Installs fonts from a web archive
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+# set -e
+
+usage() {
+    echo "Usage: $0 <font_display_name> <font_family> <download_url> <check_filename>"
+    echo ""
+    echo "Arguments:"
+    echo "  font_display_name  - Human readable name (e.g. 'Hack Nerd Font')"
+    echo "  font_family        - Font family name for grep/dirs (e.g. 'Hack')"
+    echo "  download_url       - Direct download URL for the font archive"
+    echo "  check_filename     - Filename to check if installed (e.g. 'HackNerdFont-Regular.ttf')"
+    echo ""
+    echo "Example:"
+    echo "  $0 'Hack Nerd Font' 'Hack' 'https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.tar.xz' 'HackNerdFontMono-Regular.ttf'"
+    exit 1
+}
+
+# Check arguments
+[[ $# -ne 4 ]] && usage
+
+# Parameters
+FONT_NAME="$1"
+FONT_FAMILY="$2"
+DOWNLOAD_URL="$3"
+CHECK_FILENAME="$4"
+
+TEMP_DIR="$(mktemp -d)"
+
+NC='\033[0m' # No Color
+
+log_info() { echo -e "${COLOR_BLUE}[INFO]${NC} $1"; }
+log_success() { echo -e "${COLOR_GREEN}[SUCCESS]${NC} $1"; }
+log_warning() { echo -e "${COLOR_YELLOW}[WARNING]${NC} $1"; }
+log_error() { echo -e "${COLOR_RED}[ERROR]${NC} $1"; }
+
+is_font_installed() {
+    case "$ROPERDOT_OS_TYPE" in
+        "linux")
+            # Check using fc-list first
+            if command -v fc-list >/dev/null 2>&1; then
+                fc-list | grep -i "${FONT_FAMILY}" >/dev/null 2>&1 && return 0
+            fi
+            # Check common font directories
+            [[ -f ~/.local/share/fonts/$CHECK_FILENAME ]] && return 0
+            [[ -f ~/.fonts/$CHECK_FILENAME ]] && return 0
+            [[ -f /usr/share/fonts/truetype/*/$CHECK_FILENAME ]] && return 0
+            [[ -f /usr/local/share/fonts/$CHECK_FILENAME ]] && return 0
+            ;;
+        "mac")
+            # Check macOS font directories
+            [[ -f ~/Library/Fonts/$CHECK_FILENAME ]] && return 0
+            [[ -f /Library/Fonts/$CHECK_FILENAME ]] && return 0
+            ;;
+        "windows")
+            # Check Windows per-user font directories first, then system
+            [[ -f "$LOCALAPPDATA/Microsoft/Windows/Fonts/$CHECK_FILENAME" ]] && return 0
+            [[ -f "$USERPROFILE/AppData/Local/Microsoft/Windows/Fonts/$CHECK_FILENAME" ]] && return 0
+            [[ -f "/c/Windows/Fonts/$CHECK_FILENAME" ]] && return 0
+            ;;
+    esac
+    return 1
+}
+
+get_font_dir() {
+    case "$ROPERDOT_OS_TYPE" in
+        "linux")
+            if [[ -d "$HOME/.fonts" ]] && [[ -n "$(find "$HOME/.fonts" -name "*.ttf" -o -name "*.otf" 2>/dev/null | head -1)" ]]; then
+                echo "$HOME/.fonts"
+            else
+                echo "$HOME/.local/share/fonts"
+            fi
+            ;;
+        "mac")
+            echo "$HOME/Library/Fonts"
+            ;;
+        "windows")
+            # Always use per-user font directory (no admin required)
+            if [[ -n "$LOCALAPPDATA" ]]; then
+                echo "$LOCALAPPDATA/Microsoft/Windows/Fonts"
+            elif [[ -n "$USERPROFILE" ]]; then
+                echo "$USERPROFILE/AppData/Local/Microsoft/Windows/Fonts"
+            else
+                echo "$HOME/AppData/Local/Microsoft/Windows/Fonts"
+            fi
+            ;;
+        *)
+            log_error "Unsupported OS type: $ROPERDOT_OS_TYPE"
+            exit 1
+            ;;
+    esac
+}
+
+# Function to find font files in extracted directory
+find_font_files_dir() {
+    local temp_dir="$1"
+    
+    # Check if fonts are directly in temp dir
+    if [[ -n "$(find "$temp_dir" -maxdepth 1 -name "*.ttf" -o -name "*.otf" 2>/dev/null | head -1)" ]]; then
+        echo "$temp_dir"
+        return
+    fi
+    
+    # Look for subdirectories with font family name
+    for pattern in "$FONT_FAMILY" "${FONT_FAMILY}*"; do
+        if [[ -d "$temp_dir/$pattern" ]]; then
+            echo "$temp_dir/$pattern"
+            return
+        fi
+    done
+    
+    # Look for any subdirectory with font files
+    for dir in "$temp_dir"/*; do
+        if [[ -d "$dir" && -n "$(find "$dir" -name "*.ttf" -o -name "*.otf" 2>/dev/null | head -1)" ]]; then
+            echo "$dir"
+            return
+        fi
+    done
+    
+    echo "$temp_dir"
+}
+
+# Function to convert font filename to display name for Windows registry
+get_font_display_name() {
+    local filename="$1"
+    local basename="${filename%.*}"  # Remove extension
+    
+    # Replace common patterns and add spaces
+    local display_name="$basename"
+    display_name="${display_name//NerdFont/ Nerd Font}"
+    display_name="${display_name//Font/ Font}"
+    display_name="${display_name//-/ }"
+    display_name="${display_name//_/ }"
+    
+    # Handle common style suffixes
+    display_name="${display_name// Regular/ Regular}"
+    display_name="${display_name// Bold/ Bold}"
+    display_name="${display_name// Italic/ Italic}"
+    display_name="${display_name// Light/ Light}"
+    display_name="${display_name// Medium/ Medium}"
+    display_name="${display_name// SemiBold/ SemiBold}"
+    display_name="${display_name// BoldItalic/ Bold Italic}"
+    
+    echo "$display_name"
+}
+
+# Function to register fonts in Windows registry (per-user)
+register_windows_fonts() {
+    local font_dir="$1"
+    local installed_files=("${@:2}")
+    
+    if [[ "$ROPERDOT_OS_TYPE" != "windows" ]]; then
+        return 0
+    fi
+    
+    if ! command -v reg.exe >/dev/null 2>&1; then
+        log_warning "reg.exe not found - fonts copied but not registered in registry"
+        return 0
+    fi
+    
+    # Always use per-user registry
+    local registry_hive="HKCU"
+    local registry_path="SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts"
+    
+    log_info "Registering fonts in Windows user registry..."
+    local registered_count=0
+    
+	for font_file in "$font_files_dir"/*.ttf "$font_files_dir"/*.otf; do
+	    if [[ -f "$font_file" ]]; then 
+	        local filename=$(basename "$font_file")
+	        log_info "Attempting to install: $filename"
+	        
+	        if cp "$font_file" "$font_dir/" 2>/dev/null; then
+	            log_info "Installed: $filename"
+	            installed_files+=("$font_file")
+	            ((installed_count++))
+	        else
+	            log_error "Failed to install: $filename"
+	            # Continue with other files instead of exiting
+	        fi
+	    fi
+	done
+    
+    if [[ $registered_count -gt 0 ]]; then
+        log_success "Registered $registered_count fonts in user registry"
+    fi
+}
+
+# Function to extract and install fonts
+install_fonts() {
+    local font_files_dir="$1"
+    local font_dir="$2"
+    
+    log_info "Creating font directory: $font_dir"
+    mkdir -p "$font_dir"
+    
+    log_info "Installing font files..."
+    local installed_count=0
+    local installed_files=()
+    
+    # Copy all .ttf and .otf files
+    for font_file in "$font_files_dir"/*.ttf "$font_files_dir"/*.otf; do
+        if [[ -f "$font_file" ]]; then
+            local filename=$(basename "$font_file")
+            cp "$font_file" "$font_dir/"
+            log_info "Installed: $filename"
+            installed_files+=("$font_file")
+            ((installed_count++))
+        fi
+    done
+    
+    if [[ $installed_count -eq 0 ]]; then
+        log_error "No font files found to install"
+        return 1
+    fi
+    
+    log_success "Installed $installed_count font files"
+    
+    # Platform-specific post-installation
+    case "$ROPERDOT_OS_TYPE" in
+        "linux")
+            if command -v fc-cache >/dev/null 2>&1; then
+                log_info "Updating font cache..."
+                fc-cache -fv
+                log_success "Font cache updated"
+            fi
+            ;;
+        "windows")
+            register_windows_fonts "$font_dir" "${installed_files[@]}"
+            ;;
+    esac
+}
+
+main() {
+    log_info "Installing $FONT_NAME..."
+    
+    # Check if already installed
+    if is_font_installed; then
+        log_success "$FONT_NAME appears to be already installed"
+        read -p "Reinstall anyway? [y/N]: " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            log_info "Installation skipped"
+            exit 0
+        fi
+    fi
+    
+    # Get font installation directory
+    FONT_DIR=$(get_font_dir)
+    log_info "Font directory: $FONT_DIR"
+    
+    # Create temp directory
+    mkdir -p "$TEMP_DIR"
+    
+    # Cleanup function
+    cleanup() {
+        log_info "Cleaning up temporary files..."
+        rm -rf "$TEMP_DIR"
+    }
+    trap cleanup EXIT
+    
+    # Download font archive
+    log_info "Downloading $FONT_NAME..."
+    local archive_name=$(basename "$DOWNLOAD_URL")
+    local archive_file="$TEMP_DIR/$archive_name"
+    
+    if ! get-web-file "$DOWNLOAD_URL" "$archive_file"; then
+        log_error "Failed to download font archive"
+        exit 1
+    fi
+    
+    # Extract archive
+    log_info "Extracting font archive..."
+    if ! x "$archive_file" "$TEMP_DIR"; then
+        exit 1
+    fi
+
+	find "$TEMP_DIR" -type f -name "*.ttf" | head -20
+
+    # Find the font files directory
+    local font_files_dir=$(find_font_files_dir "$TEMP_DIR")
+    log_info "Font files found in: $font_files_dir"
+    
+    install_fonts "$font_files_dir" "$FONT_DIR"
+    
+    # Platform-specific post-installation
+    case "$ROPERDOT_OS_TYPE" in
+        "mac")
+            log_info "Note: You may need to restart applications to see the new font"
+            ;;
+        "windows")
+            log_info "Note: You may need to restart applications or log out/in to see the new font"
+            ;;
+    esac
+    
+    log_success "$FONT_NAME installation completed!"
+    
+    if is_font_installed; then
+        log_success "Font installation verified successfully"
+    else
+        log_warning "Font installation verification failed, but files were copied"
+    fi
+}
+
+if [[ -z "$ROPERDOT_OS_TYPE" ]]; then
+    log_error "ROPERDOT_OS_TYPE environment variable is not set"
+    exit 1
+fi
+
+main "$@"

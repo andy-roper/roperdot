@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+"""
+Description: Decrypts an encrypted string using key and HMAC key values
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+"""
+"""
+Decrypt a string using AES-256-CBC with HMAC integrity verification.
+This code was based on an example here:
+http://www.levigross.com/2014/03/30/how-to-write-an-encrypt-and-decrypt-api-for-data-at-rest-in-nodejs/
+"""
+
+import os
+import sys
+import argparse
+import hmac
+import hashlib
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.backends import default_backend
+
+
+def constant_time_compare(val1, val2):
+    """
+    Constant-time string comparison to prevent timing attacks.
+    """
+    return hmac.compare_digest(val1, val2)
+
+
+def decrypt_string(cipher_text_blob, key, hmac_key):
+    """
+    Decrypt a string that was encrypted with the corresponding encrypt script.
+    """
+    try:
+        cipher_blob = cipher_text_blob.split(":")
+        if len(cipher_blob) != 3:
+            print("Invalid encrypted blob format")
+            return None
+            
+        ct_hex = cipher_blob[0]
+        iv_hex = cipher_blob[1]
+        received_hmac = cipher_blob[2]
+        
+        # Verify HMAC
+        h = hmac.new(hmac_key, digestmod=hashlib.sha256)
+        h.update(ct_hex.encode('utf-8'))
+        h.update(iv_hex.encode('utf-8'))
+        
+        if not constant_time_compare(h.hexdigest(), received_hmac):
+            print("Encrypted blob has been tampered with...")
+            return None
+        
+        # Decrypt
+        iv = bytes.fromhex(iv_hex)
+        cipher_text = bytes.fromhex(ct_hex)
+        
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+        decryptor = cipher.decryptor()
+        
+        padded_data = decryptor.update(cipher_text) + decryptor.finalize()
+        
+        # Remove PKCS7 padding
+        unpadder = padding.PKCS7(128).unpadder()
+        plain_data = unpadder.update(padded_data) + unpadder.finalize()
+        
+        return plain_data.decode('utf-8')
+        
+    except Exception as e:
+        print(f"Decryption error: {e}")
+        return None
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='Decrypt a string using AES-256-CBC with HMAC integrity verification',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+decrypt will decrypt a string which was encrypted using specified key and HMAC
+key values. If the ENCRYPT_KEY_HEX and ENCRYPT_HMAC_KEY_HEX environment
+variables are defined, those values will be used to decrypt the string.
+Otherwise, arguments can be passed to define the key and HMAC key values.
+        """)
+    
+    parser.add_argument('encrypted_string', help='String to decrypt')
+    parser.add_argument('key_hex', nargs='?', help='Encryption key (hex)')
+    parser.add_argument('hmac_key_hex', nargs='?', help='HMAC key (hex)')
+    
+    args = parser.parse_args()
+    
+    # Check for environment variables first
+    key_hex = os.environ.get('ENCRYPT_KEY_HEX')
+    hmac_key_hex = os.environ.get('ENCRYPT_HMAC_KEY_HEX')
+    
+    # Use command line arguments if provided
+    if args.key_hex and args.hmac_key_hex:
+        key_hex = args.key_hex
+        hmac_key_hex = args.hmac_key_hex
+    
+    if not key_hex or not hmac_key_hex:
+        print("Error: Keys must be provided either via environment variables")
+        print("(ENCRYPT_KEY_HEX and ENCRYPT_HMAC_KEY_HEX) or as command line arguments")
+        sys.exit(1)
+    
+    try:
+        key = bytes.fromhex(key_hex)
+        hmac_key = bytes.fromhex(hmac_key_hex)
+    except ValueError:
+        print("Error: Invalid hex key format")
+        sys.exit(1)
+    
+    # Decrypt the string
+    decrypted_str = decrypt_string(args.encrypted_string, key, hmac_key)
+    if decrypted_str is not None:
+        print('Decrypted string:', decrypted_str)
+    else:
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()

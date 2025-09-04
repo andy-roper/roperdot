@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+"""
+Description: Pretty prints SQL; called by format
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+"""
+
+import sys
+import sqlparse
+import os.path
+
+# https://sqlparse.readthedocs.io/en/latest/api/?highlight=format#formatting
+
+def help():
+    print('''
+parse-sql: reformats SQL using sqlparse
+Usages: parse-sql <filespec>
+        parse-sql <sql-text>
+'''[1:-1])
+    quit()
+
+if len(sys.argv) == 1 or sys.argv[1] in ['--help', '-?', '-h']:
+    help()
+arg = sys.argv[1]
+if os.path.isfile(arg):
+    with open(arg, 'r') as myFile:
+        sql = myFile.read()
+else:
+    sql = arg
+print(sqlparse.format(sql, reindent=True, indent_width=4, keyword_case='upper'))

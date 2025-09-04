@@ -1,0 +1,12 @@
+# Adapetr
+regexp=Adapter:\s(.*)
+colours=default,"\033[38;5;114m"
+======
+# High temperature
+regexp=.+:\s+(\+[67][0-9][^0-9])
+colours=default,"\033[38;5;174m"
+======
+# Very high temperature
+regexp=.+:\s+(\+[89][0-9][0-9]?)
+colours=default,"\033[05;38;5;174m"
+======

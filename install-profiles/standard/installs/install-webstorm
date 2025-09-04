@@ -1,0 +1,32 @@
+#
+# Description: Install script for WebStorm
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+# Last updated for current version on 15 Aug 2025
+# https://www.jetbrains.com/webstorm/download/#section=linux
+
+if [[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" = gnome ]]; then
+	cd "$(mktemp -d)" || return 1
+	file_name=WebStorm-2025.2.tar.gz
+	bin_dir=/opt/WebStorm-252.23892.411/bin
+	get-web-file https://download.jetbrains.com/webstorm/${file_name}
+	sudo tar xfz ${file_name} -C /opt/
+	rm ${file_name}
+	ln -s ${bin_dir}/webstorm.sh "${ROPERDOT_DIR}/extra-bin/webstorm"
+	[[ -d "$HOME/.local/share/applications" ]] || mkdir -p "$HOME/.local/share/applications"
+	cat << EOT > "$HOME/.local/share/applications/jetbrains-webstorm.desktop"
+[Desktop Entry]
+Version=2025.2
+Type=Application
+Name=WebStorm
+Icon=${bin_dir}/webstorm.svg
+Exec="${bin_dir}/webstorm.sh" %f
+Comment=The Drive to Develop
+Categories=Application;Development;IDE;Programming
+Terminal=false
+StartupWMClass=jetbrains-webstorm
+EOT
+fi

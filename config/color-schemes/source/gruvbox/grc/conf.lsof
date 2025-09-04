@@ -1,0 +1,15 @@
+# device major minor numbers
+regexp=\s(\d+),(\d+)\s
+colours=unchanged,"\033[38;5;136m","\033[38;5;178m"
+-
+# root
+regexp=\broot\b
+colours="\033[01;38;5;102;48;5;166m"
+-
+# PID
+regexp=^(\S+)\s+(\d+)\s
+colours=unchanged,"\033[01;38;5;108m","\033[38;5;108m"
+-
+# PATH
+regexp=\s\/.*\/(\S+)($| \(.*\))
+colours="\033[38;5;142m","\033[38;5;100m","\033[38;5;166m"

@@ -1,0 +1,27 @@
+# NAMES
+regexp=^(?:([a-z\-_0-9]+)\/)*(\S+)\s(?!DESCRIPTION)
+colours=default,"\033[38;5;185m","\033[01;38;5;185m"
+-
+# Title
+regexp=^NAME.*
+colours=default
+-
+# Oficial
+regexp=\[OK\](?!$)
+colours="\033[01;38;5;106m"
+-
+# Automated
+regexp=\[OK\]$
+colours="\033[38;5;99m"
+-
+# 1 digit Star
+regexp=\s{3,}(\d)\s{3,}
+colours="\033[38;5;161m"
+-
+# 2 digits Stars
+regexp=\s{3,}(\d{2})\s{3,}
+colours="\033[38;5;185m"
+-
+# 3 digits Stars
+regexp=\s{3,}(\d{3,})\s{3,}
+colours="\033[38;5;106m"

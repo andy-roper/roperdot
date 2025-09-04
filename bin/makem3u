@@ -1,0 +1,50 @@
+#!/usr/bin/perl
+# Description: Builds an m3u file from a directory of mp3s
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+
+use strict;
+use Cwd;
+
+my $d = shift;
+$d = cwd() if (!$d);
+$d .= "/" if ($d !~ /\/$/);
+my @songs;
+process_dir($d, "", \@songs);
+$d =~ /\/([^\/]*)\/$/;
+my $m3u_name = "$d$1.m3u";
+open hFile, ">$m3u_name";
+foreach (@songs) {
+	print hFile "$_\n";
+}
+close hFile;
+exit 0;
+
+sub process_dir {
+	my ($d, $subdir, $song_list) = @_;
+	opendir(DIR, $d);
+	my @f = readdir(DIR);
+	closedir(DIR);
+	foreach (@f) {
+		next if ($_ =~ /^\.{1,2}$/);
+		my $x = "$d$_";
+		if (-d $x) {
+			my @songs;
+			my $z = $subdir . $_ . "/";
+			process_dir("$x/", $z, \@songs);
+			my $m3u_name = "$x/$_.m3u";
+			open hFile, ">$m3u_name";
+			my $len = length($z);
+			foreach (@songs) {
+				$_ =~ /^.{$len}(.*)$/;
+				my $fname = $1;
+				print hFile "$fname\n";
+				push @$song_list, $_ if ($song_list);
+			}
+			close hFile;
+		}
+		else {
+			push @$song_list, "$subdir$_" if ($_ =~ /\.mp3$/i and $song_list);
+		}
+	}
+}

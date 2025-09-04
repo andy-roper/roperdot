@@ -1,0 +1,88 @@
+# Chains Custom name
+regexp=^Chain\s(\S+)\s\(.*$
+colours="\033[38;5;254m","\033[01;38;5;153m"
+-
+# Chains FILTER table
+regexp=^Chain\s(INPUT|OUTPUT|FORWARD)\s
+colours=unchanged,"\033[01;38;5;222m"
+-
+# Chains NAT|MANGLE table
+regexp=^Chain\s(PREROUTING|POSTROUTING|INPUT|OUTPUT)\s
+colours=unchanged,"\033[01;38;5;222m"
+-
+# 2row Title
+regexp=(pkts|target|num).*
+colours="\033[01;38;5;248m"
+-
+# JUMP Destiny ----------------------------------------------------------------
+regexp=ACCEPT
+colours="\033[38;5;187m"
+-
+regexp=DROP
+colours="\033[38;5;217m"
+-
+regexp=REJECT
+colours="\033[38;5;174m"
+-
+regexp=QUEUE
+colours="\033[38;5;254;48;5;174m"
+-
+regexp=RETURN
+colours="\033[38;5;254;48;5;144m"
+-
+regexp=MASQUERADE
+colours="\033[38;5;225m"
+-
+regexp=(LOG|ULOG)
+colours="\033[38;5;43m"
+-
+regexp=DNAT
+colours="\033[38;5;189m"
+-
+regexp=SNAT
+colours="\033[38;5;189m"
+# ------------------------------------------------------------------------------
+-
+# tcp
+regexp=\stcp\s
+colours="\033[01;38;5;37m"
+-
+# udp
+regexp=\sudp\s
+colours="\033[01;38;5;189m"
+-
+# icmp
+regexp=\sicmp\s
+colours="\033[38;5;37m"
+-
+# all
+regexp=\sall\s
+colours="\033[38;5;174m"
+-
+# dpt
+regexp=\sdpts?:([^\s]*)(\s|$)
+colours=default,"\033[01;38;5;222m"
+-
+# Goto
+regexp=\s(\[goto\])
+colours=default,"\033[01;38;5;254;48;5;152m"
+-
+# masq ports
+regexp=\smasq ports:\s(\d+)-?(\d+)?
+colours=default,"\033[01;38;5;222m","\033[01;38;5;222m"
+-
+# ctstate
+regexp=ctstate\s(\S+)
+colours=default,"\033[38;5;152m"
+-
+# IP
+regexp=(!)?((?:\d{1,3}\.){3}(?:\d{1,3}))(?:\/|:)?(\d+)?
+colours=default,"\033[38;5;174m","\033[38;5;231m","\033[38;5;189m"
+-
+# anywhere
+regexp=\s(anywhere|0.0.0.0/0)\s
+colours="\033[38;5;251m"
+-
+# (Num references)
+regexp=\((\d+) references\)
+colours=default,"\033[38;5;187m"

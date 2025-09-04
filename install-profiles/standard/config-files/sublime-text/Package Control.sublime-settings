@@ -1,0 +1,18 @@
+{
+	"bootstrapped": true,
+	"installed_packages": [
+		"Alignment",
+		"BracketHighlighter",
+		"Column Select",
+		"Emmet",
+		"HexViewer",
+		"HTML-CSS-JS Prettify",
+		"HTML5",
+		"Pretty JSON",
+		"SideBarEnhancements",
+		"Solarized Color Scheme",
+		"SublimeCodeIntel",
+		"SublimeLinter",
+		"Terminal"
+	]
+}

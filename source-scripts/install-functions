@@ -1,0 +1,129 @@
+[[ $ROPERDOT_CURRENT_SHELL = bash ]] && shopt -s extglob || setopt ksh_glob
+
+command -v debug >/dev/null 2>&1 || . "${ROPERDOT_DIR}/source-scripts/debug"
+
+ROPERDOT_LOG_FILE=${ROPERDOT_LOG_FILE:-$HOME/roperdot-install.log}
+
+log () {
+	if [[ -n "$1" ]]; then
+		echo "if"
+		printf '%s\n' "$@"
+	else
+		echo "else"
+		cat
+#	fi | tee -a "$ROPERDOT_LOG_FILE"
+	fi | (tee -a >(sed -r 's/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g' > $ROPERDOT_LOG_FILE))
+}
+
+apt_install_check () {
+	local package="$1"
+	local result="$(apt-cache policy $package 2>/dev/null)"
+	if [[ "$result" =~ Installed ]]; then
+		local re="Installed: .none"
+		[[ "$result" =~ $re ]] && return 1
+		return 0
+	else
+		return 1
+	fi
+}
+
+wait_for_continue () {
+	local message="${1:-Press Enter to continue}"
+	echo "$message"
+	read
+}
+
+gui_app_is_present () {
+	gui_app_presence_and_path true "$1" "$2" "$3" "$4" "$5" "$6"
+}
+
+gui_app_path() {
+	gui_app_presence_and_path false "$1" "$2" "$3" "$4" "$5" "$6"
+}
+
+gui_app_presence_and_path () {
+	local present_only="$1" app="$2" app_dir="$3" full_app_path="$4" app_binary="$5" package="$6" packageManager="$7"
+	local app_path app_name
+	if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
+		if [[ -n "$full_app_path" && "$full_app_path" != "null" ]]; then
+			local path_to_dir="${full_app_path%/*}"
+			local dir="${full_app_path##*/}"
+			app_path="$(find "$path_to_dir" -maxdepth 1 -type d -iname "$dir" 2>/dev/null)"
+		else
+			# Check if app was installed with Chocolatey
+			if [[ "$present_only" = "true" ]]; then
+				for app_name in "${choco_apps[@]}"; do
+					[[ "$app_name" = "$app" ]] && return 0
+				done
+			fi
+			
+			[[ -z "$app_dir" ]] && app_dir="$app"
+			if [[ "$app_dir" =~ \* ]]; then
+				app_path="$(find "$program_files_path" -maxdepth 1 -type d -iname "$app_dir" 2>/dev/null)"
+				if [[ -z "$app_path" ]]; then
+					app_path="$(find "$program_files_86_path" -maxdepth 1 -type d -iname "$app_dir" 2>/dev/null)"
+					[[ -z "$app_path" ]] && app_path="$(find "$app_local_path" -maxdepth 1 -type d -iname "$app_dir" 2>/dev/null)"
+				fi
+			else
+				if [[ -d "${program_files_path}/$app_dir" ]]; then
+					app_path="${program_files_path}/$app_dir"
+				elif [[ -d "${program_files_86_path}/$app_dir" ]]; then
+					app_path="${program_files_86_path}/$app_dir"
+				elif [[ -d "${app_local_path}/$app_dir" ]]; then
+					app_path="${app_local_path}/$app_dir"
+				fi
+			fi
+		fi
+	else
+		case "$ROPERDOT_OS_ENV" in
+			darwin)
+				if [[ "$packageManager" = brew ]]; then
+					if brew list $package &>/dev/null; then
+						app_path="$(brew info $package 2>/dev/null | grep /usr/ | head -1)"
+				        app_path="${app_path% \(*}"
+				    fi
+				elif [[ "$app_dir" =~ [*] ]]; then
+					app_path="$(find /Applications -maxdepth 1 -type d -name "$app_dir" | head -1)"
+					if [[ -z "$app_path" && -d ~/Applications ]]; then
+						app_path="$(find ~/Applications -maxdepth 1 -type d -name "$app_dir" | head -1)"
+					fi
+				elif [[ -d "/Applications/${app_dir}.app" ]]; then
+					app_path="/Applications/${app_dir}.app"
+					if [[ -z "$app_path" && -d ~/Applications ]]; then
+						app_path="~/Applications/${app_dir}.app"
+					fi
+				fi
+				;;
+			ubuntu)
+				if [[ -n "$packageManager" ]]; then
+					local app_is_present
+					if [[ "$packageManager" = "apt" || "$packageManager" = "apt-get" ]]; then
+						apt_install_check "$package" && app_is_present=true
+					elif [[ "$packageManager" = "snap" ]]; then
+						snap list "$package" >/dev/null 2>&1 && app_is_present=true
+					fi
+					if [[ -n "$app_is_present" ]]; then
+						[[ "$app_dir" = "null" ]] && app_dir="$package"
+						if [[ -d "/usr/lib/$app_dir" ]]; then
+							app_path="/usr/lib/$app_dir"
+						elif [[ -d "/usr/share/$app_dir" ]]; then
+							app_path="/usr/share/$app_dir"
+						fi
+					fi
+				else
+					app_path="$(command -v "$app_binary")"
+				fi
+				;;
+		esac
+	fi
+	if [[ -n "$app_path" ]]; then
+		[[ "$present_only" = "false" ]] && echo $app_path
+		return 0
+	else
+		return 1
+	fi
+}
+
+save_resume_point () {
+	[[ -n "$resuming" ]] && echo $1 > ~/.roperdot-resume-step
+}

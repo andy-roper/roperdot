@@ -1,0 +1,23 @@
+# Path
+regexp=^(\/\S+)
+colours="\033[38;5;142m"
+-
+# Path Last part
+regexp=\/(\w+)\s
+colours=unchanged,"\033[38;5;100m"
+-
+# IP
+regexp=(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d+)?)
+colours=default,"\033[38;5;178m","\033[38;5;138m"
+-
+# ALL
+regexp=\*
+colours="\033[01;38;5;166m"
+-
+# Options
+regexp=\(([\w,]+)\)
+colours=default,"\033[38;5;108m"
+-
+# Server
+regexp=for\s([^:]+):$
+colours=default,"\033[01;38;5;178m"

@@ -1,0 +1,40 @@
+#
+# Description: Decodes Base64 data and writes the output to stdout; accepts file input, piped input or clipboard input
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
+	cat <<EOT
+decode-base64: decode Base64 encoded string
+Usage: decode-base64 [--writeclip] [filespec]
+
+Options:
+--writeclip   Write output to the clipboard (default is to write to stdout)
+
+decode-base64 will decode a Base64 encoded string and write the decoded string
+to stdout, or to the clipboard if the --writeclip option is used. This script
+will read data from a file if it's supplied as an argument. It will also accept
+piped input. If neither a file argument nor piped input are provided, the
+script will read data from the clipboard.
+EOT
+#'
+	exit 0
+fi
+
+if [[ "$1" = "--writeclip" ]]; then
+	write_to_clipboard=true
+	shift
+fi
+
+. "${ROPERDOT_DIR}/source-scripts/get-input"
+
+if [[ -n "$str" ]]; then
+	if [[ -n "$write_to_clipboard" ]]; then
+		echo "$str" | base64 -d | clipcopy
+	else
+		echo "$str" | base64 -d
+	fi
+else
+	echo "No data provided to convert from Base64"
+fi

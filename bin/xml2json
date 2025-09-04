@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+"""
+Description: Converts XML from stdin to JSON
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+"""
+
+import sys
+import json
+import xmltodict
+
+# Read XML from stdin
+xml_input = sys.stdin.read().strip()
+
+if not xml_input:
+    print("Error: No XML input provided", file=sys.stderr)
+    sys.exit(1)
+
+# Parse XML to dictionary
+data_dict = xmltodict.parse(xml_input)
+
+# Output formatted JSON
+formatted_json = json.dumps(data_dict, indent=4, ensure_ascii=False)
+print(formatted_json)

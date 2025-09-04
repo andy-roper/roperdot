@@ -1,0 +1,60 @@
+# IP
+regexp=\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}
+colours="\033[38;5;68m"
+=======
+# ipv6 number
+regexp=(([0-9a-fA-F]{1,4})?\:\:?[0-9a-fA-F]{1,4})+
+colours="\033[38;5;176m"
+=======
+# icmp_seq=##
+regexp=icmp_seq=(\d+)
+colours=default,"\033[38;5;221m"
+=======
+# ttl=#
+regexp=ttl=(\d+)
+colours=default,"\033[38;5;176m"
+=======
+# name
+regexp=(?:[fF]rom|PING)\s(\S+)\s
+colours=default,"\033[38;5;68m"
+=======
+# time
+regexp=([0-9\.]+)\s?ms
+colours="\033[38;5;108m","\033[01;38;5;108m"
+=======
+# DUP
+regexp=DUP\!
+colours="\033[38;5;210m"
+=======
+# OK
+regexp=0% packet loss
+colours="\033[38;5;108m"
+=======
+# Errors
+regexp=(Destination Host Unreachable|100% packet loss)
+colours="\033[38;5;210m"
+=======
+# unknown host
+regexp=.+unknown\shost\s(.+)
+colours="\033[38;5;210m","\033[01;38;5;210m"
+-
+# statistics header
+regexp=--- (\S+) ping statistics ---
+colours="\033[01;38;5;m","\033[01;38;5;68m"
+-
+# last line min/avg/max/mdev
+regexp=rtt (min)/(avg)/(max)/(mdev)
+colours=default,"\033[38;5;221m","\033[38;5;68m","\033[38;5;210m","\033[38;5;213m"
+-
+# last line values
+regexp=\=\s([0-9\.]+)\/([0-9\.]+)\/([0-9\.]+)\/([0-9\.]+)
+colours=default,"\033[38;5;221m","\033[38;5;68m","\033[38;5;210m","\033[38;5;213m"
+-
+# these are good for nping
+regexp=SENT|RCVD
+colours="\033[38;5;210m"
+-
+# nping
+regexp=unreachable
+colours="\033[38;5;210m"
+

@@ -1,0 +1,16 @@
+# Time
+regexp=\sup(?:\s(\d+ days?),)?\s+(\d+ min|\d+:\d+),
+colours=default,"\033[38;5;173m","\033[38;5;144m"
+-
+# users
+regexp=\s+(\d+)\susers
+colours="\033[38;5;173m","\033[01;38;5;173m"
+-
+# load average
+regexp=load average: (\d+\.\d+),\s(\d+\.\d+),\s(\d+\.\d+)
+colours=default,"\033[38;5;80m","\033[38;5;116m","\033[38;5;116m"
+-
+# W Command section
+# Title
+regexp=^USER.*$
+colours="\033[01;38;5;m"

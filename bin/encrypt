@@ -1,0 +1,171 @@
+#!/usr/bin/env python3
+"""
+Description: Encrypts a string using key and HMAC key values; will generate the key and HMAC key if they're not supplied
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+"""
+"""
+Encrypt a string using AES-256-CBC with HMAC integrity protection.
+This code was based on an example here:
+http://www.levigross.com/2014/03/30/how-to-write-an-encrypt-and-decrypt-api-for-data-at-rest-in-nodejs/
+"""
+
+import os
+import sys
+import argparse
+import hmac
+import hashlib
+import secrets
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.backends import default_backend
+
+
+ALGORITHM = 'AES-256-CBC'
+HMAC_ALGORITHM = 'SHA256'
+
+
+def constant_time_compare(val1, val2):
+    """
+    Constant-time string comparison to prevent timing attacks.
+    """
+    return hmac.compare_digest(val1, val2)
+
+
+def encrypt_string(plain_text, key, hmac_key):
+    """
+    Encrypt a string using AES-256-CBC with HMAC integrity protection.
+    """
+    # Generate random IV (16 bytes for AES)
+    iv = secrets.token_bytes(16)
+    
+    # Create cipher and encrypt
+    cipher_obj = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+    encryptor = cipher_obj.encryptor()
+    
+    # Add PKCS7 padding
+    padder = padding.PKCS7(128).padder()
+    padded_data = padder.update(plain_text.encode('utf-8'))
+    padded_data += padder.finalize()
+    
+    # Encrypt the data
+    cipher_text = encryptor.update(padded_data) + encryptor.finalize()
+    cipher_text_hex = cipher_text.hex()
+    
+    # Create HMAC
+    h = hmac.new(hmac_key, digestmod=hashlib.sha256)
+    h.update(cipher_text_hex.encode('utf-8'))
+    h.update(iv.hex().encode('utf-8'))
+    
+    # Return in same format as Node.js version: cipher_text:iv:hmac
+    return f"{cipher_text_hex}:{iv.hex()}:{h.hexdigest()}"
+
+
+def decrypt_string(cipher_text_blob, key, hmac_key):
+    """
+    Decrypt a string that was encrypted with encrypt_string.
+    """
+    try:
+        cipher_blob = cipher_text_blob.split(":")
+        if len(cipher_blob) != 3:
+            print("Invalid encrypted blob format")
+            return None
+            
+        ct_hex = cipher_blob[0]
+        iv_hex = cipher_blob[1]
+        received_hmac = cipher_blob[2]
+        
+        # Verify HMAC
+        h = hmac.new(hmac_key, digestmod=hashlib.sha256)
+        h.update(ct_hex.encode('utf-8'))
+        h.update(iv_hex.encode('utf-8'))
+        
+        if not constant_time_compare(h.hexdigest(), received_hmac):
+            print("Encrypted blob has been tampered with...")
+            return None
+        
+        # Decrypt
+        iv = bytes.fromhex(iv_hex)
+        cipher_text = bytes.fromhex(ct_hex)
+        
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+        decryptor = cipher.decryptor()
+        
+        padded_data = decryptor.update(cipher_text) + decryptor.finalize()
+        
+        # Remove PKCS7 padding
+        unpadder = padding.PKCS7(128).unpadder()
+        plain_data = unpadder.update(padded_data) + unpadder.finalize()
+        
+        return plain_data.decode('utf-8')
+        
+    except Exception as e:
+        print(f"Decryption error: {e}")
+        return None
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='Encrypt a string using AES-256-CBC with HMAC integrity protection',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+encrypt will generate an encrypted string using key and HMAC key values.
+If the ENCRYPT_KEY_HEX and ENCRYPT_HMAC_KEY_HEX environment variables are
+defined, those values will be used to encrypt the string. Otherwise,
+arguments can be passed to define the key and HMAC key values.
+
+If the key and HMAC key values aren't provided, values will be generated and
+printed along with the encrypted string.
+        """)
+    
+    parser.add_argument('string', help='String to encrypt')
+    parser.add_argument('key_hex', nargs='?', help='Encryption key (hex)')
+    parser.add_argument('hmac_key_hex', nargs='?', help='HMAC key (hex)')
+    parser.add_argument('--initial', action='store_true', 
+                       help='Generate KEY and HMAC_KEY values even if environment variables are present')
+    
+    args = parser.parse_args()
+    
+    # Check for environment variables
+    key_hex = os.environ.get('ENCRYPT_KEY_HEX')
+    hmac_key_hex = os.environ.get('ENCRYPT_HMAC_KEY_HEX')
+    
+    generate_keys = False
+    
+    if not key_hex or not hmac_key_hex or args.initial:
+        if args.initial:
+            print("Generating KEY and HMAC_KEY")
+            generate_keys = True
+        elif args.key_hex and args.hmac_key_hex:
+            key_hex = args.key_hex
+            hmac_key_hex = args.hmac_key_hex
+        else:
+            print("Generating KEY and HMAC_KEY since the ENCRYPT_KEY_HEX and ENCRYPT_HMAC_KEY_HEX environment variables aren't defined")
+            generate_keys = True
+    
+    if generate_keys:
+        key = secrets.token_bytes(32)  # 256 bits
+        hmac_key = secrets.token_bytes(32)  # 256 bits
+        print(f'KEY: {key.hex()}')
+        print(f'HMAC_KEY: {hmac_key.hex()}')
+    else:
+        try:
+            key = bytes.fromhex(key_hex)
+            hmac_key = bytes.fromhex(hmac_key_hex)
+        except ValueError:
+            print("Error: Invalid hex key format")
+            sys.exit(1)
+    
+    # Encrypt the string
+    encrypted_str = encrypt_string(args.string, key, hmac_key)
+    print('Encrypted string:')
+    print(encrypted_str)
+    
+    # Verify by decrypting
+    if decrypt_string(encrypted_str, key, hmac_key) != args.string:
+        print('Error comparing string to encrypted string!')
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,54 @@
+# cxi tia dosiero estas treege nekompleta kaj nur mallonga ekzemplo
+# kial skribi regulojn por kolorigo de tekstoj
+#
+# substantivoj
+regexp=(?i)\b\w+(?=(o|oj|on|ojn)\b)
+colours="\033[38;5;71m"
+
+%%%%%%%
+
+# sufiksoj de substantivoj
+regexp=(?i)o(|j|n|jn)\b
+colours="\033[38;5;215m"
+
+%%%%%%%
+
+# verboj
+regexp=\b\w+(?=(?i)i|as|is|os|u)\b
+colours="\033[38;5;168m"
+
+%%%%%%%
+
+# sufiksoj de verboj
+regexp=(?i)(i|as|is|os|u)\b
+colours="\033[38;5;215m"
+
+%%%%%%%
+
+# adverboj
+regexp=(?i)\b\w+(?=e\b)
+colours="\033[01;38;5;168m"
+
+%%%%%%%
+
+# sufiksoj de adverboj
+regexp=(?i)(e|aux)\b
+colours="\033[38;5;215m"
+
+%%%%%%%
+
+# adjektivoj
+regexp=(?i)\b\w+(?=(a|aj|an|ajn)\b)
+colours="\033[38;5;67m"
+
+%%%%%%%
+
+# sufiksoj de adjektivoj
+regexp=(?i)a(j|n|jn)\b
+colours="\033[38;5;215m"
+
+%%%%%%%
+
+# kelkaj kurtaj vortoj
+regexp=(?i)\b(de|en|kun|sen|la|pli|plej|plu)\b
+colours="\033[01;38;5;215m"

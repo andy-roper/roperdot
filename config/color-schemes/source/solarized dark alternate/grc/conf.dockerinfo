@@ -1,0 +1,19 @@
+# Main Nodes
+regexp=^(\S[^:]+):\s?(.*)?$
+colours=default,"\033[38;5;36m"
+======
+# Sub Nodes
+regexp=^\s([^:]+):\s?(.*)?$
+colours=default,"\033[38;5;61m"
+======
+# Warning
+regexp=WARNING:\s(.+)$
+colours="\033[01;38;5;136m","\033[38;5;136m"
+======
+# devicemapper
+regexp=devicemapper$
+colours="\033[38;5;160m"
+-
+# loop-lvm
+regexp=: (/var/lib/docker/devicemapper/devicemapper/(?:meta)?data)
+colours=default,"\033[38;5;160m"

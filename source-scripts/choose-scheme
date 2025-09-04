@@ -1,0 +1,54 @@
+if [[ -n "$1" ]]; then
+	color_scheme="$1"
+else
+	schemes=()
+	schemes+=("default")
+	pushd "${ROPERDOT_DIR}/config/color-schemes/source" >&/dev/null || exit
+	for scheme in *; do
+		[[ "$scheme" == "default" ]] || schemes+=("$scheme")
+	done
+	popd >&/dev/null || exit
+	PS3="Scheme? "
+	select color_scheme in "${schemes[@]}"; do
+		break
+	done
+fi
+scheme_dir="${ROPERDOT_DIR}/config/color-schemes/source/${color_scheme}"
+if [[ ! -d "$scheme_dir" ]]; then
+	echo "Error applying new color scheme: directory $scheme_dir not found"
+	exit 1
+fi
+source "${scheme_dir}/initialize"
+if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
+	if [[ -n $SSH_CLIENT ]]; then
+		sed -i '' 's/^export ROPERDOT_COLOR_SCHEME=.*/export ROPERDOT_COLOR_SCHEME='$color_scheme'/' ~/roperdot-loader
+		export ROPERDOT_COLOR_SCHEME=$color_scheme
+	fi
+	sed -i '' 's/^export ROPERDOT_COMMON_COLOR_SCHEME=.*/export ROPERDOT_COMMON_COLOR_SCHEME='$color_scheme'/' ~/roperdot-loader
+	sed -i '' 's/ROPERDOT_VI_BACKGROUND=.*/ROPERDOT_VI_BACKGROUND='$ROPERDOT_VI_BACKGROUND'/' ~/roperdot-loader
+else
+	if [[ -n $SSH_CLIENT ]]; then
+		sed -i 's/^export ROPERDOT_COLOR_SCHEME=.*/export ROPERDOT_COLOR_SCHEME='$color_scheme'/' ~/roperdot-loader
+		export ROPERDOT_COLOR_SCHEME=$color_scheme
+	fi
+	sed -i 's/^export ROPERDOT_COMMON_COLOR_SCHEME=.*/export ROPERDOT_COMMON_COLOR_SCHEME='$color_scheme'/' ~/roperdot-loader
+	sed -i 's/ROPERDOT_VI_BACKGROUND=.*/ROPERDOT_VI_BACKGROUND='$ROPERDOT_VI_BACKGROUND'/' ~/roperdot-loader
+fi
+export ROPERDOT_COMMON_COLOR_SCHEME="$color_scheme"
+if [[ -n $SSH_CLIENT ]]; then
+	[[ -L ~/.grc && -d ~/.grc ]] && \rm ~/.grc
+	[[ -d ~/.grc ]] || ln -s "${scheme_dir}/grc" ~/.grc
+	source "${scheme_dir}/.git-colors"
+	echo "Set your terminal foreground color and cursor color to #${FOREGROUND_COLOR} and background color to #${BACKGROUND_COLOR}."
+	initialize_colors
+else
+	if [[ "$ROPERDOT_COMMON_COLOR_SCHEME" = "default" ]]; then
+		source "${ROPERDOT_DIR}/config/color-schemes/source/${ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME}/common-color-env-vars"
+	else
+		source "${ROPERDOT_DIR}/config/color-schemes/source/${ROPERDOT_COMMON_COLOR_SCHEME}/common-color-env-vars"
+	fi
+fi
+if command -v code >/dev/null 2>&1; then
+	export color_scheme
+	update-vscode-settings
+fi

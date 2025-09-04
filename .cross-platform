@@ -1,0 +1,14 @@
+# ROPERDOT_STANDARD_LOGINS: array of <username>@<hostname>
+# If your current USER and HOSTNAME match one of these entries, display of
+# the username and hostname in the prompt will be suppressed
+
+# declare -a ROPERDOT_STANDARD_LOGINS=("myusername@MyPCName" "myusername@My-MacBook.local")
+
+
+# ROPERDOT_PROMPT_HOST_COLOR_OVERRIDES: array of <hostname>:<color_variable>
+# If HOSTNAME matches one of the entries in the array, the host's name will be
+# shown using the color specified rather than the color in the ROPERDOT_PROMPT_HOST_COLOR
+# environment variable. If the HOSTNAME matches an array entry, it will be shown
+# in the prompt even if the current user and host are in ROPERDOT_STANDARD_LOGINS.
+
+# declare -a ROPERDOT_PROMPT_HOST_COLOR_OVERRIDES=("QAServerName:COLOR_YELLOW")

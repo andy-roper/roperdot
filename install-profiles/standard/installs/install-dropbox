@@ -1,0 +1,28 @@
+#
+# Description: Install script for Dropbox
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+# Last updated for current version on 15 Aug 2025
+
+if [[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" = gnome ]]; then
+	sudo apt update
+	sudo apt install -y nautilus-dropbox
+	
+	if ! command -v dropbox >/dev/null 2>&1; then
+		# Create keyrings directory for modern key management
+		sudo mkdir -p /etc/apt/keyrings
+		
+		# Import Dropbox GPG key
+		curl -fsSL https://linux.dropbox.com/fedora/rpm-public-key.asc | sudo gpg --dearmor -o /etc/apt/keyrings/dropbox.gpg
+		
+		# Add Dropbox repository with modern signed-by syntax
+		echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/dropbox.gpg] http://linux.dropbox.com/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/dropbox.list
+		
+		# Update package index and install
+		sudo apt update
+		sudo apt install -y dropbox python3-gpg
+	fi
+fi

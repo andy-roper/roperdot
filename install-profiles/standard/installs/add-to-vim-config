@@ -1,0 +1,50 @@
+#
+# Description: Adds a package to vim config files
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+# Usage
+# 1. Pass a package name to add to vim config files as an argument
+# 2. Pass a package name to add to vim config files followed by a block of text to add via stdin
+
+if test -t 0; then
+	package=$1
+	if [[ ! -e ~/.vimrc ]] || ! grep "$package" ~/.vimrc >/dev/null; then
+		echo "set rtp^=~/.vim/bundle/$package" >> ~/.vimrc
+	fi
+#	if command -v nvim >/dev/null 2>&1; then
+#		if [[ ! -e ~/.config/nvim/init.vim ]] || ! grep $package ~/.config/nvim/init.vim >/dev/null; then
+#			echo "set rtp^=~/.vim/bundle/$package" >> ~/.config/nvim/init.vim
+#		fi
+#	fi
+else
+	first_line=true
+	update_vim_config=true
+#	command -v nvim >/dev/null 2>&1 && update_nvim_config=true
+	while read -r line; do
+		if [[ -n "$first_line" ]]; then
+			unset first_line
+			package=$line
+			if [[ -d ~/.vim/bundle/$package ]]; then
+				if [[ ! -e ~/.vimrc ]] || grep "$package" ~/.vimrc; then
+					unset update_vim_config
+				fi
+#				if [[ -n "$update_nvim_config" ]]; then
+#					if [[ ! -e ~/.config/nvim/init.vim ]] || grep $package ~/.config/nvim/init.vim; then
+#						unset update_nvim_config
+#					fi
+#				fi
+#				[[ -z "$update_vim_config" && -z "$update_nvim_config" ]] && break
+				[[ -n "$update_vim_config" ]] && echo >> ~/.vimrc
+#				[[ -n "$update_nvim_config" ]] && echo >> ~/.config/nvim/init.vim
+			else
+				break
+			fi
+		else
+			[[ -n "$update_vim_config" ]] && echo "$line" >> ~/.vimrc
+#			[[ -n "$update_nvim_config" ]] && echo "$line" >> ~/.config/nvim/init.vim
+		fi
+	done
+fi

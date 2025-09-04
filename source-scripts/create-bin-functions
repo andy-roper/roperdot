@@ -1,0 +1,22 @@
+process_script_dir () {
+	local script_dir=$1
+	local temp_script="$(mktemp)"
+	local func_list=""
+	for f in "$script_dir"/*.sh; do
+		[[ "$f" =~ \* ]] && break
+		filename=$(basename "$f")
+		funcname="${filename%.sh}"
+		echo "$funcname () { $ROPERDOT_CURRENT_SHELL \"$f\" \"\$@\"; }" >> "$temp_script"
+		func_list="$func_list $funcname"
+	done
+	echo "export -f $func_list" >> "$temp_script"
+	. "$temp_script"
+	\rm "$temp_script"
+}
+
+if [[ $# -gt 0 ]]; then
+	process_script_dir "$script_dir"
+else
+	process_script_dir "${ROPERDOT_DIR}/bin-scripts"
+	[[ -d "${ROPERDOT_DIR}/personal-bin-scripts" ]] && process_script_dir "${ROPERDOT_DIR}/personal-bin-scripts"
+fi

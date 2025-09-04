@@ -1,0 +1,8 @@
+echo "=== STARTING INTERACTIVE DEBUGGING ==="
+echo "Enter commands to execute (empty line to continue):"
+while true; do
+    printf "debug> "
+    read cmd </dev/tty
+    [[ -z "$cmd" ]] && break
+    eval "$cmd"
+done

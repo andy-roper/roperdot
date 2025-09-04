@@ -1,0 +1,75 @@
+#
+# Description: Install script for z
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+. "${ROPERDOT_DIR}/source-scripts/nice-copy"
+
+if [[ -z "$has_sudo" && ! "$ROPERDOT_OS_ENV" = "darwin" ]]; then
+	echo "User lacks sudo access; aborting install of z"
+	exit 1
+fi
+
+# Detect available shells
+has_bash=$(command -v bash >/dev/null 2>&1 && echo true || echo false)
+has_zsh=$(command -v zsh >/dev/null 2>&1 && echo true || echo false)
+
+if command -v brew >/dev/null 2>&1; then
+	# Install bash version via brew if bash is available
+	if [[ "$has_bash" = "true" ]]; then
+		brew list z 2>/dev/null || {
+			export HOMEBREW_CURLRC=1
+			brew install z
+		}
+		installed=true
+	fi
+elif [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+	# Manual installation for bash
+	if [[ "$has_bash" = "true" ]]; then
+		install_app_from_git () {
+			nice_copy z.sh "${ROPERDOT_DIR}/extra-bin"
+			dos2unix "${ROPERDOT_DIR}/extra-bin/z.sh"
+
+			if [[ -d /usr/local/share/man/man1 ]]; then
+				nice_copy z.1 /usr/local/share/man/man1
+			elif [[ -d /usr/share/man/man1 ]]; then
+				nice_copy z.1 /usr/share/man/man1
+			else
+				echo "Unable to copy z manpage to man directory."
+			fi
+		}
+
+		get_from_git https://github.com/rupa/z z
+		installed=true
+	fi
+fi
+
+# Manual zsh-z installation
+if [[ "$has_zsh" = "true" ]]; then
+	install_app_from_git () {
+		nice_copy zsh-z.plugin.zsh "${ROPERDOT_DIR}/extra-bin"
+		dos2unix "${ROPERDOT_DIR}/extra-bin/zsh-z.plugin.zsh"
+	}
+
+	get_from_git https://github.com/agkozak/zsh-z zsh-z
+	installed=true
+fi
+
+# Add conditional sourcing logic to .extra
+if [[ "$has_bash" = "true" ]]; then
+	if command -v brew >/dev/null 2>&1; then
+	    brew_z_path="$(brew --prefix)/etc/profile.d/z.sh"
+	    echo "[[ -n \"\$BASH_VERSION\" && -f \"$brew_z_path\" ]] && . \"$brew_z_path\"" >> "${ROPERDOT_DIR}/.extra"
+	else
+	    echo '[[ -n "$BASH_VERSION" && -f "${ROPERDOT_DIR}/extra-bin/z.sh" ]] && . "${ROPERDOT_DIR}/extra-bin/z.sh"' >> "${ROPERDOT_DIR}/.extra"
+	fi
+fi
+
+if [[ "$has_zsh" = "true" ]]; then
+	echo '[[ -n "$ZSH_VERSION" ]] && source "${ROPERDOT_DIR}/extra-bin/zsh-z.plugin.zsh"' >> "${ROPERDOT_DIR}/.extra"
+fi
+
+[[ -e ~/.z ]] || echo > ~/.z

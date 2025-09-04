@@ -1,0 +1,31 @@
+command -v unpack >/dev/null 2>&1 || . "${ROPERDOT_DIR}/source-scripts/unpack"
+
+install_deb () {
+	local dir="$1" prefix="$2"
+	local deb="$(find "$dir" -maxdepth 1 -type f -name "${prefix}*")"
+	if [[ -z "$deb" ]]; then
+		echo "Could not find package to install for your OS version"
+		return 1
+	fi
+	local temp_dir="$(mktemp -d)"
+	pushd "$temp_dir" >/dev/null || return 1
+	unpack "$deb"
+	cd usr || return 1
+	cp -r  * "$LOCALUSR"
+	popd >/dev/null || return 1
+	rm -rf "$temp_dir" >/dev/null
+}
+
+install_deb_packages () {
+	local distro_dir="$($ROPERDOT_CURRENT_SHELL find-ubuntu-distro-dir)"
+	if [[ -z "$distro_dir" ]]; then
+		echo "Could not find appropriate distro directory for your OS"
+		return 1
+	fi
+	local prefix="$1"
+	while [[ -n "$prefix" ]]; do
+		install_deb "$distro_dir" "$prefix"
+		shift
+		prefix="$1"
+	done
+}

@@ -1,0 +1,27 @@
+# Size 'K'
+regexp=\s\d*[.,]?\dKi?
+colours="\033[38;5;114m"
+======
+# Size 'M'
+regexp=\s\d*[.,]?\dMi?
+colours="\033[38;5;186m"
+======
+# Size 'G'
+regexp=\s\d*[.,]?\dGi?
+colours="\033[38;5;174m"
+======
+# Size 'T'
+regexp=\s\d*[.,]?\dTi?
+colours="\033[01;38;5;174m"
+======
+# Mem
+regexp=^Mem
+colours="\033[01;38;5;116m"
+======
+# Swap
+regexp=^Swap
+colours="\033[01;38;5;176m"
+======
+# Zero
+regexp=\s+0\w?(\s|$)
+colours="\033[38;5;114m"

@@ -1,0 +1,16 @@
+git config --global color.diff.meta 178
+git config --global color.diff.commit 70
+git config --global color.diff.frag 164
+git config --global color.diff.old 131
+git config --global color.diff.new 70
+git config --global color.diff.whitespace "131 reverse"
+git config --global color.diff-highlight.oldNormal 131
+git config --global color.diff-highlight.oldHighlight "167 52"
+git config --global color.diff-highlight.newNormal 70
+git config --global color.diff-highlight.newHighlight "112 22"
+git config --global color.branch.current "178 reverse"
+git config --global color.branch.local 178
+git config --global color.branch.remote 70
+git config --global color.status.added 178
+git config --global color.status.changed 70
+git config --global color.status.untracked 37

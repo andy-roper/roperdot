@@ -1,0 +1,11 @@
+# Main & Last key
+regexp=(\w+)\.(\S+) = ?(.+)?$
+colours=default,"\033[38;5;100m","\033[38;5;36m","\033[38;5;136m"
+-
+# subcategories
+regexp=\w+\.(\S+(?=\.))\.
+colours=unchanged,"\033[38;5;61m"
+-
+# error
+regexp=sysctl: permission denied on key '([^']+)'
+colours="\033[38;5;167m","\033[01;38;5;167m"

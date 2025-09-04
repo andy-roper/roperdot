@@ -1,0 +1,34 @@
+if [[ -e /usr/bin/java ]]; then
+	f=$(readlink -f /usr/bin/java)
+	export JAVA_HOME=$(readlink -f "${f%/*}/../../lib")
+fi
+
+mount_iso_readonly () {
+	re="\.iso$"
+	if [[ -z "$1" || ! "$1" =~ $re ]]; then
+		cat <<EOT
+mount_iso_readonly: mount an ISO image for reading
+Usage: mount_iso_readonly <iso_file>
+EOT
+		exit 0
+	fi
+	gnome-disk-image-mounter "$1" || exit $?
+	mount_path=$(mount | grep "$1" | awk '{print $3}')
+	cd "$mount_path" || return 1
+}
+
+mount_iso_writable () {
+	re="\.iso$"
+	if [[ -z "$1" || ! "$1" =~ $re ]]; then
+		cat <<EOT
+mount_iso_writable: mount an ISO image for writing
+Usage: mount_iso_writable <iso_file>
+EOT
+		exit 0
+	fi
+	gnome-disk-image-mounter --writable "$1" || exit $?
+	mount_path=$(mount | grep "$1" | awk '{print $3}')
+	cd "$mount_path" || return 1
+}
+
+alias afk="cinnamon-screensaver-command --lock"

@@ -1,0 +1,31 @@
+# Header file
+regexp=^\#\sfile:\s(\S+)
+colours="\033[38;5;80m","\033[01;38;5;m"
+-
+# Header owner
+regexp=^\#\sowner:\s(\S+)
+colours="\033[38;5;80m","\033[01;38;5;108m"
+-
+# Header group
+regexp=^\#\sgroup:\s(\S+)
+colours="\033[38;5;80m","\033[01;38;5;221m"
+-
+# user
+regexp=(?:^|:)user:([^:]+)?:(\S+)
+colours="\033[38;5;108m","\033[38;5;234;48;5;108m","\033[38;5;151m"
+-
+# group
+regexp=(?:^|:)group:([^:]+)?:(\S+)
+colours="\033[38;5;221m","\033[38;5;234;48;5;221m","\033[38;5;221m"
+-
+# other
+regexp=(?:^|:)other:([^:]+)?:(\S+)
+colours="\033[38;5;210m","\033[38;5;234;48;5;210m","\033[38;5;210m"
+-
+# mask
+regexp=(?:^|:)mask:([^:]+)?:(\S+)
+colours="\033[38;5;68m","\033[38;5;234;48;5;68m","\033[38;5;68m"
+-
+# default:
+regexp=^default
+colours="\033[01;38;5;255;48;5;68m"

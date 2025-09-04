@@ -1,0 +1,11 @@
+# Values
+regexp=^\s([^:]+):(.+)$
+colours=default,"\033[38;5;31m"
+======
+# Client
+regexp=^(Client):
+colours=default,"\033[01;38;5;31m"
+======
+# Server
+regexp=^(Server):
+colours=default,"\033[01;38;5;143m"

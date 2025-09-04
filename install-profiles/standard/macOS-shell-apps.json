@@ -1,0 +1,412 @@
+[
+	{
+		"app": "wget",
+		"binary": "wget",
+		"package": "wget",
+		"list_prerequisite": "brew",
+		"desc": "Tool for retrieving content from web servers"
+	},
+	{
+		"app": "lynx",
+		"binary": "lynx",
+		"package": "lynx",
+		"list_prerequisite": "brew",
+		"desc": "Command-line web browser",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "p7zip",
+		"binary": "7z",
+		"package": "p7zip",
+		"list_prerequisite": "brew",
+		"desc": "File archiving utility, a port of 7z and 7za for Unix"
+	},
+	{
+		"app": "rar",
+		"binary": "unrar",
+		"package": "rar",
+		"list_prerequisite": "brew",
+		"desc": "Archive utility for decompressing rar files"
+	},
+	{
+		"app": "zopfli",
+		"binary": "zopfli",
+		"package": "zopfli",
+		"list_prerequisite": "brew",
+		"desc": "Compression library for good but slow deflate or zlib compression"
+	},
+	{
+		"app": "tree",
+		"binary": "tree",
+		"package": "tree",
+		"list_prerequisite": "brew",
+		"desc": "Recursive directory listing program that produces a depth-indented listing"
+	},
+	{
+		"app": "gawk",
+		"binary": "gawk",
+		"package": "gawk",
+		"list_prerequisite": "brew",
+		"desc": "GNU implementation of awk"
+	},
+	{
+		"app": "fzf",
+		"binary": "fzf",
+		"package": "fzf",
+		"list_prerequisite": "brew",
+		"install_script": "install-fzf",
+		"desc": "Command-line fuzzy finder; extensively used by roperdot"
+	},
+	{
+		"app": "fd",
+		"binary": "fd",
+		"package": "fd",
+		"list_prerequisite": "brew",
+		"install_script": "install-fd",
+		"desc": "A simple, fast and user-friendly alternative to find"
+	},
+	{
+		"app": "The Silver Searcher",
+		"binary": "ag",
+		"package": "the_silver_searcher",
+		"list_prerequisite": "brew",
+		"desc": "Code searching tool similar to ack, with a focus on speed"
+	},
+	{
+		"app": "VBinDiff",
+		"binary": "vbindiff",
+		"package": "vbindiff",
+		"list_prerequisite": "brew",
+		"desc": "Displays files in hex and ASCII; can show 2 files at once and highlight differences"
+	},
+	{
+		"app": "htop",
+		"binary": "htop",
+		"package": "htop",
+		"list_prerequisite": "brew",
+		"desc": "Interactive process viewer for Unix"
+	},
+	{
+		"app": "diff-so-fancy",
+		"binary": "diff-so-fancy",
+		"package": "diff-so-fancy",
+		"list_prerequisite": "brew",
+		"desc": "Formats and beautifies diff output"
+	},
+	{
+		"app": "vimdiff",
+		"binary": "vimdiff",
+		"package": "vimdiff",
+		"list_prerequisite": "brew",
+		"desc": "Shows differences between files using vim"
+	},
+	{
+		"app": "git-lfs",
+		"binary": "git-lfs",
+		"package": "git-lfs",
+		"list_prerequisite": "brew",
+		"install_command": "brew install git-lfs && git lfs install --skip-repo;",
+		"desc": "Replaces large files with text pointers inside Git while storing the contents on a remote server",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "gh",
+		"binary": "gh",
+		"package": "gh",
+		"list_prerequisite": "brew",
+		"desc": "GitHub CLI"
+	},
+	{
+		"app": "nvm",
+		"presence_command": "[[ -f ~/.nvm ]]",
+		"install_script": "install-nvm",
+		"sudo_not_required": true,
+		"desc": "Node version manager",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "Node.js",
+		"binary": "node",
+		"install_script": "install-node",
+		"desc": "JavaScript run-time environment that executes JavaScript code server-side",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "pipx",
+		"binary": "pipx",
+		"package": "pipx",
+		"list_prerequisite": "brew",
+		"desc": "Tool for installing and running Python applications in isolated environments"
+	},
+	{
+		"app": "Java",
+		"binary": "java",
+		"package": "java",
+		"list_prerequisite": "brew",
+		"install_command": "brew install java;",
+		"desc": "Compiler and run-time environment for Java",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "jENV",
+		"binary": "jenv",
+		"package": "jenv",
+		"list_prerequisite": "brew",
+		"desc": "Tool for managing the JAVA_HOME environment variable",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "AWS CLI",
+		"binary": "aws",
+		"package": "awscli",
+		"list_prerequisite": "brew",
+		"desc": "Amazon Web Services CLI"
+	},
+	{
+		"app": "jq",
+		"binary": "jq",
+		"list_prerequisite": "brew",
+		"install_script": "install-jq",
+		"desc": "Utility like sed for JSON data"
+	},
+	{
+		"app": "xmltodict",
+		"presence_command": "$python_bin -c 'import xmltodict' >/dev/null 2>&1",
+		"install_prerequisite": "pip3",
+		"install_command": "install-python-package xmltodict",
+		"sudo_not_required": true,
+		"desc": "Python module for converting XML to dictionary"
+	},
+	{
+		"app": "sqlparse",
+		"presence_command": "$python_bin -c 'import sqlparse' >/dev/null 2>&1",
+		"install_prerequisite": "pip3",
+		"install_command": "install-python-package sqlparse;",
+		"sudo_not_required": true,
+		"desc": "Python module for parsing and formatting SQL"
+	},
+	{
+		"app": "cryptography",
+		"presence_command": "$python_bin -c 'import cryptography' >/dev/null 2>&1",
+		"install_command": "install-python-package cryptography",
+		"sudo_not_required": true,
+		"desc": "Python cryptography module"
+	},
+	{
+		"app": "colored",
+		"presence_command": "$python_bin -c 'import colored' >/dev/null 2>&1",
+		"install_command": "install-python-package colored",
+		"sudo_not_required": true,
+		"desc": "Python module for color and formatting in terminals; extensively used by roperdot"
+	},
+	{
+		"app": "js-beautify",
+		"presence_command": "command -v js-beautify >/dev/null 2>&1 || $python_bin -c 'import jsbeautifier' >/dev/null 2>&1",
+		"install_script": "install-js-beautify",
+		"sudo_not_required": true,
+		"desc": "Node/Python script for beautifying JavaScript"
+	},
+	{
+		"app": "jsoncomment",
+		"presence_command": "$python_bin -c 'import jsoncomment' >/dev/null 2>&1",
+		"sudo_not_required": true,
+		"install_command": "install-python-package jsoncomment",
+		"desc": "Python JSON parser wrapper for parsing files/strings with nonstandard formatting"
+	},
+	{
+		"app": "cssbeautifier",
+		"presence_command": "command -v css-beautify >/dev/null 2>&1 || $python_bin -c 'import cssbeautifier' >/dev/null 2>&1",
+		"install_prerequisite": "pip3",
+		"sudo_not_required": true,
+		"install_command": "install-python-package cssbeautifier",
+		"desc": "Python script for beautifying CSS"
+	},
+	{
+		"app": "BeautifulSoup4",
+		"presence_command": "$python_bin -c 'import bs4' >/dev/null 2>&1",
+		"install_prerequisite": "pip3",
+		"sudo_not_required": true,
+		"install_command": "install-python-package beautifulsoup4",
+		"desc": "Python script for beautifying HTML"
+	},
+	{
+		"app": "tabulate",
+		"presence_command": "$python_bin -c 'import tabulate' >/dev/null 2>&1",
+		"install_command": "install-python-package tabulate",
+		"sudo_not_required": true,
+		"desc": "Python module for pretty-printing for tabular data"
+	},
+	{
+		"app": "rolldice",
+		"presence_command": "$python_bin -c 'import rolldice' >/dev/null 2>&1",
+		"install_command": "install-python-package py-rolldice",
+		"sudo_not_required": true,
+		"desc": "Python module for evaluating dice notation",
+		"groups": ["personal"]
+	},
+	{
+		"app": "generic colouriser",
+		"binary": "grc",
+		"package": "grc",
+		"install_script": "install-grc",
+		"desc": "Tool for adding color to the output of various Unix commands and to log files; extensively used by roperdot"
+	},
+	{
+		"app": "Pygments",
+		"binary": "pygmentize",
+		"install_script": "install-pygments",
+		"install_prerequisite": "pip3",
+		"install_command": "install-python-package pygments",
+		"sudo_not_required": true,
+		"desc": "Generic syntax highlighter for prettifying source code; extensively used by roperdot"
+	},
+	{
+		"app": "ydiff",
+		"binary": "ydiff",
+		"install_script": "install-ydiff",
+		"sudo_not_required": true,
+		"desc": "diff colorization tool"
+	},
+	{
+		"app": "shellcheck",
+		"presence_command": "brew list | grep shellcheck >/dev/null",
+		"package": "shellcheck",
+		"list_prerequisite": "brew",
+		"desc": "Shell script static analysis tool"
+	},
+	{
+		"app": "dos2unix",
+		"binary": "dos2unix",
+		"package": "dos2unix",
+		"desc": "Utilities for converting files with DOS line breaks to Unix format and vice versa"
+	},
+	{
+		"app": "z",
+		"binary": "_z",
+		"install_script": "install-z",
+		"desc": "Tool for changing to directories based on recent usage and frequency of use"
+	},
+	{
+		"app": "Midnight Commander",
+		"binary": "mc",
+		"package": "midnight-commander",
+		"list_prerequisite": "brew",
+		"desc": "Command-line visual file manager",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "tnftp",
+		"binary": "ftp",
+		"package": "tnftp",
+		"list_prerequisite": "brew",
+		"desc": "FTP client"
+	},
+	{
+		"app": "telnet",
+		"binary": "telnet",
+		"package": "telnet",
+		"list_prerequisite": "brew",
+		"desc": "Telnet client"
+	},
+	{
+		"app": "tnftpd",
+		"binary": "ftpd",
+		"package": "tnftpd",
+		"list_prerequisite": "brew",
+		"desc": "FTP client for servers using DARPA standard TELNET protocol"
+	},
+	{
+		"app": "telnetd",
+		"binary": "/usr/local/Cellar/telnetd",
+		"package": "telnetd",
+		"list_prerequisite": "brew",
+		"desc": "Telnet client for servers using DARPA standard TELNET protocol"
+	},
+	{
+		"app": "My Traceroute (MTR)",
+		"binary": "mtr",
+		"package": "mtr",
+		"list_prerequisite": "brew",
+		"install_script": "install-mtr",
+		"desc": "Diagnostic tool combining the functions of ping and traceroute",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "speedtest-cli",
+		"binary": "speedtest-cli",
+		"package": "speedtest-cli",
+		"list_prerequisite": "brew",
+		"desc": "Command-line interface for testing internet bandwidth with speedtest.net",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "testssl",
+		"binary": "testssl.sh",
+		"package": "testssl.sh",
+		"list_prerequisite": "brew",
+		"install_command": "brew install testssl && cp -f /usr/local/bin/testssl.sh /usr/local/bin/testssl;",
+		"desc": "Utility for testing a server's service on any port for TLS/SSL encryption",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "ssh-copy-id",
+		"binary": "ssh-copy-id",
+		"package": "ssh-copy-id",
+		"list_prerequisite": "brew",
+		"desc": "Used to install an SSH key on a server as an authorized key",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "entr",
+		"binary": "entr",
+		"package": "entr",
+		"list_prerequisite": "brew",
+		"desc": "Utility for running arbitrary commands when files change"
+	},
+	{
+		"app": "pv",
+		"binary": "pv",
+		"package": "pv",
+		"list_prerequisite": "brew",
+		"desc": "Utility for monitoring the progress of data through a pipeline"
+	},
+	{
+		"app": "terminal-notifier",
+		"binary": "terminal-notifier",
+		"package": "terminal-notifier",
+		"list_prerequisite": "brew",
+		"desc": "Tool to send macOS user notifications"
+	},
+	{
+		"app": "NCurses Disk Usage",
+		"binary": "ncdu",
+		"package": "ncdu",
+		"list_prerequisite": "brew",
+		"desc": "Disk usage analyzer with an ncurses interface",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "FFmpeg",
+		"binary": "ffmpeg",
+		"package": "ffmpeg",
+		"list_prerequisite": "brew",
+		"desc": "Utility for recording, converting and streaming audio and video",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "gifsicle",
+		"binary": "gifsicle",
+		"package": "gifsicle",
+		"list_prerequisite": "brew",
+		"desc": "Tool for creating, editing and getting information about GIF images and animations",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "ImageMagick",
+		"binary": "imagemagick",
+		"package": "imagemagick",
+		"list_prerequisite": "brew",
+		"desc": "Open-source suite for editing and manipulating images",
+		"exclusionGroups": ["work"]
+	}
+]

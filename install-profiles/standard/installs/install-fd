@@ -1,0 +1,41 @@
+#
+# Description: Install script for fd
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+. "${ROPERDOT_DIR}/source-scripts/nice-copy"
+
+install-fd-from-release () {
+	# https://github.com/sharkdp/fd/releases
+	local temp_dir archive url
+	temp_dir=$(mktemp -d)
+	pushd $temp_dir >/dev/null || return 1
+	get-web-file https://github.com/sharkdp/fd/releases fd.html
+	url="$(grep -Pom 1 '(?<=href="/)sharkdp/.*?/fd-v.*?-x86_64-unknown-linux.gnu.tar.gz' fd.html)"
+	get-web-file "https://github.com/$url" fd.tgz && archive="fd.tgz"
+	if [[ -n "$archive" ]]; then
+		tar xvf "$archive" >/dev/null
+		cd "$(max-file-for-pattern -d . "fd-.*")" || return 1
+		[[ -d "${ROPERDOT_DIR}/extra-bin" ]] || mkdir "${ROPERDOT_DIR}/extra-bin"
+		nice_copy fd "${ROPERDOT_DIR}/extra-bin"
+		copy_man_pages fd.1
+	fi
+	popd >/dev/null || return 1
+	\rm -rf $temp_dir
+}
+
+# Use the first procedure if in Linux or in WSL
+if [[ "$ROPERDOT_OS_FAMILY" = debian ]]; then
+	if [[ -n $ROPERDOT_WSL_V1 ]]; then
+		install-fd-from-release
+	else
+		sudo apt install fd-find -y
+	fi
+elif [[ "$ROPERDOT_OS_FAMILY" = rhel ]]; then
+	install-fd-from-release
+elif [[ "$ROPERDOT_OS_ENV" = darwin ]]; then
+	brew install fd
+fi

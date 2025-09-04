@@ -1,0 +1,21 @@
+#
+# Description: Install script for grc
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+. "${ROPERDOT_DIR}/source-scripts/nice-copy"
+
+if command -v brew >/dev/null 2>&1; then
+    brew install grc
+elif command -v apt >/dev/null 2>&1; then
+    sudo apt install grc
+else
+    echo "Neither brew nor apt found. Please install grc manually."
+    exit 1
+fi
+
+# Set up user configuration directory
+[[ -d ~/.grc ]] || mkdir ~/.grc
+nice_copy "${ROPERDOT_DIR}/config/color-schemes/source/default/grc" ~/.grc

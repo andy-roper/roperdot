@@ -1,0 +1,11 @@
+# SELinux
+regexp=(\w+_u):(\w+_r):(\w+_t):(\w\d)
+colours=default,"\033[38;5;144m","\033[38;5;180m","\033[38;5;115m","\033[38;5;182m"
+-
+# Path
+regexp=\/\S+(\/\S+)\(
+colours="\033[38;5;144m","\033[38;5;151m"
+-
+# Almost universal regex
+regexp=\.\*|\[\^\/\]\*|\(\/\.\*\)\?|\?|\\\.
+colours="\033[38;5;110m"

@@ -1,0 +1,61 @@
+#
+# Description: Install script for pygments
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+#DEBUGGING=true
+#. "${ROPERDOT_DIR}/source-scripts/debug"
+
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+. "${ROPERDOT_DIR}/source-scripts/nice-copy"
+
+# http://pygments.org/
+# https://pypi.org/project/Pygments/
+
+# Mac: done
+# Ubuntu and Mint barebones: done
+# CentOS: confirmed python is available OOTB; tested installing with yum; need to test non-sudo install
+
+if ! command -v pip3 >/dev/null 2>&1; then
+	echo Could not find pip3; aborting installation of Pygments
+	exit 1
+fi
+
+if ! command -v python3 >/dev/null 2>&1; then
+	echo Could not find python3; aborting installation of Pygments
+	exit 1
+fi
+
+if [[ "$ROPERDOT_OS_TYPE" = "linux" ]]; then
+	if [[ -n "$has_sudo" ]]; then
+		if command -v apt >/dev/null 2>&1; then
+			sudo apt install python-pygments -y && install_succeeded=true
+		elif command -v yum >/dev/null 2>&1; then
+			sudo yum install python-pygments -y && install_succeeded=true
+		fi
+ 	else
+		. "${ROPERDOT_DIR}/source-scripts/find-pip"
+		$pip_bin install --user Pygments && install_succeeded=true
+	fi
+elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
+	. "${ROPERDOT_DIR}/source-scripts/find-pip"
+	$pip_bin install --user Pygments && install_succeeded=true
+fi
+
+if [[ -n $install_succeeded ]]; then
+	[[ -n $manual_install ]] && copy_man_pages "$INSTALLSOURCE/python/pygmentize.1.gz"
+	temp_dir="$(mktemp -d)"
+	echo Installing roperdot Pygments style
+	pushd "$(temp_dir)" >/dev/null || return 1
+	unpack "${ROPERDOT_DIR}/apps-and-packages/pygments_style_roperdot.zip"
+	if [[ -n "$has_sudo" ]]; then
+		sudo $python_bin setup.py install
+	else
+#		python3 ./setup.py install --prefix="$LOCALUSR"
+		$python_bin ./setup.py install --prefix="$LOCAL"
+	fi
+	popd >/dev/null || return 1
+	rm -rf "$temp_dir" >/dev/null
+fi

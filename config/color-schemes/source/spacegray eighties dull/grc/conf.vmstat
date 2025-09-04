@@ -1,0 +1,20 @@
+# Title
+regexp=(procs)\s(-+memory-+)\s(-+swap-+)\s(-+io-+)\s(-+system-+)\s(-+cpu-+)
+colours=default,"\033[01;38;5;m","\033[01;38;5;116m","\033[01;38;5;139m","\033[01;38;5;109m","\033[01;38;5;144m","\033[01;38;5;131m"
+-
+# rows
+regexp=^(\s*\w+\s+\w+)\s+(\w+\s+\w+\s+\w+\s+\w+)\s+(\w+\s+\w+)\s+(\w+\s+\w+)\s+(\w+\s+\w+)\s+(\w+\s+\w+\s+\w+\s+\w+\s+\w+)
+colours=default,default,"\033[38;5;80m","\033[38;5;176m","\033[38;5;68m","\033[38;5;114m","\033[38;5;210m"
+-
+# ============================ DISK MODE =================================
+# Title disk mode
+regexp=^(disk-)\s(-+reads-+)\s(-+writes-+)\s(-+IO-+)
+colours=default,"\033[01;38;5;m","\033[01;38;5;144m","\033[01;38;5;139m","\033[01;38;5;109m"
+-
+# Title disk mode
+regexp=(\s+)(total\s+merged\s+sectors\s+ms)\s+(total\s+merged\s+sectors\s+ms)\s+(cur\s+sec)
+colours=default,"\033[01;38;5;m","\033[01;38;5;144m","\033[01;38;5;139m","\033[01;38;5;109m"
+-
+# rows disk mode
+regexp=^(\S+)\s+(\d+\s+\d+\s+\d+\s+\d+)\s+(\d+\s+\d+\s+\d+\s+\d+)\s+(\d+\s+\d+)
+colours=default,"\033[38;5;231m","\033[38;5;114m","\033[38;5;176m","\033[38;5;68m"

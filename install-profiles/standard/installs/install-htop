@@ -1,0 +1,56 @@
+#
+# Description: Install script for htop
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+. "${ROPERDOT_DIR}/source-scripts/install-deb"
+
+[[ -e /tmp/make-install-prepare ]] && \rm /tmp/make-install-prepare >/dev/null
+
+if [[ "$ROPERDOT_OS_TYPE" = "linux" ]]; then
+	if [[ -n "$has_sudo" ]]; then
+		if command -v apt >/dev/null 2>&1; then
+			sudo apt install htop -y
+		elif command -v yum >/dev/null 2>&1; then
+			sudo yum -y install htop
+		fi
+	else
+		if command -v apt >/dev/null 2>&1; then
+			install_deb_packages htop
+		else
+			if ! command -v gcc >/dev/null 2>&1 && ! command -v cc >/dev/null 2>&1; then
+				echo "Error: either gcc or cc is required for installing htop; aborting install"
+				exit 1
+			fi
+			if yum list installed 2>/dev/null | grep "ncurses-devel" >/dev/null; then
+				cat << EOT >> /tmp/make-install-prepare
+make-install-prepare() {
+	./configure --prefix="\$LOCALUSR"
+}
+EOT
+			else
+				cat << EOT >> /tmp/make-install-prepare
+make-install-prepare() {
+	if [[ ! -d "\${LOCAL}/packages/centos/ncurses" ]]; then
+		local rpmdir="\${INSTALLSOURCE}/packages/centos/ncurses"
+		unpack_rpm "\$rpmdir" "ncurses-[0-9]"
+		unpack_rpm "\$rpmdir" "ncurses-base"
+		unpack_rpm "\$rpmdir" "ncurses-libs"
+		unpack_rpm "\$rpmdir" "ncurses-devel"
+	fi
+	export PATH="\$PATH:\$LOCALUSR/bin"
+	export LD_LIBRARY_PATH="\$LOCALUSR/lib64"
+	export CPATH="\$LOCALUSR/include"
+	./configure --prefix="\$LOCAL" --exec-prefix=\$HOME/.local CFLAGS=-I"\$LOCALUSR/include" CPPFLAGS=-I"\$LOCALUSR/include" CXXFLAGS=-L"\$LOCALUSR/include" LDFLAGS=-L/"\$LOCALUSR/lib64"
+}
+EOT
+			fi
+			make-install htop
+		fi
+	fi
+elif command -v brew >/dev/null 2>&1; then
+	brew install htop
+fi

@@ -1,0 +1,23 @@
+# Devices
+regexp=^[\w\d-]+\s{2,}(?!%)
+colours="\033[38;5;151m"
+-
+# Averages Title
+regexp=\s+(%user)\s+(%nice)\s+(%system)\s+(%iowait)\s+(%steal)\s+(%idle)
+colours=default,"\033[38;5;68m","\033[38;5;80m","\033[38;5;176m","\033[38;5;213m","\033[38;5;210m","\033[38;5;108m"
+-
+# Averages Numbers
+regexp=\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)
+colours=default,"\033[38;5;68m","\033[38;5;80m","\033[38;5;176m","\033[38;5;213m","\033[38;5;210m","\033[38;5;108m"
+-
+# Averages last line
+regexp=^Average:.*$
+colours="\033[38;5;m"
+-
+# High rates (4 digits)
+regexp=\s\d{4}\.\d+
+colours="\033[38;5;210m"
+-
+# High rates (5+ digits)
+regexp=\s\d{5,}\.\d+
+colours="\033[01;38;5;210m"

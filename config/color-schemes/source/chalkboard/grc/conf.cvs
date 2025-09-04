@@ -1,0 +1,24 @@
+# conflict
+regexp=^C .*$
+colours="\033[01;38;5;174m"
+count=more
+======
+# modified
+regexp=^M .*$
+colours="\033[01;38;5;104m"
+count=more
+======
+# added
+regexp=^A .*$
+colours="\033[38;5;116m"
+count=more
+======
+# removed
+regexp=^R .*$
+colours="\033[38;5;116m"
+count=more
+======
+# unlisted
+regexp=^\? .*$
+colours="\033[01;38;5;m"
+count=more

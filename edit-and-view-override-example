@@ -1,0 +1,43 @@
+if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+	edit_override () {
+		local ext="${1##*.}"
+		case "$ext" in
+			chm) echo hh ;;
+		esac
+	}
+
+	view_override () {
+		local ext="${1##*.}"
+		case "$ext" in
+			chm) echo hh ;;
+		esac
+	}
+elif [[ "$ROPERDOT_DESKTOP_ENV" = "gnome" ]]; then
+	edit_override () {
+		local ext="${1##*.}"
+		case "$ext" in
+			ps) echo evince ;;
+		esac
+	}
+
+	view_override () {
+		local ext="${1##*.}"
+		case "$ext" in
+			ps) echo evince ;;
+		esac
+	}
+elif [[ "$ROPERDOT_DESKTOP_ENV" = "kde" ]]; then
+	edit_override () {
+		local ext="${1##*.}"
+		case "$ext" in
+			chm|dvi|djvu|epub|mobi) echo okular ;;
+		esac
+	}
+
+	view_override () {
+		local ext="${1##*.}"
+		case "$ext" in
+			chm|dvi|djvu|epub|mobi) echo okular ;;
+		esac
+	}
+fi

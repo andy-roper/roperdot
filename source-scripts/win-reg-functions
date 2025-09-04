@@ -1,0 +1,12 @@
+get-reg-value () {
+	local key="$1" value="$2"
+	key="${key//\//\\}"
+	reg.exe query "$key" /v "$value" | tail -2 | head -1 | sed -e 's/.*\s\{2,\}//'
+}
+
+get-reg-path-value () {
+	local dir="$(get-reg-value "$1" "$2")"
+	[[ "$dir" =~ % ]] && dir="$(cd /mnt/c && cmd.exe /c echo "$dir" 2>/dev/null | sed -e 's/"//g')"
+	local value="$(wslpath "$dir")"
+	echo $value | tr -d '\r' | tr -d '\n'
+}

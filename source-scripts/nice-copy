@@ -1,0 +1,44 @@
+command -v backup_file >/dev/null 2>&1 || . "${ROPERDOT_DIR}/source-scripts/backup-file"
+
+nice_copy () {
+	[[ $ROPERDOT_CURRENT_SHELL = bash ]] && shopt -s dotglob || setopt dotglob
+	declare -a sources
+	local dest_file dest dest_is_dir dest_dir
+	while [[ $# -gt 1 ]]; do
+		sources+=("$1")
+		shift
+	done
+	dest="$1"
+	[[ -d "$dest" ]] && dest_is_dir=true
+	for src in "${sources[@]}"; do
+		if [[ -d "$src" ]]; then
+			if [[ -n "$dest_is_dir" ]]; then
+				for f in "$src"/*; do
+					# nice_copy "$f" "$dest"
+					[[ -f "$f" ]] && nice_copy "$f" "$dest"
+				done
+			else
+				echo "Error in nice_copy: attempt to copy directory $src to file $dest"
+			fi
+		else
+			if [[ -n "$dest_is_dir" ]]; then
+				dest_dir="$dest"
+				dest_file="${src##*/}"
+				dest_file="$dest/$dest_file"
+			else
+				dest_file="$dest"
+				dest_dir="${dest%/*}"
+			fi
+			backup_file "$dest_file"
+			if [[ "$ROPERDOT_DESKTOP_ENV" = "mac" || "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+				cp "$src" "$dest_file" >/dev/null
+			else
+				if [[ -w "$dest_dir" ]]; then
+					cp "$src" "$dest_file" >/dev/null
+				else
+					sudo cp "$src" "$dest_file" >/dev/null
+				fi
+			fi
+		fi
+	done
+}

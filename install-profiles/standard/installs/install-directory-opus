@@ -1,0 +1,22 @@
+#
+# Description: Install script for Directory Opus
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+	choco install -y directoryopus
+	[[ "$(desktop_shortcut_exists "Directory Opus")" ]] || create-windows-shortcut "Directory Opus" "%PROGRAMFILES%\GPSoftware\Directory Opus\dopus.exe"
+
+	zip_file="${ROPERDOT_DIR}/install-profiles/personal/config-files/Directory Opus.zip"
+	if [[ -f "$zip_file" ]]; then
+		. "${ROPERDOT_DIR}/source-scripts/unpack"
+		. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
+		winenv APPDATA
+		dest_dir="$APPDATA/GPSoftware/Directory Opus"
+		mkdir -p "$dest_dir"
+		cd "$dest_dir"
+		unpack_overwrite "$zip_file"
+	fi
+fi

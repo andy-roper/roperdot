@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+"""
+Description: Converts an RGB color to an xterm-256 color
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+"""
+
+# Default color levels for the color cube
+cubelevels = [0x00, 0x5f, 0x87, 0xaf, 0xd7, 0xff]
+# Generate a list of midpoints of the above list
+snaps = [(x + y) / 2 for x, y in zip(cubelevels, [0] + cubelevels)][1:]
+
+
+def rgb2short(r, g, b):
+    """ Converts RGB values to the nearest equivalent xterm-256 color."""
+    # Using list of snap points, convert RGB value to cube indexes
+    r, g, b = map(lambda x: len(tuple(s for s in snaps if s < x)), (r, g, b))
+    # Simple colorcube transform
+    return r * 36 + g * 6 + b + 16
+
+
+def split_into(s, l):
+    return [int(s[1][y - l : y], 16) for y in range(l, len(s[1]) + l, l)]
+
+
+def help():
+    print('''
+rgb2xterm256: converts an RGB color to an xterm-256 color 
+Usages: rgb2xterm256 <hex-rgb-value>
+        rgb2xterm256 <dec-red-value> <dec-green-value> <dec-blue-value>
+
+Examples:
+rgb2xterm256 aabbcc
+rgb2xterm256 170 187 204
+'''[1:-1])
+    quit()
+
+
+def main():
+    import sys
+    if len(sys.argv) == 1 or sys.argv[1] in ['--help', '-?', '-h']:
+        help()
+
+    """ Pass either 1 hex rgb string or split into 3."""
+    if len(sys.argv) < 3:
+        args = split_into(sys.argv, 2)
+    else:
+        # args = sys.argv
+        args = []
+        for v in sys.argv[1:]:
+            args.append(int(v))
+
+    print(rgb2short(args[0], args[1], args[2]))
+
+
+if __name__ == '__main__':
+    main()

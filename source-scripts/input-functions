@@ -1,0 +1,119 @@
+read_input () {
+	if [[ $ROPERDOT_CURRENT_SHELL = bash ]]; then
+		read -p "$1 "
+	else
+		read "?$1 "
+	fi
+	[[ -n "$logfile" ]] && echo "$REPLY" >> $logfile
+}
+
+read_key () {
+	local silent_switch
+	[[ "$2" = silent ]] && silent_switch=-s
+	if [[ $ROPERDOT_CURRENT_SHELL = bash ]]; then
+		read -p "$1 " -n1 $silent_switch
+	else
+		read -k 1 $silent_switch "?$1 "
+	fi
+	[[ -n "$logfile" ]] && echo "$REPLY" >> $logfile
+}
+
+# Return 0 for affirmative, 1 for negative
+ask_yn () {
+	echo
+	local text="$1" recommended="$3" current_value="$4" default
+	if [[ "$2" = "y" || "$2" = "Y" || "$2" = "true" || "$2" = "TRUE" ]]; then
+		default=y
+	else
+		default=n
+	fi
+	if [[ -n "$accept_recommended" && ( -n "$recommended" || -n "$current_value" ) ]]; then
+		local override_value
+		[[ -n "$current_value" ]] && override_value="$current_value" || override_value="$recommended"
+		if [[ "$override_value" = "y" || "$override_value" = "Y" || "$override_value" = "true" || "$override_value" = "TRUE" ]]; then
+			override_value=y
+		else
+			override_value=n
+		fi
+		echo "${text} ${override_value}"
+		echo
+		[[ "$override_value" = "y" ]] && return 0 || return 1
+	else
+		if [[ "$default" = "n" ]]; then
+			while true; do
+				read_input "$text"
+				echo
+				[[ $REPLY =~ ^[nN]$ || "$REPLY" = "" ]] && return 1
+				[[ $REPLY =~ ^[yY]$ ]] && return 0
+			done
+		else
+			while true; do
+				read_input "$text"
+				echo
+				[[ $REPLY =~ ^[yY]$ || "$REPLY" = "" ]] && return 0
+				[[ $REPLY =~ ^[nN]$ ]] && return 1
+			done
+		fi
+	fi
+}
+
+ask_yn_n () {
+	local text="$1 [y/N]?"
+	shift
+	ask_yn "$text" n "$@" && return 0 || return 1
+}
+
+ask_yn_y () {
+	local text="$1 [Y/n]?"
+	shift
+	ask_yn "$text" y "$@" && return 0 || return 1
+}
+
+# Example usages:
+# selection="$(select_from_list "Prompt text" "default_index" "Choice one" "Choice two" "Choice three")"
+# NOTE: default_index is 1-based, not 0-based
+select_from_list() {
+	local PS3="$1: " value selection COLUMNS_OLD=$COLUMNS
+	shift
+	index=$1
+	shift
+	if [[ "$1" = "--index" ]]; then
+		local return_index=true
+		shift
+	fi
+	if [[ -n "$accept_recommended" && -n "$index" ]]; then
+		let count=0
+		for option in "$@"; do
+			(( ++count ))
+			echo "$count) $option" > /dev/tty
+		done
+		echo "${PS3}${index}" > /dev/tty
+		if [[ -n "$return_index" ]]; then
+			echo $index
+		else
+			echo "${@:$index:1}"
+		fi
+		return
+	fi
+	COLUMNS=1
+	for value in "$@"; do
+		[[ ${#value} -gt $COLUMNS ]] && COLUMNS=${#value}
+	done
+	while [[ -z "$selection" ]]; do
+		select selection in "$@"; do
+			break
+		done
+	done
+	COLUMNS=$COLUMNS_OLD
+	if [[ -n "$return_index" ]]; then
+		echo $REPLY
+	else
+		echo "$selection"
+	fi
+}
+
+select_from_list_index () {
+	local prompt_text="$1" default_index="$2"
+	shift 2
+	select_from_list "$prompt_text" "$default_index" --index "$@"
+}

@@ -1,0 +1,24 @@
+{
+	"workbench.colorCustomizations": {
+		"terminal.background": "#2d2d2d",
+		"terminal.foreground": "#c9c6bc",
+		"terminal.ansiBlack": "#1b1e25",
+		"terminal.ansiRed": "#f2777a",
+		"terminal.ansiGreen": "#92b477",
+		"terminal.ansiYellow": "#ffcc66",
+		"terminal.ansiBlue": "#6599cc",
+		"terminal.ansiMagenta": "#cc99cc",
+		"terminal.ansiCyan": "#66cccc",
+		"terminal.ansiWhite": "#f2f0ec",
+		"terminal.ansiBrightBlack": "#686868",
+		"terminal.ansiBrightRed": "#ff8186",
+		"terminal.ansiBrightGreen": "#a2daa4",
+		"terminal.ansiBrightYellow": "#ffd968",
+		"terminal.ansiBrightBlue": "#5e98da",
+		"terminal.ansiBrightMagenta": "#ff77ff",
+		"terminal.ansiBrightCyan": "#92ece9",
+		"terminal.ansiBrightWhite": "#ffffff"
+	},
+	"terminal.integrated.fontFamily": "Hack Nerd Font Mono",
+	"terminal.integrated.fontSize": 13
+}

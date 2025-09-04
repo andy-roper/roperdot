@@ -1,0 +1,31 @@
+# Blk
+regexp=^(/dev/)(.+):\s
+colours=default,"\033[38;5;142m","\033[38;5;100m"
+======
+# Blk mapper
+regexp=^/dev/(mapper/)(.+):\s
+colours=unchanged,"\033[04;38;5;142m","\033[38;5;100m"
+======
+# UUID
+regexp=\sUUID="([^"]+)
+colours="\033[01;38;5;178m","\033[38;5;66m"
+======
+#UUID_SUB
+regexp=\sUUID_SUB="([^"]+)
+colours="\033[38;5;142m","\033[38;5;100m"
+======
+# TYPE
+regexp=TYPE="([^"]+)
+colours="\033[01;38;5;108m","\033[38;5;108m"
+======
+# LABEL
+regexp=\sLABEL="([^"]+)
+colours="\033[01;38;5;65m","\033[38;5;65m"
+======
+# PARTLABEL
+regexp=\sPARTLABEL="([^"]+)
+colours="\033[01;38;5;142m","\033[38;5;166m"
+# PARTUUID
+regexp=PARTUUID="([^"]+)
+colours="\033[38;5;142m","\033[38;5;138m"
+

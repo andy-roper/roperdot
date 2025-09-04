@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+
+# Script to create a simple git repo with commits and uncommitted changes for testing prompts
+
+set -e  # Exit on any error
+
+REPO_NAME="git-test-repo-dirty"
+
+# Clean up existing repo if it exists
+if [ -d "$REPO_NAME" ]; then
+    echo "Removing existing $REPO_NAME directory..."
+    rm -rf "$REPO_NAME"
+fi
+
+# Create and enter the test repository
+echo "Creating test repository: $REPO_NAME"
+mkdir "$REPO_NAME"
+cd "$REPO_NAME"
+
+# Initialize git repo
+git init
+
+# Configure git user (in case not set globally)
+git config user.name "Test User"
+git config user.email "test@example.com"
+
+# Create initial file and commit
+echo "Initial content" > README.md
+echo "print('Hello, World!')" > script.py
+git add README.md script.py
+git commit -m "Initial commit"
+
+# Make another commit
+echo "Updated content with more details" > README.md
+git add README.md
+git commit -m "Update README"
+
+# Add some uncommitted changes
+echo "Modified content - not yet committed" >> README.md
+echo "print('Hello, World!')" > new_script.py
+echo "temp_file.log" > .gitignore
+
+echo ""
+echo "✅ SUCCESS! Test repository created."
+echo ""
+echo "Repository created at: $(pwd)"
+echo ""
+echo "Current git status:"
+git status --short
+echo ""
+echo "Git log (last 3 commits):"
+git log --oneline -3 2>/dev/null || git log --oneline
+echo ""
+echo "To test your prompt, cd into this directory:"
+echo "cd $REPO_NAME"
+echo ""
+echo "To clean up when done:"
+echo "cd .. && rm -rf $REPO_NAME"

@@ -1,0 +1,17 @@
+#
+# Description: Install script for git
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
+choco install -y git
+if [[ ! -f /usr/bin/git ]]; then
+	if [[ -f "${rd_program_files}/Git" ]]; then
+		ln -s "${rd_program_files}/Git/bin/git.exe" /usr/bin/git
+	elif [[ -f "${rd_program_files_x86}/Git" ]]; then
+		ln -s "${rd_program_files_x86}/Git/bin/git.exe" /usr/bin/git
+	fi
+fi

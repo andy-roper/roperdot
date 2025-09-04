@@ -1,0 +1,24 @@
+# new lines and filenames (unified diff)
+regexp=^\+(.*$)
+colours="\033[01;38;5;114m"
+count=more
+=======
+# removed lines and filenames (unified diff)
+regexp=^\-(--.+$|[^\-].*$|$)
+colours="\033[01;38;5;204m"
+count=more
+========
+# new lines
+regexp=^\>([^\>].*|$)
+colours="\033[01;38;5;114m"
+count=more
+=======
+# removed lines
+regexp=^\<([^\<].*|$)
+colours="\033[01;38;5;204m"
+count=more
+=======
+# lines affected
+regexp=^@@ .* @@$
+colours="\033[38;5;176m"
+count=more

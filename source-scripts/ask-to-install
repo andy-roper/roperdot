@@ -1,0 +1,65 @@
+command -v ask_yn >/dev/null 2>&1 || . "${ROPERDOT_DIR}/source-scripts/input-functions"
+
+ask_to_install () {
+	local app_name="$1"
+	local desc="$2"
+	local default_answer="$3"
+	if [[ -n "$install_all" ]]; then
+		echo "Installing $app_name"
+		return 0
+	fi
+	if [[ -n "$accept_recommended" && -n "$default_answer" ]]; then
+		if [[ "$app_name" = "Linuxbrew" ]]; then
+			ask_yn_n "Linuxbrew is a package manager required to install several applications. Install it" "$default_answer"
+		elif [[ -n "$single_install" ]]; then
+			ask_yn_n "Install $app_name ($desc)" "$default_answer"
+		else
+			echo "$app_name: $desc"
+			ask_yn_n "Install $app_name" "$default_answer"
+		fi
+	else
+		if [[ "$app_name" = "Linuxbrew" ]]; then
+			ask_yn_n "Linuxbrew is a package manager required to install several applications. Install it"
+		elif [[ -n "$single_install" ]]; then
+			ask_yn_n "Install $app_name ($desc)"
+		else
+			echo "$app_name: $desc"
+			ask_yn_n "Install $app_name"
+		fi
+	fi
+	local return_code=$?
+	[[ $return_code -eq 0 ]] && echo "Installing $app_name"
+	return $return_code
+}
+
+ask_to_install_warning () {
+	local app_name="$1"
+	local desc="$2"
+	local default_answer="$3"
+	if [[ -n "$install_all" ]]; then
+		echo "${warning_text}Installing $app_name${normal_text}"
+		return 0
+	fi
+	if [[ -n "$accept_recommended" && -n "$default_answer" ]]; then
+		if [[ "$app_name" = "Linuxbrew" ]]; then
+			ask_yn_n "Linuxbrew is a package manager required to install several applications. Install it" "$default_answer"
+		elif [[ -n $single_install ]]; then
+			ask_yn_n "${warning_text}Install $app_name ($desc)${normal_text}" "$default_answer"
+		else
+			echo "$app_name: $desc"
+			ask_yn_n "${warning_text}Install $app_name${normal_text}" "$default_answer"
+		fi
+	else
+		if [[ "$app_name" = "Linuxbrew" ]]; then
+			ask_yn_n "Linuxbrew is a package manager required to install several applications. Install it"
+		elif [[ -n $single_install ]]; then
+			ask_yn_n "${warning_text}Install $app_name ($desc)${normal_text}"
+		else
+			echo "$app_name: $desc"
+			ask_yn_n "${warning_text}Install $app_name${normal_text}"
+		fi
+	fi
+	local return_code=$?
+	[[ $return_code -eq 0 ]] && echo "Installing $app_name"
+	return $return_code
+}

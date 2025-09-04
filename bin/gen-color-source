@@ -1,0 +1,60 @@
+#!/usr/bin/env perl
+# Description: Prints color definitions based on an .Xresources file
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+
+use strict;
+
+my $schemeFile = $ARGV[0];
+help() if (!$schemeFile || ! -f $schemeFile);
+my @colorNames = ("BLACK", "RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN", "WHITE");
+my %ansiColorValue;
+
+open hFile, $schemeFile;
+while (<hFile>) {
+	chomp;
+	next if ($_ !~ /^\*\.(.*):\s*#(.{6})/);
+	my $name = $1;
+	my $color = $2;
+	if ($name =~ /^color(\d+)/) {
+		my $index = $1;
+		if ($index > 7) {
+			$name = "BR" . $colorNames[$index - 8];
+		}
+		else {
+			$name = $colorNames[$index];
+		}
+	}
+	elsif ($name eq "foreground" || $name eq "background") {
+		$name = uc $name;
+	}
+	else {
+		next;
+	}
+	my $colorValue = qx(rgb2xterm256 $color);
+	$colorValue =~ s/\n//g;
+	$ansiColorValue{$name} = $colorValue;
+}
+close hFile;
+foreach my $colorName (@colorNames) {
+	print "$colorName " . $ansiColorValue{$colorName} . "\n";
+}
+foreach my $colorName (@colorNames) {
+	my $name = "BR$colorName";
+	print "$name " . $ansiColorValue{$name} . "\n";
+}
+
+sub help {
+	print <<EOT;
+gen-color-source: prints color definitions based on an .Xresources file
+Usage: gen-color-source <filespec>
+
+gen-color-source will generate the closest 256-color approximation for the
+colors in an .Xresources file.
+
+These colors should be tweaked as necessary to your preference and then
+saved as color-defs.txt along with .Xresources to a color scheme directory
+under roperdot/config/color-schemes/source.
+EOT
+	exit 0;
+}

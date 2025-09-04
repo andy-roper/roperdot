@@ -1,0 +1,7 @@
+#Message
+regexp=([^\w\d]+)
+colours=unchanged
+======
+regexp=([a-zA-Z0-9]+)
+colours=default,"\033[38;5;114m","\033[38;5;179m","\033[38;5;204m"
+

@@ -1,0 +1,277 @@
+#!/usr/bin/env perl
+# Description: Shows size in bytes for files
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+
+use strict;
+
+use File::Find;
+use File::Spec;
+use Getopt::Long;
+use Getopt::Long qw(:config bundling);
+use Cwd;
+
+my @dirList;
+my %dirSize;
+my %formattedSize;
+my $sizeTotal;
+my $dotSize = 0;
+
+my $ascending;
+my $descending;
+my $humanReadable;
+my $omitTotal;
+my $needHelp;
+my $verbose;
+my $fullPath;
+my $processChildren;
+my $suppressZeroBytes;
+my $presentDir;
+
+my $result = GetOptions(
+	"a|asc"      => \$ascending,
+	"c|children" => \$processChildren,
+	"d|desc"     => \$descending,
+	"f|full"     => \$fullPath,
+	"p|present"  => \$presentDir,
+	"r|readable" => \$humanReadable,
+	"t|terse"    => \$omitTotal,
+	"v|verbose"  => \$verbose,
+	"z|zero"     => \$suppressZeroBytes,
+	"h|help|?"   => \$needHelp
+);
+showHelp() if (!$result || $needHelp);
+
+my ($dir, $fileGlob);
+if ($#ARGV >= 0) {
+	my $arg = $ARGV[0];
+	if ($arg =~ /[*]/) {
+		if ($arg =~ /^(.*)\/(.*?)$/) {
+			$dir = $1;
+			$fileGlob = $2;
+		}
+		else {
+			$dir = ".";
+			$fileGlob = $arg;
+		}
+	}
+	else {
+		$dir = $arg;
+	}
+}
+else {
+	$dir = ".";
+}
+if ($fileGlob) {
+	$fileGlob =~ s/\./\\./g;
+	$fileGlob =~ s/\*/.*/g;
+	$fileGlob = qr/^${fileGlob}$/i;
+}
+showHelp() if (! -d $dir);
+my $maxLen = 0;
+my $dirPrefix;
+if ($fullPath) {
+	if ($dir eq ".") {
+		$dirPrefix = cwd() . "/";
+	}
+	elsif ($dir =~ /^\//) {
+		$dirPrefix = $dir;
+	}
+	else {
+		$dirPrefix = cwd() . "/";
+	}
+#	$dirPrefix = ($dir eq "." ? cwd() : $dir) . "/";
+}
+
+print "dirPrefix: $dirPrefix\n" if ($verbose);
+
+if ($processChildren) {
+	opendir(PARENTDIR, $dir) or die $!;
+	while (my $f = readdir(PARENTDIR)) {
+		next if ($f =~ /\.{1,2}$/);
+		$f = File::Spec->catfile($dir, $f);
+		$f =~ s/^\.\///;
+		if (-d $f) {
+			processDir($f)
+		}
+		elsif (!$fileGlob || $f =~ $fileGlob) {
+			my $size = (-s $f);
+			print "$size $f\n" if ($verbose);
+			$dotSize += $size;
+		}
+	}
+	closedir(PARENTDIR);
+	$dirSize{"."} = $dotSize;
+}
+else {
+	processDir($dir);
+}
+
+my $total = $dirSize{"."};
+$formattedSize{"."} = formatNumber($total);
+foreach my $d (@dirList) {
+	if ($processChildren) {
+		next if ($d =~ /\.\.$/);
+		if ($d =~ /\.$/) {
+			$total += $dirSize{$d} if (!$omitTotal);
+			$formattedSize{$d} = formatNumber($dirSize{$d});
+			next;
+		}
+	}
+	else {
+		next if ($d =~ /\.{1,2}$/);
+	}
+	$sizeTotal = 0;
+	find({ wanted => \&processFile }, ( $d ));
+	$dirSize{$d} = $sizeTotal;
+	$total += $sizeTotal if (!$omitTotal);
+	$formattedSize{$d} = formatNumber($sizeTotal);
+}
+
+$total = formatNumber($total) if (!$omitTotal);
+my $format = "%${maxLen}s  %s\n";
+if ($suppressZeroBytes) {
+	foreach my $d (keys %dirSize) {
+		delete $dirSize{$d} if (!$dirSize{$d});
+	}
+}
+if ($ascending) {
+	foreach my $d (sort { $dirSize{$a} <=> $dirSize{$b} } keys %dirSize) {
+		printf $format, $formattedSize{$d}, formatDirName($d);
+	}
+}
+elsif ($descending) {
+	foreach my $d (sort { $dirSize{$b} <=> $dirSize{$a} } keys %dirSize) {
+		printf $format, $formattedSize{$d}, formatDirName($d);
+	}
+}
+else {
+	foreach my $d (sort {lc $a cmp lc $b} keys %dirSize) {
+		printf $format, $formattedSize{$d}, formatDirName($d);
+	}
+}
+printf $format, $total, "TOTAL" if (!$omitTotal);
+exit 0;
+
+sub processDir {
+	my $dotSize = 0;
+	my $dir = shift;
+	opendir(DIR, $dir) or die $!;
+	while (my $f = readdir(DIR)) {
+		next if ($f =~ /\.{1,2}$/);
+		$f = File::Spec->catfile($dir, $f);
+		$f =~ s/^\.\///;
+		if (-d $f) {
+			print "dir: $f\n" if ($verbose);
+			push @dirList, $f if (!$presentDir);
+		}
+		elsif (!$fileGlob || $f =~ $fileGlob) {
+			my $size = (-s $f);
+			print "$size $f\n" if ($verbose);
+			$dotSize += $size;
+		}
+	}
+	closedir(DIR);
+	if ($processChildren) {
+		$dirSize{"$dir/."} = $dotSize;
+		push @dirList, "$dir/.";
+	}
+	else {
+		$dirSize{"."} = $dotSize;
+	}
+}
+
+sub processFile {
+	if (! -d $_ && (!$fileGlob || $_ =~ $fileGlob)) {
+		my $size = (-s $_);
+		print "$size $_\n" if ($verbose);
+		$sizeTotal += $size;
+	}
+}
+
+sub formatDirName {
+	my $d = shift;
+	if ($dirPrefix) {
+		if ($d eq ".") {
+			if ($dirPrefix eq $dir) {
+				return "$dirPrefix/.";
+			}
+			if ($dir eq ".") {
+				return "$dirPrefix.";
+			}
+			return "$dirPrefix$dir/.";
+		}
+		if ($dirPrefix eq $dir) {
+			return $d;
+		}
+		return "$dirPrefix$d";
+	}
+	else {
+		if ($d eq ".") {
+			if ($dir eq ".") {
+				return ".";
+			}
+			return "$dir/.";
+		}
+		return $d;
+	}
+}
+
+sub formatNumber {
+	my $n = shift;
+	if ($humanReadable) {
+		return humanReadable($n);
+	}
+	else {
+		return commify($n);
+	}
+}
+
+sub commify {
+	local $_ = shift;
+	1 while s/^(-?\d+)(\d{3})/$1,$2/;
+	$maxLen = length($_) if (length($_) > $maxLen);
+	return $_;
+}
+
+sub humanReadable {
+	my $n = shift;
+	my @suffix = ( "", "K", "M", "G", "T", "P", "E" );
+	my $suffixIndex = 0;
+	while ($n >= 1024) {
+		$n /= 1024;
+		++$suffixIndex;
+	}
+	my $h;
+	if ($suffixIndex > 0 && $n < 10) {
+		$h = sprintf("%.1f%s", $n, $suffix[$suffixIndex]);
+	}
+	else {
+		$h = sprintf("%d%s", $n, $suffix[$suffixIndex]);
+	}
+	$maxLen = length($h) if (length($h) > $maxLen);
+	return $h;
+}
+
+sub showHelp {
+	print <<EOT;
+u: show size in bytes for files
+Usage: u [OPTION] ... [FILE]
+
+Options:
+-a, --asc       Sort output in ascending size order
+-c, --children  Process child directories of target
+-d, --desc      Sort output in descending size order
+-f, --full      Full path
+-r, --readable  Show output in human-readable format
+-p, --present   Process only files in the present directory
+-t, --terse     Omit grand total
+-v, --verbose   Print diagnostic information
+-z, --zero      Suppress zero-byte directories
+
+u will show the size in bytes of the FILEs (or for the current directory by
+default). If a directory is specified, sizes will be listed for the directory
+and each of its subdirectories.
+EOT
+	exit 0;
+}

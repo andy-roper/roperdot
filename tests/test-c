@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+
+buildUp() {
+	testDir=$(mktemp -d)
+	echo "abcdefg" > "$testDir/test file.txt"
+	echo $testDir
+}
+
+tearDown() {
+	\rm "test archive.*" "test file.txt" >/dev/null 2>&1
+	return 0
+}
+
+createArchive() {
+	archive="test archive.$1"
+	# c "$archive" * >/dev/null 2>&1
+	c --verbose "$archive" *
+	\rm "test file.txt"
+	x "$archive" >/dev/null 2>&1
+}
+
+test_zip() {
+	ext=zip
+	cd $(buildUp) && createArchive $ext && assertTrue '[ -s "$archive" -a -s "test file.txt" ]'
+}
+
+test_7z() {
+	ext=7z
+	cd $(buildUp) && createArchive $ext && assertTrue '[ -s "$archive" -a -s "test file.txt" ]'
+}
+
+test_cbz() {
+	ext=cbz
+	cd $(buildUp) && createArchive $ext && assertTrue '[ -s "$archive" -a -s "test file.txt" ]'
+}
+
+test_rar() {
+	ext=rar
+	cd $(buildUp) && createArchive $ext && assertTrue '[ -s "$archive" -a -s "test file.txt" ]'
+}
+
+test_cbr() {
+	ext=cbr
+	cd $(buildUp) && createArchive $ext && assertTrue '[ -s "$archive" -a -s "test file.txt" ]'
+}
+
+test_tz() {
+	ext=tz
+	cd $(buildUp) && createArchive $ext && assertTrue '[ -s "$archive" -a -s "test file.txt" ]'
+}
+
+test_tar() {
+	ext=tar
+	cd $(buildUp) && createArchive $ext && assertTrue '[ -s "$archive" -a -s "test file.txt" ]'
+}
+
+test_tgz() {
+	ext=tgz
+	cd $(buildUp) && createArchive $ext && assertTrue '[ -s "$archive" -a -s "test file.txt" ]'
+}
+
+test_tbz2() {
+	ext=tbz2
+	cd $(buildUp) && createArchive $ext && assertTrue '[ -s "$archive" -a -s "test file.txt" ]'
+}
+
+test_txz() {
+	ext=txz
+	cd $(buildUp) && createArchive $ext && assertTrue '[ -s "$archive" -a -s "test file.txt" ]'
+}
+
+test_tlz() {
+	ext=tlz
+	cd $(buildUp) && createArchive $ext && assertTrue '[ -s "$archive" -a -s "test file.txt" ]'
+}
+
+test_tar7z() {
+	ext=tar.7z
+	cd $(buildUp) && createArchive $ext && assertTrue '[ -s "$archive" -a -s "test file.txt" ]'
+}
+
+. ~/shunit2-master/shunit2

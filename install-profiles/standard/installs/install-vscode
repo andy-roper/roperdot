@@ -1,0 +1,125 @@
+#
+# Description: Install script for Visual Studio Code
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+. "${ROPERDOT_DIR}/source-scripts/input-functions"
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
+if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+	choco install -y vscode
+	. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
+	def_win_env_linux_path ProgramFiles
+	[[ -d "${ProgramFiles}/Microsoft VS Code" ]] || exit 0
+	if ! command -v code >/dev/null 2>&1; then
+		code () { "${ProgramFiles}/Microsoft VS Code/bin/code" "$@"; }
+	fi
+elif [[ "$ROPERDOT_OS_TYPE" = "linux" ]]; then
+	if command -v snap >/dev/null 2>&1; then
+		sudo snap install --classic code
+	else
+		sudo apt install software-properties-common apt-transport-https wget
+		wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | sudo apt-key add -
+		sudo add-apt-repository "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"
+		sudo apt install code
+	fi
+elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
+	if [[ -n "$has_sudo" ]]; then
+		brew install visual-studio-code
+	else
+		brew install visual-studio-code --appdir=~/Applications
+	fi
+fi
+
+if [[ "$ROPERDOT_DESKTOP_ENV" != windows ]]; then
+	command -v code >/dev/null 2>&1 || exit 0
+fi
+
+if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+	selection="$(select_from_list_index "Apply updates to VS Code settings install recommended extensions for" 3 "VS Code for Windows" "VS Code for WSL" "Both")"
+	case "$selection" in
+		1) export regular_install=true ;;
+		2) export windows_install=true ;;
+		3) export regular_install=true windows_install=true ;;
+	esac
+else
+	export regular_install=true
+fi
+
+install_ext () {
+	if [[ -n "$regular_install" ]]; then
+		if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+			# [[ -d ~/.vscode-server/"$1" ]] || code --install-extension "$1"
+			if [[ ! -d ~/.vscode-server/"$1" ]]; then
+				echo "Doing: code --install-extension \"$1\""
+				code --verbose --install-extension "$1"
+			fi
+		else
+			[[ -d ~/.vscode/"$1" ]] || code --install-extension "$1"
+		fi
+	fi
+	if [[ -n "$windows_install" && ! -d "$(win_env_linux_path USERPROFILE)/.vscode/extensions/$1" ]]; then
+		temp_wsl="$(win_env_linux_path TEMP)"
+		cat << EOT > "${temp_wsl}/add-extension.bat"
+pushd "%~dp0"
+"$(win_env ProgramFiles)\\Microsoft VS Code\\bin\\code.cmd" --install-extension "$1"
+popd
+EOT
+		cat "${temp_wsl}/add-extension.bat"
+		pushd "$temp_wsl"
+		cmd.exe /c "$(win_env TEMP)\\add-extension.bat"
+		popd
+		rm "${temp_wsl}/add-extension.bat" >/dev/null
+	fi
+}
+
+if command -v choco >/dev/null 2>&1; then
+	choco list --local-only >/dev/null && have_shellcheck=true
+elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]] && command -v brew >/dev/null 2>&1; then
+	brew list >/dev/null && have_shellcheck=true
+elif command -v apt >/dev/null 2>&1; then
+	apt list --installed >/dev/null && have_shellcheck=true
+fi
+
+# skipping_extension_installs=true
+if [[ -z $skipping_extension_installs ]]; then
+	[[ "$ROPERDOT_OS_TYPE" = "linux" && "$ROPERDOT_DESKTOP_ENV" = "windows" ]] && install_ext ms-vscode-remote.remote-wsl
+	[[ -n "$have_shellcheck" ]] && install_ext timonwong.shellcheck
+	install_ext wallabyjs.quokka-vscode
+	install_ext albymor.increment-selection
+	install_ext redhat.vscode-yaml
+	install_ext amazonwebservices.aws-toolkit-vscode
+	install_ext aws-scripting-guy.cform
+	install_ext atlassian.atlascode
+	install_ext ms-azuretools.vscode-docker
+	install_ext ms-vscode-remote.remote-containers
+	# install_ext msjsdiag.debugger-for-chrome
+	install_ext dbaeumer.vscode-eslint
+	install_ext dbaeumer.jshint
+	install_ext donjayamanne.githistory
+	install_ext eamodio.gitlens
+	install_ext github.copilot
+	install_ext github.copilot-chat
+	install_ext ms-azuretools.vscode-containers
+	install_ext yzhang.markdown-all-in-one
+	install_ext oracle.sql-developer
+	install_ext christian-kohler.path-intellisense
+	install_ext ms-vscode.hexeditor
+
+	# install_ext mycelo.oracle-plsql
+	# install_ext mp.vscode-oracle-format
+	# install_ext ms-python.python
+	# install_ext ms-vscode.vscode-typescript-next
+	# install_ext esbenp.prettier-vscode
+	# install_ext ms-vscode.vscode-json
+	# install_ext ms-vscode-remote.remote-ssh
+	# install_ext ms-vscode.remote-explorer
+	# install_ext pkief.material-icon-theme
+	# install_ext formulahendry.auto-rename-tag
+fi
+
+export color_scheme
+
+update-vscode-settings || echo "Visual Studio Code settings.json could not be updated. You should run update-vscode-settings after starting Visual Studio Code so it can create the application's user directory."

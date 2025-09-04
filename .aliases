@@ -1,0 +1,345 @@
+#
+# Description: Cross-platform and bash/zsh aliases for roperdot dotfiles
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+if [[ "$ROPERDOT_CUSTOM_CD" = true ]]; then
+	if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
+		alias cd="set -f;__cd"
+	else
+		alias cd="set -F;__cd"
+	fi
+fi
+
+if [[ "$ROPERDOT_CUSTOM_CP" = true ]]; then
+	if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
+		alias cp="set -f;__cp -i -v"
+		alias cpr="set -f;__cp -R -i -v"
+	else
+		alias cp="set -F;__cp -i -v"
+		alias cpr="set -F;__cp -R -i -v"
+	fi
+else
+	alias cp='cp -i -v'
+	alias cpr='cp -R -i -v'
+fi
+
+if [[ "$ROPERDOT_CUSTOM_LS" = true ]]; then
+	if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
+		if [[ $ROPERDOT_OS_ENV = darwin && "$(command -v ls)" = "/bin/ls" ]]; then
+			alias ls='set -f;__ls -lA'
+			alias lw='set -f;__ls -A'
+		else
+			alias ls='set -f;__ls -lA --group-directories-first --time-style=long-iso'
+			alias lw='set -f;__ls -A --group-directories-first --time-style=long-iso'
+			alias lt='set -f;__ls -lA -tr --time-style=long-iso'
+			alias lsz='set -f;__ls -lA -Sr --time-style=long-iso'
+			alias lb='set -f;__ls -1 -A'
+		fi
+		alias l='set -f;ls'
+		alias pl='set -f;pwd;ls'
+	else
+		if [[ $ROPERDOT_OS_ENV = darwin && "$(command -v ls)" = "/bin/ls" ]]; then
+			alias ls='set -F;__ls -lA'
+			alias lw='noglob __ls -A'
+		else
+			alias ls='set -F;__ls -lA --group-directories-first --time-style=long-iso'
+			alias lw='set -F;__ls -A --group-directories-first --time-style=long-iso'
+			alias lt='set -F;__ls -lA -tr --time-style=long-iso'
+			alias lsz='set -F;__ls -lA -Sr --time-style=long-iso'
+			alias lb='set -F;__ls -1 -A --ignore=\. --ignore=\.\.'
+		fi
+		alias l='set -F;ls'
+		alias pl='set -F;pwd;ls'
+	fi
+else
+	if [[ $ROPERDOT_OS_ENV = darwin && "$(command -v ls)" = "/bin/ls" ]]; then
+		alias ls='\ls $LS_SWITCHES -lA'
+		alias lw='\ls $LS_SWITCHES -A'
+	else
+		alias ls='\ls $LS_SWITCHES -lA --group-directories-first --time-style=long-iso'
+		alias lw='\ls $LS_SWITCHES -A --group-directories-first --time-style=long-iso'
+		alias lt='\ls $LS_SWITCHES -lA -tr --time-style=long-iso'
+		alias lsz='\ls $LS_SWITCHES -lA -Sr --time-style=long-iso'
+		alias lb='\ls $LS_SWITCHES -1 -A'
+	fi
+	alias l='ls'
+	alias pl='pwd;ls'
+fi
+
+if [[ "$ROPERDOT_CUSTOM_MV" = true ]]; then
+	if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
+		alias mv="set -f;__mv -i -v"
+	else
+		alias mv="set -F;__mv -i -v"
+	fi
+else
+	alias mv='mv -i -v'
+fi
+
+if [[ "$ROPERDOT_CUSTOM_RM" = true ]]; then
+	if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
+		alias rm="set -f;__rm -i -v"
+	else
+		alias rm="set -F;__rm -i -v"
+	fi
+else
+	alias rm='rm -i -v'
+fi
+
+command -v help >/dev/null 2>&1 || alias help=helprd
+
+if [[ $ROPERDOT_OS_ENV = ubuntu && $ROPERDOT_DESKTOP_ENV = windows ]]; then
+	alias tasklist=tasklist.exe
+	alias taskkill=taskkill.exe
+fi
+
+alias disks="df -P -kH"
+alias dfh="df -h"
+
+alias ln='ln -i'
+
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+
+alias ~='cd ~'
+alias cd..='\cd ..'
+alias ..='\cd ..'
+alias ...='\cd ../..'
+alias ....='\cd ../../..'
+alias .....='\cd ../../../..'
+alias -- -='\cd -'  # cd to previous directory
+alias cdp='\cd -'   # cd to previous directory
+
+alias cls=clear
+alias flush=sync
+alias h=history
+alias j='jobs -l'
+alias md='mkdir -p'
+alias rd=rmdir
+alias now='date +"%T"'
+alias curdate='date +"%x"'
+alias path="printenv PATH | tr ':' '\n'"
+
+if [[ $ROPERDOT_DESKTOP_ENV = windows ]] && command -v choco.exe >/dev/null 2>&1; then
+	alias choco='choco.exe'
+fi
+
+# Add an "alert" alias for long running commands.  Use like so:
+#   sleep 10; alert
+command -v notify-send >/dev/null 2>&1 && alias alert='notify-send --urgency=low -i "$([ $? -eq 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+
+# define ports alias if lsof if present
+command -v lsof >/dev/null 2>&1 && alias ports='lsof -i -P | grep -i "listen"'
+
+command -v dig >/dev/null 2>&1 && alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
+
+alias ua='u -a'
+alias ud='u -d'
+
+# define aliases to diable globbing first
+if [[ $ROPERDOT_CURRENT_SHELL = bash ]]; then
+	alias lf='set -f;lf'
+	alias lfr='set -f;lf -r'
+	alias ff='set -f;_ff'
+	alias ftr='set -f;_ftr'
+	if command -v fdfind >/dev/null 2>&1 || command -v fd >/dev/null 2>&1; then
+		alias fsz='set -f;_fsz'
+	fi
+	if command -v ag >/dev/null 2>&1; then
+		alias ft='set -f;_ft'
+	else
+		alias ft='_ft'
+	fi
+else
+	alias lf='set -F;lf'
+	alias lfr='set -F;lf -r'
+	alias ff='set -F;_ff'
+	alias ftr='set -F;_ftr'
+	if command -v fdfind >/dev/null 2>&1 || command -v fd >/dev/null 2>&1; then
+		alias fsz='set -F;_fsz'
+	fi
+	if command -v ag >/dev/null 2>&1; then
+		alias ft='set -F;_ft'
+	else
+		alias ft='_ft'
+	fi
+fi
+
+# list processes in order by memory usage
+alias psmem='ps aux | sort -nr -k 4'
+alias psmem10='ps aux | sort -nr -k 4 | head -10'
+# list processes in order by cpu usage
+alias pscpu='ps aux | sort -nr -k 3'
+alias pscpu10='ps aux | sort -nr -k 3 | head -10'
+
+alias meminfo='free -m -l -t'
+
+[[ -f /var/log/Xorg.0.log ]] && alias gpumeminfo='grep -i --color memory /var/log/Xorg.0.log'
+
+if [[ $ROPERDOT_OS_ENV = darwin ]]; then
+	alias localip="ipconfig getifaddr en0"
+else
+	alias localip="ifconfig eth0 | grep 'inet ' | awk '{print \$2}'"
+fi
+if command -v curl >/dev/null 2>&1; then
+	alias header='\curl -I'
+	alias myip='\curl icanhazip.com'
+	for method in GET HEAD POST PUT DELETE TRACE OPTIONS; do
+	    alias "${method}"="call-api ${method}"
+	done
+fi
+alias .=_dot
+alias chmox='chmod u+x'
+alias killn='pkill -i -f'
+
+# command -v ag >/dev/null 2>&1 && alias ag='ag --hidden --follow --nogroup --color-path $COLOR_GREEN_CODE --color-line-number $COLOR_YELLOW_CODE --color-match "${COLOR_BG_YELLOW_CODE};${COLOR_BLACK_CODE}"'
+
+if [[ $ROPERDOT_CURRENT_SHELL = bash ]]; then
+	alias m="set -f;m"
+else
+	alias m="set -F;m"
+fi
+
+if command -v npm >/dev/null 2>&1; then
+	alias ni='npm install'
+	alias nis='npm install --save'
+fi
+
+if command -v git >/dev/null 2>&1; then
+	function clone() {
+	    git clone --depth=1 $1
+	    cd "$(basename "${1%.*}")" || return 1
+	    yarn install
+	}
+
+	alias push="git push"
+
+	# Undo a git push
+	alias undopush="git push -f origin HEAD^:master"
+
+	# git root
+	alias master="git checkout master"
+
+	alias g="git"
+	alias ga='git add'
+	alias gaa='git add .'
+	alias gau='git add --update'
+	alias gb='git branch'
+	alias gbd='git branch --delete '
+	alias gc='git commit'
+	alias gcm='git commit --message'
+	alias gcf='git commit --fixup'
+	alias gco='git checkout'
+	alias gcob='git checkout -b'
+	alias gcom='git checkout master'
+#	alias gcos='git checkout staging'
+#	alias gcod='git checkout develop'
+	alias gd='git diff'
+	alias gda='git diff HEAD'
+	alias glg='git log --graph --oneline --decorate --all'
+	alias gld='git log --pretty=format:"%h %ad %s" --date=short --all'
+	alias gm='git merge --no-ff'
+	alias gma='git merge --abort'
+	alias gmc='git merge --continue'
+	alias gnit='git init'
+	alias gp='git push'
+	alias gpl='git pull'
+	alias gpom="git push origin master"
+	alias gpr='git pull --rebase'
+	# git root
+	alias gr='[[ -z $(git rev-parse --show-cdup) ]] || cd $(git rev-parse --show-cdup || pwd)'
+	alias greb='git rebase'
+	alias gs='git status'
+	alias gss='git status --short'
+	alias gst='git stash'
+	alias gsta='git stash apply'
+	alias gstd='git stash drop'
+	alias gstl='git stash list'
+	alias gstp='git stash pop'
+	alias gsts='git stash save'
+fi
+
+command -v dos2unix >/dev/null 2>&1 && alias d2u=dos2unix
+command -v unix2dos >/dev/null 2>&1 && alias u2d=unix2dos
+
+alias root='sudo -i'
+alias reboot='sudo /sbin/reboot'
+alias halt='sudo /sbin/halt'
+alias shutdown='sudo /sbin/shutdown'
+
+GRC="$(command -v grc)"
+if [[ "$TERM" != "dumb" && -n "$GRC" ]]; then
+	alias colourify="\"$GRC\" -es --colour=auto"
+	alias configure="colourify ./configure"
+	# Note: I avoided colorizing ls to avoid embedded ANSI codes in the output
+	for app in as blkid curl df dig docker docker-machine du env fdisk findmnt free g++ gas gcc getsebool head id ifconfig ip iptables ld lsblk lsof lspci make mount mtr netstat ping ps semanage tail traceroute traceroute6; do
+		command -v $app >/dev/null 2>&1 && alias "$app"="colourify $app"
+	done
+	command -v ydiff >/dev/null 2>&1 || alias diff="colourify diff"
+fi
+
+alias hosts='sudo $EDITOR /etc/hosts'
+
+# pst: ps terse
+# Truncate lines to the terminal window width
+if command -v perl >/dev/null 2>&1; then
+	if command -v grc >/dev/null 2>&1; then
+		alias pst="ps -ef | perl -wln -e '\$_ = \$1 if (/^(.{\$ENV{COLUMNS}}).+/); print;' | grcat conf.ps"
+	else
+		alias pst="ps -ef | perl -wln -e '\$_ = \$1 if (/^(.{\$ENV{COLUMNS}}).+/); print;'"
+	fi
+fi
+
+alias fs="stat -c \"%s bytes\""
+alias decode-base64-clip="decode-base64 --writeclip"
+alias encode-base64-clip="encode-base64 --writeclip"
+alias json-to-string-clip="json-to-string --writeclip"
+alias vb="v -b"
+alias vt="v -t"
+
+alias format-clip="format --writeclip"
+alias format-json="format -t json"
+alias format-json-file="format -t json -i"
+alias format-json-clip="format -t json --writeclip"
+
+alias distro="cat /etc/*-release"
+
+alias d4="roll d4"
+alias d6="roll d6"
+alias d8="roll d8"
+alias d10="roll d10"
+alias d12="roll d12"
+alias d20="roll d20"
+alias d%="roll d%"
+
+alias mc="\mc -S roperdot-${ROPERDOT_MC_SCHEME}"
+
+[[ $ROPERDOT_OS_TYPE = linux ]] && command -v fdfind >/dev/null 2>&1 && alias fd=fdfind
+
+if command -v ag >/dev/null 2>&1; then
+	if [[ $ROPERDOT_CURRENT_SHELL = bash ]]; then
+		alias rt="set -f;rt"
+		alias rtr="set -f;rt -r"
+		alias ren="set -f;ren"
+	else
+		alias rt="set -F;rt"
+		alias rtr="set -F;rt -r"
+		alias ren="set -F;ren"
+	fi
+fi
+
+if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
+	alias roll="set -f;roll"
+	alias rolln="set -f;_rolln"
+	alias u="set -f;u"
+else
+	alias roll="set -F;roll"
+	alias rolln="set -F;_rolln"
+	alias u="set -F;u"
+fi
+
+alias tvdb="node ~/roperdot/scripts/tvdb/tvdb.js"

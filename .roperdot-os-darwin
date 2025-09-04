@@ -1,0 +1,239 @@
+source "${ROPERDOT_DIR}/source-scripts/path-manipulation"
+
+if [[ -n "$ZSH_VERSION" ]] && ! (zmodload -e zsh/pcre 2>/dev/null || zmodload zsh/pcre 2>/dev/null); then
+    export ROPERDOT_MISSING_PCRE=1
+fi
+
+prepend_to_path_var () {
+    local new_dir=${1%/}
+    local IFS=':'
+    for dir in $PATH ; do
+        dir=${dir%/}
+        if [[ "$dir" = "$new_dir" ]]; then
+            return 0
+        fi
+    done
+    export PATH="$new_dir${PATH:+:$PATH}"
+}
+
+app_path () {
+    local app_name="$1"
+    
+    if [[ -d "$HOME/Applications/$app_name" ]]; then
+        echo "$HOME/Applications/$app_name"
+    elif [[ -d "/Applications/$app_name" ]]; then
+        echo "/Applications/$app_name"
+    fi
+}
+
+export BREW_PREFIX=$(brew --prefix)
+
+get_brew_path () {
+	local path="$BREW_PREFIX/opt/$1"
+	[[ -d $path ]] && echo $path
+}
+
+core_utils_path="$(get_brew_path coreutils)"
+[[ -n "$core_utils_path" ]] && prepend_to_path_var "$core_utils_path/libexec/gnubin"
+find_utils_path="$(get_brew_path findutils)"
+[[ -n "$find_utils_path" ]] && prepend_to_path_var "$find_utils_path/libexec/gnubin"
+more_utils_path="$(get_brew_path moreutils)"
+[[ -n "$more_utils_path" ]] && prepend_to_path_var "$more_utils_path/libexec/gnubin"
+[[ -d /usr/local/sbin ]] && add_dir_to_path_var /usr/local/sbin
+
+alias lsusb='system_profiler SPUSBDataType'
+
+groups $USER | grep -q admin && export has_sudo=true
+[[ -n "$has_sudo" ]] && alias su='sudo -i'
+command -v gtar >/dev/null 2>&1 && alias tar=gtar
+
+alias eject='drutil eject'
+
+# burn a disc image to a CD/DVD/Blu-Ray without verification
+alias burn='drutil burn -noverify'
+
+# burn a disc image to a CD/DVD/Blu-Ray with verification
+alias vburn='drutil burn'
+
+if command -v brew >/dev/null 2>&1; then
+	alias update-brew="brew update && brew upgrade && brew cleanup && brew doctor && npm-check -g -u"
+	export HOMEBREW_NO_INSECURE_REDIRECT=1
+	export HOMEBREW_NO_ANALYTICS=1
+
+	if [[ "$BREW_PREFIX" == "$HOME"* ]]; then
+	    appdir="$HOME/Applications"
+	else
+	    appdir="/Applications"
+	fi
+
+	export HOMEBREW_CASK_OPTS="--appdir=$appdir"
+	
+	if [[ $ROPERDOT_CURRENT_SHELL = bash ]]; then
+		# Source bash completion
+		[[ -r "$brew_prefix/etc/profile.d/bash_completion.sh" ]] && . "$brew_prefix/etc/profile.d/bash_completion.sh"
+		
+		if command -v hub >/dev/null 2>&1; then
+			if [[ -r "$brew_prefix/etc/bash_completion.d/hub.bash_completion.sh" ]]; then
+				source "$brew_prefix/etc/bash_completion.d/hub.bash_completion.sh";
+			fi
+			alias git=hub
+		fi
+	else
+		command -v hub >/dev/null 2>&1 && alias git=hub
+	fi
+
+	unset brew_prefix
+fi
+
+# Recursively delete .DS_Store files
+alias rmdsstore="find . -name '*.DS_Store' -type f -ls -delete"
+
+# Empty the Trash on all mounted volumes and the main HDD and clear the useless sleepimage
+empty_trash () {
+	if [[ -n "$1" ]]; then
+		cat <<EOT
+empty_trash: Empties the Trash on all mounted volumes and the main drive and clears sleepimage
+Usage: empty_trash
+EOT
+		exit 0
+	fi
+	if [[ -n "$has_sudo" ]]; then
+		sudo rm -rfv /Volumes/*/.Trashes
+    	[[ -f /private/var/vm/sleepimage ]] && sudo rm -v /private/var/vm/sleepimage
+    fi
+    rm -rfv ~/.Trash/*
+    if [[ -d "/Users/$USER/Library/Application Support/stremio" ]]; then
+		rm -rv "/Users/$USER/Library/Application Support/stremio/Cache"
+		rm -rv "/Users/$USER/Library/Application Support/stremio/stremio-cache"
+	fi
+}
+
+# cd into whatever is the forefront Finder window.
+cdf () {  # short for cdfinder
+	if [[ -n "$1" ]]; then
+		cat <<EOT
+cdf: cd into the folder being viewed in the forefront Finder window
+Usage: cdf
+EOT
+		exit 0
+	fi
+	cd "$(osascript -e 'tell app "Finder" to POSIX path of (insertion location as alias)')" || return 1
+}
+
+# who is using the laptop's iSight camera?
+camera_used_by () {
+	if [[ -n "$1" ]]; then
+		cat <<EOT
+camera_used_by: Checks to see which apps are using the camera
+Usage: camera_used_by
+EOT
+		exit 0
+	fi
+	echo "Checking to see who is using the iSight camera..."
+	usedby=$(lsof | grep -w "AppleCamera\|USBVDC\|iSight" | awk '{printf $2"\n"}' | xargs ps)
+	echo -e "Recent camera uses:\n$usedby"
+}
+
+alias show_files='defaults write com.apple.finder AppleShowAllFiles YES; killall Finder'
+alias hide_files='defaults write com.apple.finder AppleShowAllFiles NO; killall Finder'
+
+alias hide_desktop="defaults write com.apple.finder CreateDesktop -bool false && killall Finder"
+alias show_desktop="defaults write com.apple.finder CreateDesktop -bool true && killall Finder"
+
+# Add tab completion for "defaults read|write NSGlobalDomain"
+# You could just use "-g" instead, but I like being explicit
+complete -v >/dev/null 2>&1 && complete -W "NSGlobalDomain" defaults
+
+if [[ -x /usr/libexec/java_home ]]; then
+	export java_home="$(/usr/libexec/java_home 2>/dev/null)"
+	if [[ -n "$java_home" && ! "$java_home" =~ "null" && -d "$java_home" ]]; then
+		export JAVA_HOME="$java_home"
+		add_dir_to_path_var "$JAVA_HOME/bin"
+		export PATH="$PATH"
+	fi
+fi
+
+# Usage: shell_switch [bash|zsh]
+# The shell must be in /etc/shells
+shell_switch () {
+	if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
+		cat <<EOT
+shell_switch: Switches to the designated shell
+Usage: shell_switch [bash|zsh]
+EOT
+		exit 0
+	fi
+	chsh -s "$(brew --prefix)/bin/$1"
+}
+
+# Create animated gifs from any video
+# from Alex Sexton   gist.github.com/SlexAxton/4989674
+# Requires ffmpeg, gifsicle and imagemagick
+gifify () {
+	if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
+		cat <<EOT
+gifify: Converts a video to an animated GIF
+Usage: gifify <video.mov>
+
+Note: the file extension MUST be included in the designated filename.
+EOT
+		exit 0
+	fi
+	if [[ $2 == '--good' ]]; then
+		ffmpeg -i "$1" -r 10 -vcodec png out-static-%05d.png
+		time convert -verbose +dither -layers Optimize -resize 900x900\> out-static*.png  GIF:- | gifsicle --colors 128 --delay=5 --loop --optimize=3 --multifile - > "$1.gif"
+		rm out-static*.png
+	else
+		ffmpeg -i "$1" -s 600x400 -pix_fmt rgb24 -r 10 -f gif - | gifsicle --optimize=3 --delay=3 > "$1.gif"
+	fi
+}
+
+# Transform video into webm
+# Requires ffmpeg
+webmify () {
+	if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
+		cat <<EOT
+webmify: Converts a video into the webm format
+Usage: webmify <video>
+EOT
+		exit 0
+	fi
+	ffmpeg -i "$1" -vcodec libvpx -acodec libvorbis -isync -copyts -aq 80 -threads 3 -qmax 30 -y "$2" "$1.webm"
+}
+
+alias afk="/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resources/CGSession -suspend"
+
+# Alter rm's behavior to move files to Trash by calling rm_to_trash
+
+#alias rm=__rm
+#
+#__rm () {
+#	switches=
+#	i=0
+#	args=()
+#	for arg in "$@" ; do
+#		if [[ "$arg" =~ ^-{1,2}(.*)$ && ! -e "$arg" ]]; then
+#			if [[ -n "$switches" ]]; then
+#				switches="${switches},${BASH_REMATCH[1]}"
+#			else
+#				switches=${BASH_REMATCH[1]}
+#			fi
+#		else
+#			args[$i]=$arg
+#			(( ++i ))
+#		fi
+#	done
+#	if [[ "$switches" =~ [hv\?] ]]; then
+#		rm_to_trash "-$switches"	
+#	else
+#		if [[ -n $switches ]]; then
+#			switches="-$switches"
+#		fi
+#		for (( i = 0; i < ${#args[@]}; i++)) {
+#			rm_to_trash $switches "${args[$i]}"
+#		}
+#	fi
+#}
+
+# Override aliases and functions if not using GNU versions of commands
+[[ "$(command -v stat)" = "/usr/bin/stat" ]] && alias fs="stat -f \"%z bytes\""

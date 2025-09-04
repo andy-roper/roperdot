@@ -1,0 +1,5 @@
+script_name=$(basename "$0")
+
+debug() {
+	[[ -n $DEBUGGING ]] && echo "fnord $script_name $@"
+}

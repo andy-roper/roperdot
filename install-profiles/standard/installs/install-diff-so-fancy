@@ -1,0 +1,17 @@
+#
+# Description: Install script for diff-so-fancy
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+. "${ROPERDOT_DIR}/source-scripts/nice-copy"
+
+if [[ -n "$has_sudo" ]] && command -v brew >/dev/null 2>&1; then
+	brew install diff-so-fancy
+else
+	get_from_git https://github.com/so-fancy/diff-so-fancy diff-so-fancy
+fi
+
+

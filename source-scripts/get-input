@@ -1,0 +1,38 @@
+# Inputs:
+# check_for_input_file: if a filename is passed as an argument and this has a value,
+#   return the filename in input_file; otherwise, return the file's contents in str
+# get_input_add_spaces: if this has a value, insert a space between each line in
+#   piped input; should only be used when formatting text
+#
+# Outputs:
+# str: string to be processed
+# input_file: name of the file to be processed
+
+[[ -f ~/output.txt ]] && rm ~/output.txt
+
+unset str input_file
+if [[ -n $SUPPRESS_PIPE ]] || test -t 0; then
+    # no pipe
+    if [[ -n "$1" ]]; then
+        if [[ -f "$1" ]]; then
+        	if [[ -n "$check_for_input_file" ]]; then
+        		input_file="$1"
+        	else
+            	str="$(cat "$1")"
+            fi
+        else
+            str="$1"
+        fi
+    else
+        str="$(clippaste)"
+    fi
+else
+    # pipe
+    while read -r line || [[ -n "$line" ]]; do
+    	if [[ -n "$get_input_add_spaces" ]]; then
+    		str+="$line "
+    	else
+        	str+="$line"
+        fi
+    done < /dev/stdin
+fi

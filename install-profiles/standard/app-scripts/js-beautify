@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+"""
+Description: Beautifies JavaScript; called by format
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+"""
+import sys
+import os
+from pathlib import Path
+import jsbeautifier
+
+if len(sys.argv) != 2:
+    print("Usage: beautify-javascript <filename>", file=sys.stderr)
+    sys.exit(1)
+
+filename = sys.argv[1]
+
+if not os.path.isfile(filename):
+    print(f"Error: File '{filename}' not found.", file=sys.stderr)
+    sys.exit(1)
+
+    with open(filename, 'r', encoding='utf-8') as file:
+        js_content = file.read()
+    
+    options = jsbeautifier.default_options()
+    # options.indent_size = 4          # Force 4-space indentation
+    # options.indent_char = ' '        # Use spaces instead of tabs
+    # options.max_preserve_newlines = 2  # Limit consecutive empty lines
+    
+    beautified_js = jsbeautifier.beautify(js_content)  # Uses config files
+    # beautified_js = jsbeautifier.beautify(js_content, options)  # Uses explicit options
+    
+    print(beautified_js)

@@ -1,0 +1,92 @@
+# mvn grc colorizer configuration
+# [INFO]
+regexp=^\[INFO\]
+colours="\033[01;38;5;m"
+count=more
+==============
+# [WARNING]
+regexp=^\[WARNING\]
+colours="\033[01;38;5;136m"
+count=more
+==============
+# [ERROR]
+regexp=^\[ERROR\]
+colours="\033[01;38;5;167m"
+count=more
+==============
+# BUILD FAILURE
+regexp=BUILD FAILURE
+colours="\033[01;38;5;167m"
+count=more
+==============
+# [debug]
+regexp=^\[debug\]
+colours="\033[38;5;168m"
+count=more
+==============
+# lines [INFO] ----
+regexp=\s[-]{6,}
+colours="\033[38;5;167m"
+count=more
+==============
+# lines ^----
+regexp=^[-]{6,}
+colours="\033[38;5;136m"
+count=more
+==============
+# lines  T E S T S
+regexp=^ T E S T S
+colours="\033[38;5;136m"
+count=more
+==============
+# lines ^Tests run:
+regexp=^Tests run: ([\d]+)
+colours="\033[38;5;136m","\033[38;5;114m"
+count=more
+==============
+# lines ^Tests run: Failures/Errors/Skipped
+regexp=(Failures|Errors|Skipped):\s([\d]+)
+colours="\033[38;5;m","\033[38;5;136m","\033[01;38;5;167m"
+count=more
+==============
+# lines ^Tests run: Failures/Errors/Skipped
+regexp=(Failures|Errors|Skipped):\s(0)\D?
+colours="\033[38;5;m","\033[38;5;136m","\033[38;5;114m"
+count=more
+==============
+# summary
+regexp=\s(Total time: )(.*)$
+colours="\033[38;5;m","\033[38;5;m","\033[01;38;5;136m"
+count=more
+==============
+# summary
+regexp=\s(Finished at: )(.*)$
+colours="\033[38;5;m","\033[38;5;m","\033[01;38;5;136m"
+count=more
+==============
+# BUILD SUCCESSFUL
+regexp=\s(BUILD SUCCESSFUL)
+colours="\033[38;5;m","\033[01;38;5;114m"
+count=more
+==============
+# Building projectName
+regexp=^(\[INFO\])( Building )(.*)$
+colours="\033[38;5;m","\033[01;38;5;m","\033[38;5;m","\033[01;38;5;255m"
+count=more
+==============
+# reactor summary
+regexp=([.]{3,} )(SUCCESS)( \[)([^\]]*)(])
+colours="\033[38;5;m","\033[38;5;m","\033[38;5;114m","\033[38;5;m","\033[38;5;136m","\033[38;5;m"
+count=more
+==============
+# reactor summary
+regexp=([.]{3,} )(FAILURE)( \[)([^\]]*)(])
+colours="\033[38;5;m","\033[38;5;m","\033[38;5;167m","\033[38;5;m","\033[38;5;167m","\033[38;5;m"
+count=more
+==============
+# reactor summary
+regexp=([.]{3,} )(SKIPPED)
+colours="\033[38;5;m","\033[38;5;m","\033[01;38;5;136m","\033[38;5;m"
+count=more
+
+

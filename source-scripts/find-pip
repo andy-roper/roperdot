@@ -1,0 +1,16 @@
+# Implemented to work around Python externally-managed-environment errors
+
+if [[ -x /usr/bin/pip3 ]]; then
+	export pip_bin=/usr/bin/pip3
+elif command -v pip3 >/dev/null 2>&1; then
+	export pip_bin=pip3
+elif command -v pip >/dev/null 2>&1; then
+	export pip_bin=pip
+fi
+if [[ "$pip_bin" = "/usr/bin/pip3" ]]; then
+    export python_bin=/usr/bin/python3
+elif [[ "$pip_bin" = "pip3" ]]; then
+    export python_bin=python3
+else
+	export python_bin=python
+fi

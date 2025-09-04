@@ -1,0 +1,86 @@
+#
+# Description: Install script for node
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+if [[ -d ~/.nvm ]]; then
+	export NVM_DIR="$HOME/.nvm"
+	[[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
+
+	# Install node.js
+	nvm install node || { echo "nvm install failed"; exit 1; }
+else
+	if [[ "$ROPERDOT_OS_TYPE" = linux ]]; then
+		if [[ -z "$has_sudo" ]]; then
+			echo "Unable to install; sudo rights required"
+			exit 1
+		fi
+		if command -v apt >/dev/null 2>&1; then
+			sudo apt install nodejs -y
+		elif command -v yum >/dev/null 2>&1; then
+			sudo yum -y install nodejs
+		fi
+	elif [[ "$ROPERDOT_OS_ENV" = darwin ]]; then
+		if command -v brew >/dev/null 2>&1; then
+			brew install node
+		fi
+	fi
+fi
+
+if ! command -v npm >/dev/null 2>&1; then
+	if [[ "$ROPERDOT_OS_TYPE" = linux ]]; then
+		if command -v apt >/dev/null 2>&1; then
+			sudo apt install npm -y
+		elif command -v yum >/dev/null 2>&1; then
+			sudo yum -y install npm
+		fi
+	elif [[ "$ROPERDOT_OS_ENV" = darwin ]]; then
+		if command -v brew >/dev/null 2>&1; then
+			brew install npm
+		fi
+	fi
+fi
+
+# Install @angular/cli
+if ! npm list -g "@angular/cli" >/dev/null; then
+	if [[ -n "$has_sudo" ]]; then
+		if [[ -n "$NVM_DIR" ]]; then
+			npm install -g @angular/cli
+		else
+			sudo npm install -g @angular/cli
+		fi
+	else
+		echo "Unable to install @angular/cli; sudo rights required"
+		exit 1
+	fi
+fi
+
+# Install TypeScript
+if ! npm list -g "typescript" >/dev/null; then
+	if [[ -n "$has_sudo" ]]; then
+		if [[ -n "$NVM_DIR" ]]; then
+			npm install -g typescript
+		else
+			sudo npm install -g typescript
+		fi
+	else
+		echo "Unable to install typescript; sudo rights required"
+		exit 1
+	fi
+fi
+
+# Install tsx
+if ! npm list -g "tsx" >/dev/null; then
+	if [[ -n "$has_sudo" ]]; then
+		if [[ -n "$NVM_DIR" ]]; then
+			npm install -g tsx
+		else
+			sudo npm install -g tsx
+		fi
+	else
+		echo "Unable to install tsx; sudo rights required"
+		exit 1
+	fi
+fi

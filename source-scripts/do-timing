@@ -1,0 +1,22 @@
+if [[ -n $SHOW_TIMING ]]; then
+	if [[ $ROPERDOT_OS_ENV = darwin && -e /usr/local/opt/coreutils/libexec/gnubin/date ]]; then
+		call_date() { /usr/local/opt/coreutils/libexec/gnubin/date "$@"; }
+	else
+		call_date() { date "$@"; }
+	fi
+	do_timing() {
+		if [[ -n $start_time ]]; then
+			local end_time="$(call_date -u +%s.%N)"
+			local elapsed="$(bc <<<"$end_time-$start_time")"
+			echo "Time elapsed for $timing_event: $elapsed"
+		fi
+		if [[ -n $1 ]]; then
+			timing_event=$1
+			start_time="$(call_date -u +%s.%N)"
+		fi
+	}
+else
+	do_timing() {
+		return
+	}
+fi

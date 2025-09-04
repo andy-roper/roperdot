@@ -1,0 +1,41 @@
+#
+# Description: Install script for PeaZip
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+# Last updated for current version on 15 Aug 2025
+# http://www.peazip.org/peazip-linux.html
+
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
+if [[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" = gnome ]]; then
+	temp_dir="$(mktemp -d)"
+	pushd "$temp_dir" >/dev/null || return 1
+	if [[ "$ROPERDOT_KERNEL_ARCH" = 64 ]]; then
+		# NOTE: the portable version is required for 64-bit systems; the non-portable version
+		# is compiled for 32-bit and requires 32-bit libraries to work
+		version=10.6.0
+	    file_name=peazip_portable-${version}.LINUX.GTK2.x86_64
+	    get-web-file https://github.com/peazip/PeaZip/releases/download/${version}/${file_name}.tar.gz
+	    sudo tar -xzf ${file_name}.tar.gz -C /opt
+	    sudo mv /opt/$file_name /opt/PeaZip
+	    rm ${file_name}.tar.gz
+	    [[ -d "$HOME/.local/share/applications" ]] || mkdir "$HOME/.local/share/applications"
+	    cp /opt/PeaZip/FreeDesktop_integration/peazip.desktop "$HOME/.local/share/applications"
+	    sed -i '/Exec=/c\Exec=/opt/PeaZip/peazip %F' "$HOME/.local/share/applications/peazip.desktop"
+	    [[ -d "$HOME/.local/share/icons" ]] || mkdir -p "$HOME/.local/share/icons"
+	    cp /opt/PeaZip/FreeDesktop_integration/peazip.png "$HOME/.local/share/icons"
+	    ln -s /opt/PeaZip/peazip "${ROPERDOT_DIR}/extra-bin/peazip"
+	else
+		echo "PeaZip portable DEB couldn't be found for 32-bit systems; aborting install"
+		exit 1
+#		file_name=peazip_10.6.0.LINUX.GTK2-2_i386.deb
+#	    get-web-file https://github.com/peazip/PeaZip/releases/download/${version}/${file_name}
+#	    sudo dpkg -i ${file_name}
+#	    rm ${file_name}
+	fi
+	popd >/dev/null || return 1
+	rm -rf "$temp_dir" >/dev/null
+fi

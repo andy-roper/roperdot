@@ -1,0 +1,31 @@
+#
+# Description: Install script for Slack
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
+# Last updated for current version on 4 Nov 2018
+# https://slack.com/downloads/linux
+
+# I stopped using snap to install slack on 4 Nov 2018 because it was failing to download the package.
+# sudo snap install slack --classic;
+
+if [[ "$ROPERDOT_OS_FAMILY" = debian ]]; then
+	temp_dir="$(mktemp -d)"
+	pushd "$temp_dir" >/dev/null || return 1
+	if [[ "$ROPERDOT_KERNEL_ARCH" = "64" ]]; then
+		wget -O ~/slack.deb https://downloads.slack-edge.com/linux_releases/slack-desktop-3.3.3-amd64.deb
+	else
+		wget -O ~/slack.deb https://downloads.slack-edge.com/linux_releases/slack-desktop-3.3.3-amd32.deb
+	fi
+	if [[ "$ROPERDOT_OS_ENV" = "mint" ]]; then
+		sudo gdebi -n ~/slack.deb
+	else
+		sudo apt install -i ~/slack.deb -y || sudo apt install -f -y
+	fi
+	popd >/dev/null || return 1
+	rm -rf "$temp_dir"
+fi

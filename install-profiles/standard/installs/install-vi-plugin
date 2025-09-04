@@ -1,0 +1,29 @@
+#
+# Description: Install script for vi plugin
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+. "${ROPERDOT_DIR}/source-scripts/unpack"
+. "${ROPERDOT_DIR}/source-scripts/input-functions"
+[[ -e /tmp/install-vi-plugin-post ]] && . /tmp/install-vi-plugin-post
+
+author="$1"
+if [[ -n "$2" ]]; then
+	plugin="$2"
+else
+	plugin="$1"
+fi
+
+[[ -d ~/.vim/bundle ]] || mkdir -p ~/.vim/bundle
+if [[ ! -d ~/.vim/bundle/$plugin ]]; then
+	echo "Installing $plugin plugin"
+	if command -v git >/dev/null 2>&1; then
+		git clone "http://github.com/${author}/${plugin}.git" ~/".vim/bundle/$plugin"
+	else
+		echo "Git not available; aborting install of vi plugin"
+		exit 1
+	fi
+	command -v install-vi-plugin-post >/dev/null 2>&1 && install-vi-plugin-post
+fi

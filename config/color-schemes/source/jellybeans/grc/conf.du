@@ -1,0 +1,27 @@
+# Cannot read STDERR, not working
+regexp=^du.*
+colours="\033[38;5;174m"
+======
+# Path
+regexp=\s+[\.\/]+([\w\s\-\_\.]+)(\/.*)?$
+colours=default,"\033[01;38;5;152m","\033[38;5;152m"
+======
+# Size 'K'
+regexp=^\d*[.,]?\dKi?\s
+colours="\033[38;5;144m"
+======
+# Size 'M'
+regexp=^\d*[.,]?\dMi?\s
+colours="\033[38;5;222m"
+======
+# Size 'G'
+regexp=^\d*[.,]?\dGi?\s
+colours="\033[38;5;174m"
+======
+# Size 'T'
+regexp=^\d*[.,]?\dTi?\s
+colours="\033[01;38;5;174m"
+======
+# Total
+regexp=(.*)\s+(total)$
+colours="\033[01;38;5;222;48;5;152m"

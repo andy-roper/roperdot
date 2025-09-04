@@ -1,0 +1,12 @@
+#!/usr/bin/osascript
+#
+# Description: (Mac) Selects light mode on a Mac
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+tell application "System Events"
+	tell appearance preferences
+		set dark mode to false
+	end tell
+end tell

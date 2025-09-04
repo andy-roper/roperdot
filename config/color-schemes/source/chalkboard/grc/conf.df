@@ -1,0 +1,44 @@
+# FS
+#regexp=^.*?\s
+regexp=^(?!Filesystem)(\/[-\w\d.]+)+\s
+colours="\033[38;5;104m","\033[01;38;5;104m"
+======
+# Size 'K'
+regexp=\s\d*[.,]?\dKi?\s
+colours="\033[38;5;114m"
+======
+# Size 'M'
+regexp=\s\d*[.,]?\dMi?\s
+colours="\033[38;5;186m"
+======
+# Size 'G'
+regexp=\s\d*[.,]?\dGi?\s
+colours="\033[38;5;174m"
+======
+# Size 'T'
+regexp=\s\d*[.,]?\dTi?\s
+colours="\033[01;38;5;174m"
+======
+# Mounted on
+regexp=\/$|(\/[-\w\d. ]+)+$
+colours="\033[38;5;114m","\033[01;38;5;114m"
+======
+# Use 0-60%
+regexp=[\b1-6][0-9]?%|0%
+colours="\033[38;5;114m"
+======
+# Use 70-90%
+regexp=[7-9][0-9]%
+colours="\033[38;5;186m"
+======
+# Use 90-97
+regexp=9[0-7]%
+colours="\033[38;5;174m"
+======
+# Use 98-100
+regexp=9[8-9]%|100%
+colours="\033[01;38;5;174m"
+======
+# tmpfs lines
+regexp=^tmpfs.*
+colours="\033[38;5;241m"

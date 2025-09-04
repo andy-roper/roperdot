@@ -1,0 +1,13 @@
+command -v win_env_linux_path || . "${ROPERDOT_DIR}/source-scripts/win-env-functions"
+
+desktop_shortcut_exists () {
+	local shortcut="$1.lnk"
+	local USERPROFILE="$(win_env_linux_path USERPROFILE)"
+	if [[ -f "$USERPROFILE/Desktop/$shortcut" ]]; then
+		echo true
+	elif [[ -f "/mnt/c/Users/public/Desktop/$shortcut" ]]; then
+		echo true
+	else
+		echo false
+	fi
+}

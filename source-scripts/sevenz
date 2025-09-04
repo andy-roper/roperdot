@@ -1,0 +1,9 @@
+if command -v 7z >/dev/null 2>&1; then
+	sevenz () {
+		7z "$@"
+	}
+elif command -v 7za >/dev/null 2>&1; then
+	sevenz () {
+		7za "$@"
+	}
+fi

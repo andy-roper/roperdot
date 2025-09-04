@@ -1,0 +1,52 @@
+#
+regexp=\b(g?cc|[gc]\+\+|g?as|ld)\b
+colours="\033[01;38;5;255m"
+count=once
+.........
+#
+regexp=^[^:\s]*?:\d+:
+colours="\033[01;38;5;176m"
+.........
+regexp=^[^:\s]*?:
+colours="\033[38;5;80m"
+count=once
+.........
+#
+regexp=\`[A-Za-z0-9_():&*]+( const)?\'
+colours="\033[38;5;176m"
+.........
+# compilation method modifiers
+regexp=\s\-(O\d?|f\S+|pthread|g\S*|c|W\S,\S+)\b
+colours="\033[38;5;221m"
+.........
+# -O
+regexp=\-O\d 
+colours="\033[38;5;108m"
+.........
+# -o
+regexp=\-o\s[^\s]+
+colours="\033[38;5;221m"
+.........
+# warning and error won't work, unless you redirect also
+# stderr to grcat
+#
+# warning
+regexp=[Ww]arning[:\b]
+colours="\033[38;5;255m"
+.........
+regexp=warning:
+colours="\033[01;38;5;221m"
+count=once
+.........
+# error
+regexp=[Ee]rror[:\b]
+colours="\033[01;38;5;255m"
+.........
+regexp=error:
+colours="\033[01;38;5;255;48;5;210m"
+count=once
+.........
+#note
+regexp=note:
+colours="\033[01;38;5;80m"
+count=once

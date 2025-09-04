@@ -1,0 +1,21 @@
+initialize_colors () {
+	if [[ "$ROPERDOT_OS_ENV" = "darwin" ]] && ! \ls --color >/dev/null 2>&1; then
+		export LS_SWITCHES="-G"
+		export LSCOLORS='gxgxadxecxxexecxcxgxgx'   # closest I could get to my color scheme
+	else
+		[[ "$ROPERDOT_OS_ENV" = "darwin" ]] && command -v gdircolors >/dev/null 2>&1 && alias dircolors="gdircolors"
+		if command -v dircolors >/dev/null 2>&1; then
+			export LS_SWITCHES="--color=always"
+			eval "$(dircolors "${ROPERDOT_DIR}/config/color-schemes/source/${ROPERDOT_COLOR_SCHEME}/.dircolors")"
+		fi
+	fi
+	source "${ROPERDOT_DIR}/config/color-schemes/source/${ROPERDOT_COLOR_SCHEME}/color-env-vars"
+	if [[ "$ROPERDOT_COMMON_COLOR_SCHEME" = "default" ]]; then
+		source "${ROPERDOT_DIR}/config/color-schemes/source/${ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME}/common-color-env-vars"
+	elif [[ -n "$ROPERDOT_COMMON_COLOR_SCHEME" ]]; then
+		source "${ROPERDOT_DIR}/config/color-schemes/source/${ROPERDOT_COMMON_COLOR_SCHEME}/common-color-env-vars"
+	else
+		echo "Neither ROPERDOT_COMMON_COLOR_SCHEME nor ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME are defined; skipping loading of common-color-env-vars."
+	fi
+	source "${ROPERDOT_DIR}/define-colors"
+}

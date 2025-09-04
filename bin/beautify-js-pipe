@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+"""
+Description: Beautifies piped JavaScript content; called by format
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+"""
+
+import sys
+import jsbeautifier
+
+if len(sys.argv) > 1:
+    # Read from file
+    with open(sys.argv[1], 'r') as f:
+        content = f.read()
+else:
+    # Read from stdin
+    content = sys.stdin.read()
+
+options = jsbeautifier.default_options()
+options.indent_with_tabs = True
+
+print(jsbeautifier.beautify(content, options))

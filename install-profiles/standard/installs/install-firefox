@@ -1,0 +1,21 @@
+#
+# Description: Install script for Firefox
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
+	choco install -y firefox
+
+	zip_file="${ROPERDOT_DIR}/install-profiles/personal/config-files/Firefox.zip"
+	if [[ -f "$zip_file" ]]; then
+		. "${ROPERDOT_DIR}/source-scripts/unpack"
+		. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
+		winenv APPDATA
+		dest_dir="$APPDATA/Mozilla/Firefox/Profiles"
+		mkdir -p "$dest_dir"
+		cd "$dest_dir"
+		unpack_overwrite "$zip_file"
+	fi
+fi

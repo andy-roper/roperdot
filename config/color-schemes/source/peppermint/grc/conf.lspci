@@ -1,0 +1,19 @@
+# Address
+regexp=^(..):(..).(.)
+colours=default,"\033[38;5;151m","\033[38;5;186m","\033[38;5;204m"
+-
+# Ethernet
+regexp=(Ethernet controller|Network controller)
+colours="\033[38;5;109m"
+-
+# Wireless
+regexp=Wireless
+colours="\033[38;5;152m"
+-
+# SATA
+regexp=SATA controller
+colours="\033[38;5;114m"
+-
+# Audio
+regexp=Audio device
+colours="\033[38;5;74m"

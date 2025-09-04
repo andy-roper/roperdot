@@ -1,0 +1,11 @@
+# (  )
+regexp=\((?:([^,)]+),\s)?(-\w)\)
+colours=default,"\033[38;5;99m","\033[38;5;73m"
+-
+# unlimited
+regexp=\sunlimited
+colours="\033[01;38;5;161m"
+-
+# number
+regexp=\s\d+
+colours="\033[38;5;185m"

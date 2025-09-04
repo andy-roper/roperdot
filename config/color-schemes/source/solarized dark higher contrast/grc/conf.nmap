@@ -1,0 +1,35 @@
+# Scan Title
+regexp=Nmap scan report for (\S+)\s\(([^\)]+)\)
+colours=default,"\033[01;38;5;114m","\033[01;38;5;168m"
+-
+# up
+regexp=Host is (up)
+colours=default,"\033[01;38;5;114m"
+-
+# Failed to resolve
+regexp=Failed\sto\sresolve\s\"(\S+)\"
+colours="\033[38;5;167m","\033[01;38;5;167m"
+-
+# Closed ports
+regexp=Not shown: (\d+)\s(closed|filtered)\sports
+colours=default,"\033[38;5;203m","\033[38;5;167m"
+-
+# Titles
+regexp=^PORT.*$|^HOP.*
+colours="\033[01;38;5;m"
+-
+# Ports
+regexp=^(\d+)\/(\w+)\s+(\w+)\s+(\S+)
+colours=default,"\033[01;38;5;114m","\033[38;5;168m","\033[38;5;36m","\033[01;38;5;136m"
+-
+# Ports Details
+regexp=^\|_?(.*)
+colours="\033[01;38;5;114m",default
+-
+# Trace
+regexp=^\d+\s+(\d+\.\d+\sms)[^0-9]*(\d+\.\d+\.\d+\.\d+)
+colours=default,"\033[38;5;114m","\033[38;5;168m"
+-
+# Network Distance:
+regexp=Network Distance:\s(\d+)
+colours=default,"\033[01;38;5;114m"

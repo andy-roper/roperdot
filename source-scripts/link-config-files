@@ -1,0 +1,12 @@
+if [[ -e ~/.dircolors && -n "$ROPERDOT_COLOR_SCHEME" && -n "$ROPERDOT_DIR_COLORS_SET" ]] && ! grep "ROPERDOT" ~/.dircolors >/dev/null; then
+	mv ~/.dircolors ~/.dircolors.bak
+fi
+if [[ ! -e ~/.dircolors && -n "$ROPERDOT_COLOR_SCHEME" && -n "$ROPERDOT_DIR_COLORS_SET" ]]; then
+	if command -v tput >/dev/null 2>&1 && tput setaf 1 >/dev/null 2>&1; then
+		# 256 colors
+		ln -sf "${ROPERDOT_DIR}/.dir_colors.${ROPERDOT_COLOR_SCHEME}.${ROPERDOT_DIR_COLORS_SET}.256" ~/.dircolors
+	else
+		# 16 colors
+		ln -sf "${ROPERDOT_DIR}/.dir_colors.16-color.${ROPERDOT_DIR_COLORS_SET}" ~/.dircolors
+	fi
+fi

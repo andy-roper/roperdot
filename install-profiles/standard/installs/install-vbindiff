@@ -1,0 +1,40 @@
+#
+# Description: Install script for VBinDiff
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+# Last updated for current version on 4 July 2018
+# https://www.cjmweb.net/vbindiff/
+
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+. "${ROPERDOT_DIR}/source-scripts/install-deb"
+. "${ROPERDOT_DIR}/source-scripts/nice-copy"
+
+# Use the first procedure if in Linux or in WSL
+if [[ "$ROPERDOT_OS_TYPE" = linux ]]; then
+	if [[ -n "$has_sudo" ]]; then
+		if command -v apt >/dev/null 2>&1; then
+			sudo apt-get install -y vbindiff
+		elif command -v yum >/dev/null 2>&1; then
+			sudo yum -y install vbindiff
+		fi
+	else
+		echo "User lacks sudo access; aborting install of vbindiff"
+	fi
+elif [[ "$ROPERDOT_OS_ENV" = darwin ]]; then
+	if command -v brew >/dev/null 2>&1; then
+		brew install vbindiff
+	fi
+elif [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
+	zip_file=VBinDiff-3.0_beta5.zip
+	temp_dir="$(mktemp -d)"
+	pushd "$temp_dir" >/dev/null || return 1
+	get-web-file https://www.cjmweb.net/vbindiff/$zip_file
+	unpack $zip_file
+	[[ -d "${ROPERDOT_DIR}/extra-bin" ]] || mkdir "${ROPERDOT_DIR}/extra-bin"
+	nice_copy VBinDiff.exe "${ROPERDOT_DIR}/extra-bin"
+	popd >/dev/null || return 1
+	rm -rf "$temp_dir"
+fi

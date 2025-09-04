@@ -1,0 +1,37 @@
+# Based on mklement0's answer here:
+# https://stackoverflow.com/questions/22537804/retrieve-a-word-after-a-regular-expression-in-shell-script/22539067
+# To retain the behavior that re_match[1] is the first match even for zsh which uses 1-based indexing, the whole
+# match is returned in re_match_whole. This eliminates the need to set the KSH_ARRAYS option for zsh to use 0-based
+# indexing.
+if [[ $current_shell = bash || $ROPERDOT_CURRENT_SHELL = bash ]]; then
+	re_match () {
+		shopt -u nocaseglob
+		unset -v re_match re_match_whole
+		[[ $1 =~ $2 ]] || return $?
+		re_match=( "${BASH_REMATCH[@]}" ) && re_match_whole="${re_match[0]}" && return 0
+	}
+else
+	re_match () {
+		unset -v re_match re_match_whole
+		if [[ -n "$ROPERDOT_MISSING_PCRE" ]]; then
+			local perl_result
+			perl_result=$(perl -ne "if (/$2/) { print \"\$&\\n\"; foreach my \$i (1..\$#-) { print \"\$\$i\\n\" if defined \$\$i; } }" <<< "$1" 2>/dev/null)
+			[[ -n "$perl_result" ]] || return 1
+			
+			# Parse perl results into arrays
+			local -a results
+			results=("${(@f)perl_result}")  # Split on newlines
+			re_match_whole="${results[1]}"
+			re_match=("${results[@]:1}")    # Skip first element (whole match) for captures
+			return 0
+		fi
+		if [[ ! -o RE_MATCH_PCRE ]]; then
+			local need_to_unset_option=true
+			setopt RE_MATCH_PCRE
+		fi
+		[[ $1 =~ $2 ]] || local match_return=$?
+		[[ -n $need_to_unset_option ]] && unsetopt RE_MATCH_PCRE
+		[[ -n $match_return ]] && return $match_return
+		re_match=( "${match[@]}" ) && re_match_whole="$MATCH" && return 0
+	}
+fi

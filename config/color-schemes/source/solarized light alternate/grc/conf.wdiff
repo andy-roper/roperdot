@@ -1,0 +1,9 @@
+# new words
+regexp=\{\+.+\+\}
+colours="\033[01;38;5;100m"
+count=more
+=======
+# deleted words
+regexp=\[\-.+\-\]
+colours="\033[01;38;5;100m"
+count=more

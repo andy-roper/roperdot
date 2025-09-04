@@ -1,0 +1,389 @@
+#!/usr/bin/env perl
+# Description: Compares directories
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+
+# TO DO
+# MAYBE add capability to add to an MD5 info file:
+#   If printing and one or more arguments are info files, read their contents into memory
+#   If a file path is processed and that file path already exists in memory from the info file,
+#   get the MD5 of the file; if it differs, remove the old MD5 entry from memory and create a new one
+#   This will require a map by path
+#   Could use switch to ignore existing, i.e. don't calculate MD5 if the file already exists
+#   Would want to remove a file from the list if the file doesn't physically exist: this would be done if a
+#   volume is specified and it matches
+#   What if a file was renamed? Any way to handle besides a full scan?
+
+use strict;
+use Cwd;
+use Getopt::Long;
+use Digest::MD5;
+use Data::Dumper;
+
+my $help;
+my $dirsep= ($^O !~ /mswin/ || $ENV{'ROPERDOT_OS_ENV'} eq "msys" ? "/" : "\\");
+my $recursing = 0;
+my $suppressing = 0;
+my $printing = 0;
+my $deleting = 0;
+my $onlyOther = 0;
+my $verbose = 0;
+my $volumeName;
+my @deleteDirs;
+my @fileGroup;
+my @fdata;
+
+GetOptions(
+	'delete=s' => \@deleteDirs,
+	'help|?'   => \$help,
+	'other'    => \$onlyOther,
+	'print'    => \$printing,
+	'suppress' => \$suppressing,
+	'recurse'  => \$recursing,
+	'verbose'  => \$verbose,
+	'volume=s' => \$volumeName
+);
+
+help() if ($help);
+
+if (scalar @deleteDirs > 0 && scalar @ARGV == 0) {
+	print "Error: When enabling deletion, you must include at least one directory not flagged for file deletion.\n";
+	exit 1;
+}
+
+foreach (@ARGV) {
+	push @fileGroup, {
+		path => $_,
+		deleteDupes => 0
+	};
+}
+foreach (@deleteDirs) {
+	push @fileGroup, {
+		path => $_,
+		deleteDupes => 1
+	};
+}
+
+$deleting = 1 if (scalar @deleteDirs > 0);
+
+push @fileGroup, { path => cwd(), deleteDupes => 0 } if (scalar @fileGroup == 0);
+
+help() if ($onlyOther && scalar @fileGroup == 1);
+
+# %fileInfo: key = file size
+# each element in the hash will be an array of hashes:
+#    "name": string
+#    "deleteEligible": boolean (integer)
+#    "md5": string; populated from hash info file or when looking for duplicates
+
+my %fileInfo;
+
+my $mask;
+my $fgIndex = 0;
+foreach (@fileGroup) {
+	my $path = $_->{path};
+	print "Processing " . $path . "\n" if ($verbose);
+	parseFullPath(\$path, \$mask);
+	$_->{path} = $path;
+	print "Path: " . $_->{path} . ", mask: $mask\n" if ($verbose);
+	if ($printing) {
+		printFileGroup($fgIndex++, $mask);
+	}
+	else {
+		processFileGroup($fgIndex++, $mask);
+	}
+}
+
+print Dumper %fileInfo if ($verbose);
+print "Built hash of files; checking for duplicates\n" if ($verbose);
+lookForDupes();
+
+exit 0;
+
+sub lookForDupes {
+	foreach my $key (keys %fileInfo) {
+		my $files = $fileInfo{$key};
+		next if (scalar @{$files} == 1);
+		# Skip processing if $onlyOther is true and all files with the same size have the same fgIndex
+		if ($onlyOther) {
+			my $skip = 1;
+			my $fgIndex = -1;
+			foreach my $fInfo (@{$files}) {
+				if ($fgIndex == -1) {
+					$fgIndex = $fInfo->{fgIndex};
+				}
+				elsif ($fInfo->{fgIndex} != $fgIndex) {
+					$skip = 0;
+					last;
+				}
+			}
+			next if ($skip);
+		}
+		
+		my %hashList;
+		# Store hash of array of file info references by MD5 hash codes
+		foreach my $fInfo (@{$files}) {
+			my $md5 = ($fInfo->{md5} ? $fInfo->{md5} : getMD5Hash($fInfo->{name}));
+			if ($hashList{$md5}) {
+				push @{$hashList{$md5}}, $fInfo;
+			}
+			else {
+				$hashList{$md5} = [
+					$fInfo
+				];
+			}
+		}
+		# Process each array in %hashList with more than one element,
+		# i.e. 2 or more files with the same MD5 hash
+		foreach my $md5 (keys %hashList) {
+			my $md5List = $hashList{$md5};
+			next if (scalar @{$md5List} == 1);
+			print "process dupes for hash $md5\n" if ($verbose);
+			# Process duplicates
+			if ($deleting) {
+				print "deleting\n" if ($verbose);
+				my @filesToDelete;
+				my @filesToKeep;
+				foreach my $fInfo (@{$md5List}) {
+					if ($fileGroup[$fInfo->{fgIndex}]->{deleteDupes}) {
+						push @filesToDelete, $fInfo->{name};
+					}
+					else {
+						push @filesToKeep, $fInfo->{name};
+					}
+				}
+				print "filesToKeep: " . (scalar @filesToKeep) . ", filesToDelete: " . (scalar @filesToDelete) . "\n" if ($verbose);
+				# Only delete files if there's at least one duplicate that won't be deleted
+				if (scalar @filesToKeep > 0) {
+					my $x = "";
+					foreach my $name (@filesToKeep) {
+						$x .= ($x ? "\t" : "") . $name;
+					}
+					foreach my $name (@filesToDelete) {
+						$x .= ($x ? "\t" : "") . "$name (deleted)";
+						unlink $name if (!$suppressing);
+					}
+					print "$x\n";
+					next;
+				}
+			}
+			my $x = "";
+			foreach my $fInfo (@{$md5List}) {
+				$x .= ($x ? "\t" : "") . $fInfo->{name};
+			}
+			print "$x\n";
+		}
+	}
+}
+
+sub printFileGroup {
+	my ($fgIndex, $mask) = @_;
+
+	if (!(-d $fileGroup[$fgIndex]->{path})) {
+		print "Error: directory argument required when printing\n";
+		exit 1;
+	}
+	processDirToPrint("", $fgIndex, $mask);
+}
+
+
+sub processFileGroup {
+	my ($fgIndex, $mask) = @_;
+	
+	if (-d $fileGroup[$fgIndex]->{path}) {
+		processDir($fileGroup[$fgIndex]->{path}, $fgIndex, $mask);
+	}
+	else {
+		processHashInfoFile($fileGroup[$fgIndex]->{path}, $fgIndex);
+	}
+}
+
+sub processDir {
+	my ($d, $fgIndex, $mask) = @_;
+	
+	opendir(DIR, "$d");
+	my @f = readdir(DIR);
+	closedir(DIR);
+	foreach (@f) {
+		next if ($_ =~ /^\.{1,2}$/);
+		my $x = "$d/$_";
+		if (-d $x) {
+			processDir($x, $fgIndex, $mask) if $recursing;
+		}
+		elsif (!$mask or $_ =~ /$mask/i) {
+			my $size = getFileSize($x);
+			next if (!$size);
+			if ($fileInfo{$size}) {
+				push @{$fileInfo{$size}}, {
+					name => $x,
+					fgIndex => $fgIndex
+				}
+			}
+			else {
+				$fileInfo{$size} =[
+					{
+						name => $x,
+						fgIndex => $fgIndex
+					}
+				];
+			}
+		}
+	}
+}
+
+sub processDirToPrint {
+	my ($relDir, $fgIndex, $mask) = @_;
+
+	my $dir = $fileGroup[$fgIndex]->{path} . ($relDir ? "/$relDir" : "");
+	opendir(DIR, $dir);
+	my @f = readdir(DIR);
+	closedir(DIR);
+	foreach (@f) {
+		next if ($_ =~ /^\.{1,2}$/);
+		my $fullPath = "$dir/$_";
+		if (-d $fullPath) {
+			processDirToPrint(($relDir ? "$relDir/$_" : $_), $fgIndex, $mask) if $recursing;
+		}
+		elsif (!$mask or $_ =~ /$mask/i) {
+			my $size = getFileSize($fullPath);
+			next if (!$size);
+			my $md5 = getMD5Hash($fullPath);
+			if ($volumeName) {
+				print "$size\t$md5\t$volumeName/" . ($relDir ? "$relDir/$_" : $_) . "\n";
+			}
+			else {
+				print "$size\t$md5\t$fullPath\n";
+			}
+		}
+	}
+}
+
+sub getFileSize {
+	my $filePath = shift;
+	my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime,
+	 $mtime, $ctime, $blksize, $blocks) = stat $filePath;
+	return $size;
+}
+
+sub getMD5Hash {
+	my $filePath = shift;
+	open(hFile, $filePath);
+	binmode(hFile);
+	my $md5 = Digest::MD5->new->addfile(*hFile)->hexdigest;
+    close(hFile);
+    return $md5;
+}
+
+# Expected file format:
+# size  md5  filePathAndName
+sub processHashInfoFile {
+	my ($f, $fgIndex) = @_;
+	
+	open(hFile, $f) or die "Can't open $f: $!";
+	while (<hFile>) {
+		chomp;
+		$_ =~ /(\w+)\s+(\w+)\s+(.*)$/;
+		my ($size, $md5, $f) = ($1, $2, $3);
+		if ($fileInfo{$size}) {
+			push @{$fileInfo{$size}}, {
+				name => $f,
+				fgIndex => $fgIndex
+			}
+		}
+		else {
+			$fileInfo{$size} = [
+				{
+					name => $f,
+					fgIndex => $fgIndex,
+					md5 => $md5
+				}
+			];
+		}
+	}
+	close(hFile);
+}
+
+sub parseDir {
+	my $p = shift;
+
+	# replace backlashes	
+	$p =~ s/\\/\//g;
+	# compress doubled dirseps
+	$p =~ s/\/+/\//g;
+	# remove trailing slash
+	$p =~ s/\/$//g;
+	# return empty string if contains pattern characters
+	$p = "" if ($p =~ /[*?]/);
+	return $p;
+}
+
+sub parseFullPath {
+	my ($p, $m) = @_;
+	
+	if (!(-d $$p)) {
+		my ($v1, $v2) = ($$p =~ /^(.*\/)([^\/]*?)$/);
+	
+		if ($v1 eq "") {
+			$$m = $$p;
+			$$p = cwd();
+			$$p =~ s/\\/\//g;
+		}
+		else {
+			$$p = $v1;
+			$$m = $v2;
+		}
+		if ($$m !~ /\*|\?/) {
+			$$p = parseDir($$p) . $$m;
+			$$m = "";
+			return;
+		}
+		$$m = dos_to_regex($$m);
+	}
+	$$p = parseDir($$p);
+}
+
+sub dos_to_regex {
+	my $m = shift;
+	# replace *.* with *
+	$m =~ s/\*\.\*/\*/g;
+	# replace . with \.
+	$m =~ s/\./\\\./g;
+	# replace * with .*
+	$m =~ s/\*/\.\*/g;
+	# replace $ with \$
+	$m =~ s/\$/\\\$/g;
+	# replace ? with .
+	$m =~ s/\?/./g;
+	# put ^ at beginning and $ at end
+	return "^$m\$";
+}
+
+sub help {
+	print <<EOT;
+dc: compare directories and generate a list of duplicate files
+Usage: dc [-hros?] [-ve] [filegroup] [[-d] <filegroup>] [...]
+       dc -p [-vo <volumeName>] [filegroup] [...]
+
+dc (directory compare) compares files within one or more directories by content
+and generates a list of duplicate files.  It can also be used to compare
+directories to files containing a list of file sizes, MD5 hashcodes and
+filenames, or to compare multiple files containing sizes, hashcodes and
+filenames.
+
+Options
+-d or --delete      use this switch before a directory to indicate that files
+                    in that directory that are duplicates of files in other
+                    directories should be automatically deleted.
+-h or --help or -?  print help
+-o or --other       suppress comparison of files within a directory; only check
+                    for duplicates in other directories
+-p or --print       print file sizes, MD5 hashes and paths instead of comparing
+-r or --recurse     recurse subdirectories
+-s or --suppress    use with -d to print output as though deletion were being
+                    done without actually deleting the files
+-ve or --verbose    verbose output
+-vo or --volume     specify volume name to print instead of the base path when
+                    printing
+EOT
+	exit 0;
+}

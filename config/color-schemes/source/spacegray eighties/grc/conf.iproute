@@ -1,0 +1,27 @@
+# DEV
+regexp=dev\s(\S+)
+colours=default,"\033[38;5;80m"
+=====
+# Gateway
+regexp=(via)\s(\S+)\s
+colours=default,"\033[38;5;221m","\033[01;38;5;221m"
+=====
+# Network
+regexp=^(default|[^ \/]+(\/(\d+))?)
+colours="\033[38;5;108m","\033[38;5;151m",default,"\033[38;5;108m"
+=====
+# Network DEFAULT
+regexp=^default
+colours="\033[01;38;5;255;48;5;108m"
+=====
+# Local
+regexp=(src)\s(\S+)\s?
+colours=default,"\033[38;5;176m","\033[01;38;5;176m"
+=====
+# proto
+regexp=(proto)\s(\S+)\s
+colours=default,default,"\033[38;5;221m"
+=====
+# linkdown
+regexp=linkdown
+colours="\033[01;38;5;210m"

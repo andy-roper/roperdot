@@ -1,0 +1,26 @@
+#
+# Description: Install script for YACReader
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+# Last updated for current version on 4 July 2018
+# https://software.opensuse.org/download.html?project=home%3Aselmf&package=yacreader
+# https://mintguide.org/office/637-yacreader-reader-cataloger-of-images-and-comics.html
+
+if [[ "$ROPERDOT_OS_ENV" = "mint" && "$ROPERDOT_DESKTOP_ENV" = "gnome" ]]; then
+	case "$ROPERDOT_OS_VERSION" in
+		18) version=16.04 ;;
+		17.3) version=15.10 ;;
+		17.2) version=15.04 ;;
+		17.1) version=14.10 ;;
+		*) version=18.04 ;;
+	esac
+	sudo sh -c "echo 'deb http://download.opensuse.org/repositories/home:/selmf/xUbuntu_${version}/ /' >> /etc/apt/sources.list.d/yacreader.list"
+	cd /tmp || return 1
+	wget http://download.opensuse.org/repositories/home:selmf/xUbuntu_${version}/Release.key
+	sudo apt-key add - < Release.key
+	sudo apt-get update
+	sudo apt-get install yacreader -y
+fi

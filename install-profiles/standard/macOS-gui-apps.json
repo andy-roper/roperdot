@@ -1,0 +1,258 @@
+[
+	{
+		"app": "iTerm2",
+		"package": "iterm2",
+		"app_name": "iTerm2",
+		"package_manager": "brew",
+		"desc": "Replacement for the macOS Terminal"
+	},
+	{
+		"app": "Sublime Text",
+		"package": "sublime-text",
+		"package_manager": "brew",
+		"install_script": "install-sublime-text",
+		"desc": "Developers' text editor"
+	},
+	{
+		"app": "Tunnelblick",
+		"package": "tunnelblick",
+		"package_manager": "brew",
+		"desc": "OpenVPN VPN client",
+		"groups": ["development"]
+	},
+	{
+		"app": "Google Chrome",
+		"package": "google-chrome",
+		"package_manager": "brew",
+		"desc": "Web browser"
+	},
+	{
+		"app": "Firefox",
+		"package": "firefox",
+		"package_manager": "brew",
+		"desc": "Web browser",
+		"groups": ["personal"],
+		"disabledByDefault": true
+	},
+	{
+		"app": "Brave Browser",
+		"package": "brave-browser",
+		"package_manager": "brew",
+		"desc": "Web browser",
+		"groups": ["personal"],
+		"disabledByDefault": true
+	},
+	{
+		"app": "MacDown",
+		"package": "macdown",
+		"package_manager": "brew",
+		"desc": "Markdown editor"
+	},
+	{
+		"app": "Notion",
+		"package": "notion",
+		"package_manager": "brew",
+		"install_script": "install-notion",
+		"groups": ["personal"],
+		"desc": "Note taking/organizing app"
+	},
+	{
+		"app": "Slack",
+		"package": "slack",
+		"package_manager": "brew",
+		"desc": "Team messaging app",
+		"groups": ["development"],
+		"disabledByDefault": true
+	},
+	{
+		"app": "Docker",
+		"package": "docker",
+		"package_manager": "brew",
+		"exclusionGroups": ["work"],
+		"desc": "Virtualization platform"
+	},
+	{
+		"app": "Dropbox",
+		"package": "dropbox",
+		"package_manager": "brew",
+		"exclusionGroups": ["work"],
+		"desc": "Secure file sharing and storage solution"
+	},
+	{
+		"app": "Windows App",
+		"package": "windows-app",
+		"package_manager": "brew",
+		"exclusionGroups": ["work"],
+		"desc": "Microsoft remote desktop client"
+	},
+	{
+		"app": "Hex Fiend",
+		"package": "hex-fiend",
+		"package_manager": "brew",
+		"desc": "Hex editor"
+	},
+	{
+		"app": "Visual Studio Code",
+		"package": "visual-studio-code",
+		"package_manager": "brew",
+		"install_script": "install-vscode",
+		"desc": "Microsoft's source code editor"
+	},
+	{
+		"app": "WebStorm",
+		"package": "webstorm",
+		"package_manager": "brew",
+		"desc": "JetBrains' JavaScript IDE",
+		"disabledByDefault": true
+	},
+	{
+		"app": "Eclipse for Java",
+		"package": "eclipse-java",
+		"package_manager": "brew",
+		"desc": "Java IDE with built-in CVS client, Git client, XML editor, etc.",
+		"disabledByDefault": true
+	},
+	{
+		"app": "SourceTree",
+		"package": "sourcetree",
+		"package_manager": "brew",
+		"desc": "Git client"
+	},
+	{
+		"app": "P4Merge",
+		"package": "p4v",
+		"package_manager": "brew",
+		"desc": "Visual diff and merge tool"
+	},
+	{
+		"app": "pgAdmin 4",
+		"package": "pgadmin4",
+		"package_manager": "brew",
+		"desc": "Administration and development platform for PostgreSQL",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "Postman",
+		"package": "postman",
+		"package_manager": "brew",
+		"groups": ["development"],
+		"desc": "REST client"
+	},
+	{
+		"app": "Lens",
+		"package": "lens",
+		"package_manager": "brew",
+		"groups": ["development"],
+		"desc": "Kubernetes management app"
+	},
+	{
+		"app": "SoapUI",
+		"appDir": "SoapUI-*",
+		"install_script": "install-soapui",
+		"install_prerequisite": "java",
+		"groups": ["development"],
+		"desc": "REST client"
+	},
+	{
+		"app": "LibreOffice",
+		"package": "libreoffice",
+		"package_manager": "brew",
+		"desc": "Productivity suite",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "BetterZip",
+		"package": "betterzip",
+		"package_manager": "brew",
+		"desc": "File archiver utility"
+	},
+	{
+		"app": "VirtualBox",
+		"package": "virtualbox",
+		"package_manager": "brew",
+		"desc": "Hypervisor for virtualization",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "Forklift",
+		"package": "forklift",
+		"package_manager": "brew",
+		"desc": "File manager"
+	},
+	{
+		"app": "Android File Transfer",
+		"package": "android-file-transfer",
+		"package_manager": "brew",
+		"desc": "Tool for browsing and transferring files between an Android device and your Mac",
+		"groups": ["personal"]
+	},
+	{
+		"app": "Cyberduck",
+		"package": "cyberduck",
+		"package_manager": "brew",
+		"desc": "FTP client"
+	},
+	{
+		"app": "VLC",
+		"package": "vlc",
+		"package_manager": "brew",
+		"desc": "Multimedia player",
+		"groups": ["personal"]
+	},
+	{
+		"app": "foobar2000",
+		"package": "foobar2000",
+		"package_manager": "brew",
+		"desc": "Music player",
+		"groups": ["personal"]
+	},
+	{
+		"app": "GIMP",
+		"package": "gimp",
+		"package_manager": "brew",
+		"desc": "Graphics editor",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "Calibre",
+		"package": "calibre",
+		"package_manager": "brew",
+		"desc": "e-book reader/manager",
+		"groups": ["personal"]
+	},
+	{
+		"app": "Simple Comic",
+		"package": "simple-comic",
+		"package_manager": "brew",
+		"desc": "Comic Reader",
+		"groups": ["personal"]
+	},
+	{
+		"app": "Rectangle",
+		"package": "rectangle",
+		"package_manager": "brew",
+		"desc": "Tool for enhancing resizing and moving windows",
+		"groups": ["development"]
+	},
+	{
+		"app": "Gyazo",
+		"package": "gyazo",
+		"package_manager": "brew",
+		"desc": "Screen capture utility",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "LICEcap",
+		"package": "licecap",
+		"package_manager": "brew",
+		"desc": "Tool for capturing animated screen captures",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "GrandPerspective",
+		"package": "grandperspective",
+		"package_manager": "brew",
+		"desc": "Disk space visualization app",
+		"exclusionGroups": ["work"]
+	}
+]

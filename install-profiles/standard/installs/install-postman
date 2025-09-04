@@ -1,0 +1,37 @@
+#
+# Description: Install script for Postman
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+# Last updated for current version on 15 Aug 2025
+
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
+# https://www.getpostman.com/apps
+
+if [[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" = gnome ]]; then
+	temp_dir="$(mktemp -d)"
+	pushd "$temp_dir" >/dev/null || return 1
+	get-web-file https://dl.pstmn.io/download/latest/linux64 postman.tar.gz
+	sudo tar -xzf postman.tar.gz -C /opt
+	rm postman.tar.gz
+	ln -s /opt/Postman/app/Postman "${ROPERDOT_DIR}/extra-bin/postman"
+	[[ -d "$HOME/.local/share/icons" ]] || mkdir -p "$HOME/.local/share/icons"
+	cp /opt/Postman/app/resources/app/assets/icon.png "$HOME/.local/share/icons/postman.png"
+	[[ -d "$HOME/.local/share/applications" ]] || mkdir -p "$HOME/.local/share/applications"
+	cat << EOT > "$HOME/.local/share/applications/postman.desktop"
+[Desktop Entry]
+Encoding=UTF-8
+Version=11.58.4
+Name=Postman
+Type=Application
+Exec=/opt/Postman/app/Postman
+Icon=postman.png
+Terminal=false
+Categories=Application;Development;Programming;Internet;Network
+EOT
+	popd >/dev/null || return 1
+	rm -rf "$temp_dir" >/dev/null
+fi

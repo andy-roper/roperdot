@@ -1,0 +1,23 @@
+# Normal
+regexp=[aAcCdDeijsStTu]
+colours="\033[38;5;80m"
+-
+# User Namespace
+regexp=[iadA]
+colours="\033[38;5;151m"
+-
+# Read Only
+regexp=[EhINXZ]
+colours="\033[01;38;5;210m"
+-
+# Separators
+regexp=[\-]
+colours="\033[38;5;m"
+-
+# Error
+regexp=(lsattr:) \w.*
+colours=default,"\033[01;38;5;210m"
+-
+# Filename
+regexp=(\/[-\w\d. ]+)+$
+colours="\033[38;5;221m","\033[01;38;5;m"

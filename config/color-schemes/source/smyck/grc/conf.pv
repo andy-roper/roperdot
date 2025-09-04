@@ -1,0 +1,8 @@
+# size
+regexp=(\s|^)\d+([.,]\d+)?\s?([kKMG][bB]|[bB]|[kKMG])(?=[\s,]|$)
+colours="\033[38;5;179m"
+=======
+#
+regexp=<=>
+colours="\033[38;5;179m"
+

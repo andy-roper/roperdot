@@ -1,0 +1,76 @@
+# Test if ~/$2 is sourced in file ~/$1
+is_config_sourced () {
+	local target_file="$1"
+	if [[ -f ~/$target_file ]]; then
+		local config_file="$2"
+		re="^[^#]*(\.|source)[[:space:]]+[^#]*$config_file"
+		while read line; do
+			[[ "$line" =~ $re ]] && return 0
+		done < ~/"$target_file"
+	fi
+	return 1
+}
+
+alert () {
+	echo -e "\x1B[0;91m$1\x1B[0m"
+}
+
+# Add sourcing of file ~/$2 to file ~/$1
+add_config_sourcing () {
+	local target_file="$1" config_file="$2"
+	is_config_sourced "$target_file" "$config_file" && return
+	if [[ -e "$target_file" ]]; then
+		alert "Backing up $target_file to $target_file.bak"
+		cp -f "$target_file" "$target_file.bak"
+	fi
+	alert "Adding sourcing of $config_file to $target_file"
+	if [[ "$ROPERDOT_OS_ENV" = "mac" && "$target_file" = ".bash_profile" && "$config_file" = ".bashrc" ]]; then
+#		echo -e "\ntype update_terminal_cwd >/dev/null 2>&1 && export -f update_terminal_cwd" >> ~/$target_file
+		echo -e "\ntype update_terminal_cwd >/dev/null 2>&1" >> ~/"$target_file"
+	fi
+	echo -e "\n[[ -f ~/\"$config_file\" ]] && . ~/\"$config_file\"" >> ~/"$target_file"
+}
+
+add_package_sourcing () {
+	add_config_sourcing "$1" "roperdot-loader"
+}
+
+# If the user doesn't have config files sourcing each other already, add sourcing
+# of roperdot-loader to .bashrc and add sourcing of .bashrc to .bash_profile
+# Order config files are processed:
+# Mac, WSL Ubuntu: shell: .bash_profile or .profile; subshell: .bashrc
+# Linux: shell: .bashrc; subshell: .bashrc
+update_config_files () {
+	
+	if [[ -n $PROCESSING_BASH ]]; then
+		if [[ -e ~/.bashrc ]]; then
+			# If .bash_profile or .profile exist and .bashrc sources either one, use the user's
+			# configuration sourcing
+			if [[ -e ~/.bash_profile ]] && is_config_sourced .bashrc .bash_profile; then
+				add_package_sourcing .bash_profile
+		    elif [[ -e ~/.profile ]] && is_config_sourced .bashrc .profile; then
+		    	add_package_sourcing .profile
+		    else
+		    	add_package_sourcing .bashrc
+			    if [[ -e ~/.bash_profile ]]; then
+			    	add_config_sourcing .bash_profile .bashrc
+			    elif [[ -e ~/.profile ]]; then
+			    	add_config_sourcing .profile .bashrc
+			    fi
+		    fi
+		else
+			add_package_sourcing .bashrc
+			if [[ -e ~/.bash_profile ]]; then
+				add_config_sourcing .bash_profile .bashrc
+			elif [[ -e ~/.profile ]]; then
+				add_config_sourcing .profile .bashrc
+			elif [[ "$ROPERDOT_OS_ENV" = "mac" || "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+				add_config_sourcing .bash_profile .bashrc
+			fi
+		fi
+	fi
+	if [[ -n $PROCESSING_ZSH && -f ~/.zshrc ]]; then
+		add_package_sourcing .zshrc
+		echo "export PROMPT=\"%~ %# \"" >> .zshrc
+	fi
+}

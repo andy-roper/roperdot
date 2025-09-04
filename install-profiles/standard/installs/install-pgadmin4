@@ -1,0 +1,92 @@
+#
+# Description: Install script for pgAdmin 4
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+# Check if running on supported OS
+if [[ "$ROPERDOT_OS_FAMILY" != "debian" ]]; then
+    log_error "Unsupported OS family: $ROPERDOT_OS_FAMILY"
+    log_error "This script supports Debian-based systems only"
+    exit 1
+fi
+
+set -e
+
+NC='\033[0m' # No Color
+
+log_info() { echo -e "${COLOR_BLUE}[INFO]${NC} $1"; }
+log_success() { echo -e "${COLOR_GREEN}[SUCCESS]${NC} $1"; }
+log_warning() { echo -e "${COLOR_YELLOW}[WARNING]${NC} $1"; }
+log_error() { echo -e "${COLOR_RED}[ERROR]${NC} $1"; }
+
+# Add official pgAdmin repository
+# Download the repository public key using get-web-file
+TEMP_KEY="$(mktemp ${TMPDIR:-/tmp}/tempXXXXXX)"
+mv "$TEMP_KEY" "$TEMP_KEY.pub"
+TEMP_KEY="$TEMP_KEY.pub"
+if ! get-web-file "https://www.pgadmin.org/static/packages_pgadmin_org.pub" "$TEMP_KEY"; then
+    log_error "Failed to download pgAdmin repository key"
+    exit 1
+fi
+
+# Install the public key
+sudo gpg --dearmor < "$TEMP_KEY" > /usr/share/keyrings/packages-pgadmin-org.gpg 2>/dev/null || {
+    if [[ ! -f /usr/share/keyrings/packages-pgadmin-org.gpg ]]; then
+        log_error "Failed to install pgAdmin repository key"
+        rm -f "$TEMP_KEY"
+        exit 1
+    fi
+}
+
+# Cleanup temp key file
+rm -f "$TEMP_KEY"
+
+# Get the Ubuntu/Debian codename
+CODENAME=$(lsb_release -cs)
+
+# Handle Linux Mint (maps to Ubuntu codenames)
+case "$CODENAME" in
+    "wilma"|"virginia"|"vera"|"vanessa"|"una"|"ulyssa"|"tricia"|"tina"|"tessa"|"tara"|"sylvia"|"sonya"|"serena"|"sarah"|"rosa"|"rebecca"|"rafaela"|"qiana")
+        # Linux Mint to Ubuntu mapping
+        if [[ "$CODENAME" == "wilma" ]]; then
+            CODENAME="noble"  # Ubuntu 24.04
+        elif [[ "$CODENAME" == "virginia" ]]; then
+            CODENAME="jammy"  # Ubuntu 22.04
+        elif [[ "$CODENAME" == "vera" || "$CODENAME" == "vanessa" || "$CODENAME" == "una" ]]; then
+            CODENAME="jammy"  # Ubuntu 22.04
+        elif [[ "$CODENAME" == "ulyssa" || "$CODENAME" == "tricia" || "$CODENAME" == "tina" || "$CODENAME" == "tessa" || "$CODENAME" == "tara" ]]; then
+            CODENAME="focal"  # Ubuntu 20.04
+        else
+            CODENAME="jammy"  # Default to Ubuntu 22.04 for older Mint versions
+        fi
+        ;;
+esac
+
+# Create repository configuration
+if ! sudo sh -c "echo 'deb [signed-by=/usr/share/keyrings/packages-pgadmin-org.gpg] https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/$CODENAME pgadmin4 main' > /etc/apt/sources.list.d/pgadmin4.list"; then
+    log_error "Failed to create pgAdmin repository configuration"
+    exit 1
+fi
+
+# Update package lists
+if ! sudo apt update; then
+    log_error "Failed to update package lists"
+    log_warning "This might be due to unsupported distribution version"
+    log_info "Trying with a fallback codename..."
+    
+    # Try with jammy as fallback
+    sudo sh -c "echo 'deb [signed-by=/usr/share/keyrings/packages-pgadmin-org.gpg] https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/jammy pgadmin4 main' > /etc/apt/sources.list.d/pgadmin4.list"
+    
+    if ! sudo apt update; then
+        log_error "Failed to update package lists even with fallback. Repository might not support your distribution."
+        exit 1
+    fi
+fi
+
+# Install pgAdmin4 desktop version
+if ! sudo apt install -y pgadmin4-desktop; then
+    log_error "Failed to install pgAdmin4"
+    exit 1
+fi

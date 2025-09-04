@@ -1,0 +1,10 @@
+#
+# Description: Install script for Notion
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
+	 brew install --cask notion
+fi

@@ -1,0 +1,651 @@
+#!/usr/bin/env perl
+# Description: Renames files using regular expressions
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+
+use strict;
+use Cwd;
+use utf8;
+
+help(1) if ($ARGV[0] eq "" || $ARGV[0] eq "-?" || $ARGV[0] eq "-h" || $ARGV[0] eq "--help");
+
+my $verbose = 0;
+my $global = 0;
+my $recursing = 0;
+my $numbering = 0;
+my $first_number = -1;
+my $file_number;
+my $file_number_mask;
+my $test_mode = 0;
+my $baseonly = 1;
+my $casecheck = 0;
+my $limitMask = "";
+my $srchex;
+my $replex;
+my $rename_count = 0;
+my $special_mode;
+my $doCommonFixes;
+my $files_affected;
+my @args;
+my @stdin_files;
+
+my $dirsep = "\\";
+my $unix = 0;
+if ($^O !~ /mswin/i || $ENV{'ROPERDOT_OS_ENV'} eq "cygwin" || $ENV{'ROPERDOT_OS_ENV'} eq "msys" ? "/" : "\\") {
+	$dirsep = "/";
+	$unix = 1;
+}
+
+my $rv = 0;
+my $end_index = 2;
+# process switches
+
+until (!(scalar @ARGV) or ($ARGV[0] !~ /^-/)) {
+	my $arg = shift @ARGV;
+	last if ($arg eq "--");
+	showRegexHelp() if ($arg =~ /(H)/);
+	if ($arg eq "--srchex") {
+		$srchex = shift @ARGV;
+		if (!$srchex) {
+			print "Invalid search pattern\n";
+			exit 0;
+		}
+		next;
+	}
+	if ($arg eq "--replex") {
+		$replex = shift @ARGV;
+		if (!$replex) {
+			print "Invalid replace pattern\n";
+			exit 0;
+		}
+		next;
+	}
+	if ($arg =~ /(a.)/) {
+		$files_affected = substr($1, 1, 1);
+		help(2) if ($files_affected !~ /[df]/);
+		$arg = "$`$'";
+	}
+	if ($arg =~ /(x.)/) {
+		$special_mode = substr($1, 1, 1);
+		help(3) if ($special_mode !~ /[ltu]/);
+		$arg = "$`$'";
+	}
+	if ($arg =~ /(g)/) {
+		$arg = "$`$'";
+		$global = 1;
+	}
+	if ($arg =~ /(r)/) {
+		$arg = "$`$'";
+		$recursing = 1;
+	}
+	if ($arg =~ /(n)/ or $arg =~ /(t)/) {
+		$arg = "$`$'";
+		$test_mode = 1;
+	}
+	if ($arg =~ /(N)/) {
+		$arg = "$`$'";
+		$numbering = 1;
+	}
+	if ($arg =~ /(e)/) {
+		$arg = "$`$'";
+		$baseonly = 0;
+	}
+	if ($arg =~ /(c)/) {
+		$arg = "$`$'";
+		$casecheck = 1;
+	}
+	if ($arg =~ /(l)/) {
+		help(4) if ($arg !~ /.*l$/);
+		$limitMask = shift @_;
+		if ($limitMask !~ /\([^?]/) {
+			print "Invalid limit pattern: no parameters defined\n";
+			exit 0;
+		}
+		next;
+	}
+	if ($arg =~ /(z)/) {
+		$arg = "$`$'";
+		$doCommonFixes = 1;
+	}
+	if ($arg =~ /(v)/) {
+		$arg = "$`$'";
+		$verbose = 1;		
+	}
+	help(5) if ($arg && $arg ne "-");
+	if ($numbering && $first_number == -1) {
+		help(6) if ($#ARGV == -1);
+		$first_number = shift @ARGV;
+	}
+}
+
+help(7) if ($numbering && $recursing);
+
+if ($numbering && $first_number == -1) {
+	$first_number = 1;
+}
+if ($special_mode || $numbering || $doCommonFixes) {
+	$end_index = 0;
+	$baseonly = 1 if ($special_mode eq "t");
+}
+else {
+	$srchex = shift @ARGV;
+	$replex = shift @ARGV;
+}
+
+while (scalar @ARGV) {
+	my $arg = shift @ARGV;
+	$arg =~ s/^\.\///;
+	push @args, $arg;
+}
+if ($#args == -1) {
+	while (<STDIN>) {
+		chomp;
+		push @stdin_files, $_;
+	}
+}
+help(8) if (scalar @args == 0 && $#stdin_files == -1);
+
+if ($unix) {
+	# replace "#<number>" with "$<number>"
+	$replex =~ s/(?<!\\)#(\d)/\$\1/g;
+}
+
+validateRegexes();
+
+$file_number = $first_number;
+$rename_count = 0;
+my $file_pattern;
+
+foreach my $dir (@args) {
+	if (-f $dir) {
+		ren_func("", $dir);
+	}
+	else {
+		parseFullPath(\$dir, \$file_pattern);
+		$rv = processDir($dir, $file_pattern);
+	}
+}
+foreach my $f (@stdin_files) {
+	ren_func("", $f);
+	++$rv;
+}
+print "$rename_count files renamed\n" if ($rv);
+exit $rv;
+
+sub validateRegexes {
+	my %replexArgs;
+	foreach my $arg ($replex =~ /\$(\d+)/g) {
+		$replexArgs{$arg} = "defined";
+	}
+	my $srchexArgCount = 0;
+	my %missingArgs;
+	foreach my $arg ($srchex =~ /(?<!\\)\(/g) {
+		++$srchexArgCount;
+		if ($replexArgs{$srchexArgCount}) {
+			$replexArgs{$srchexArgCount} = "referenced";
+		}
+		else {
+			$missingArgs{$srchexArgCount} = 1;
+		}
+	}
+	my $errorStr = "";
+	if (keys %missingArgs) {
+		$errorStr = "Captures not referenced in replacement pattern: ";
+		my $firstArg = 1;
+		foreach my $arg (sort keys %missingArgs) {
+			$errorStr .= ($firstArg ? "" : ", ") . $arg;
+			if ($firstArg) {
+				$firstArg = 0;
+			}
+		}
+	}
+	if (keys %replexArgs) {
+		my $undefinedCaptures = "";
+		foreach my $arg (sort keys %replexArgs) {
+			if ($replexArgs{$arg} ne "referenced") {
+				$undefinedCaptures .= ($undefinedCaptures ? ", " : "") . $arg; 
+			}
+		}
+		if ($undefinedCaptures) {
+			if ($errorStr) {
+				$errorStr .= "\n";
+			}
+			$errorStr .= "Captures referenced but not defined in search pattern: $undefinedCaptures\n";
+		}
+	}
+	if ($errorStr) {
+		print "Capture mismatches:\n\n$errorStr\n";
+		exit 0;
+	}
+}
+
+sub ren_func {
+	my ($d, $f) = @_;
+	my ($x, $ext, $oldstr, $newstr, $i, $preMask, $postMask, $oldname, $newname);
+
+	if ($baseonly && !(-d "$d/$f")) {
+		$f =~ /(.*)(\..*)$/;
+		$oldstr = $newstr = $1;
+		$ext = $2;
+	}
+	else {
+		$oldstr = $newstr = $f;
+		$ext = "";
+	}
+	if ($limitMask ne "") {
+		my @values = $newstr =~ /$limitMask/;
+		next if ($& eq "");
+		$i = 0;
+		++$i until ($i > 9 || $values[$i] ne "");
+		$x = $values[$i];
+		$newstr =~ /(.*)\Q$x\E(.*)/;
+		$preMask = $1;
+		$postMask = $2;
+		$newstr = $x;
+	}
+	if ($doCommonFixes) {
+		$newstr = doCommonFixes($newstr);
+	}
+	elsif ($special_mode eq 'l') {
+		# convert to lowercase
+		$newstr =~ tr/[A-Z]/[a-z]/;
+	}
+	elsif ($special_mode eq 't') {
+		# convert to titlecase
+		my $converted_str = "";
+		while ($newstr =~ /(['\x41-\x5A\x61-\x7A\xC0-\xFF]+)/g) {
+			$converted_str .= $`;
+			my $word = $1;
+			$newstr = $';
+			$word =~ /^(.)(.*)/;
+			$word = uppercase($1) . lowercase($2);
+			$converted_str .= $word;
+		}
+		$newstr = $converted_str . $newstr;
+		# convert appropriate articles, prepositions and conjunctions to lowercase
+		$newstr =~ s/\b(?<!^)((and)|(an)|(at)|(a)|(for)|(in)|(of)|(on)|(or)|(the)|(to)|(from))\b(?!$|[\.])/\L$1/gi;
+		# convert contraction/possessive endings to lowercase
+		$newstr =~ s/(\w)'((ve|re|ll)|([dmst]))\b/$1'\L$2/gi;
+        # convert ordinal suffixes to lowercase
+        $newstr =~ s/(\d+)(st|nd|rd|th)\b/$1 . lc($2)/gie;
+		# convert letters after dashes to uppercase
+		$newstr =~ s/- ([a-z])/- \U$1/gi;
+		# convert letters after parentheses to uppercase
+		$newstr =~ s/\(([a-z])/(\U$1/gi;
+		# convert season/episode references
+		$newstr =~ s/(s\d+e\d+)/\L$1/gi;
+		# convert roman numerals
+		$newstr =~ s/( xv)(i{2,3})\b/$1\U$2/gi;
+		$newstr =~ s/\b(i[vx])\b/\U$1/gi;
+		$newstr =~ s/\b([vx]i*)\b/\U$1/gi;
+		# convert extension to lowercase
+		$newstr =~ s/(\.[a-z]{1,4})$/\L$1/i;
+		# replace TV
+		$newstr =~ s/tv/TV/i;
+	}
+	elsif ($special_mode eq 'u') {
+		# convert spaces to underscores
+		$newstr =~ s/\s+/_/g;
+	}
+	elsif ($numbering) {
+		if ($numbering && $newstr =~ /^\d[\d\-]* ?-? ?(.*)$/) {
+			$newstr = sprintf($file_number_mask, $file_number++) . " - $1";
+		}
+	}
+	else {
+		if ($replex =~ /\{/) {
+			$newstr = process_formatting($newstr);
+		}
+		else {
+			eval '$newstr =~ s/' . $srchex . '/' . $replex . '/' .
+			 ($casecheck ? "" : "i") . ($global ? "g" : "");
+		}
+	}
+	$newstr = $preMask . $newstr . $postMask;
+	if ($oldstr ne $newstr) {
+		$newname = $d . $newstr . $ext;
+		if (-e $newname && lc($oldstr) ne lc($newstr)) {
+			print "Error: renaming $oldname to $newname: $newname already exists\n";
+			return 0;
+		}
+		if (!$test_mode) {
+			if (!rename("$d$f", "$newname")) {
+				print "Error renaming $oldname to $newname: $!\n";
+				return 0;
+			}
+			++$rename_count;
+		}
+		print "$d$f renamed to $newname\n";
+	}
+	return 1;
+}
+
+sub doCommonFixes {
+	my $str = shift;
+	$str =~ s/_/ /g;      # replace underscores with spaces
+	$str =~ s/\s+/ /g;    # replace multiple contiguous spaces with single space
+	$str =~ s/(^ | $)//g; # remove leading and trailing spaces
+	$str =~ s/[`’]/'/g;   # replace backticks and smart quotes with apostrophes
+	$str =~ s/[“”]/''/g;  # replace smart double quotes with double single quotes
+	$str =~ s/—/-/g;      # replace em dash with dash
+	$str =~ s/…/.../g;    # replace ellipsis character with 3 dots
+	return $str;
+}
+
+sub process_unix_replace {
+	my $string = shift @_;
+}
+
+sub process_formatting {
+	my $string = shift @_;
+	my $processed_str;
+	while ($string =~ /$srchex/gi) {
+		next if length($&) eq 0;
+		$processed_str .= $`;
+		my $prefix = $`;
+		my @arg = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+		$string = $';
+		my $match_str = $replex;
+		my $processed_match;
+		while ($match_str =~ /{('.*?'(?:,\s*\$\d)+)}/g) {
+			$processed_match .= $`;
+			$match_str = $';
+			my $pattern = $1;
+			for (my $i = 1; $i < 10; $i++) {
+				my $j = $i - 1;
+				$pattern =~ s/\$$i/'$arg[$j]'/g;
+			}
+			eval '$processed_match .= sprintf(' . $pattern . ')';
+		}
+		$processed_str .= $processed_match . $match_str;
+	}
+	$processed_str .= $string;
+	return $processed_str;	
+}
+
+sub parseDir {
+	my $p = shift;
+
+	# replace slash with backslash if Win32
+	$p =~ s/\//\\/g if ($dirsep eq "\\");
+	if ($dirsep eq '\\') {
+		# compress doubled dirseps except at start
+		$p =~ s/(?<!^)\\+/\\/g;
+	}
+	else {
+		# compress doubled dirseps
+		$p =~ s/\/+/\//g;
+	}
+	# append dirsep if not present
+	$p .= $dirsep if ($p !~ /\Q$dirsep\E$/);
+	# return empty string if contains pattern characters
+	$p = "" if ($p =~ /[*?]/);
+	return $p;
+}
+
+sub parseFullPath {
+	my ($p, $m) = @_;
+
+	if (-d $$p && ($recursing || $$p =~ /$dirsep/)) {
+		$$m = "";
+	}
+	else {
+		my ($v1, $v2) = ($$p =~ /^(.*\Q$dirsep\E)(.*?)$/);
+
+		if ($v1 eq "") {
+			$$m = $$p;
+			$$p = cwd();
+		}
+		else {
+			$$p = $v1;
+			$$m = $v2;
+		}
+		$$m = dos_to_regex($$m);
+	}
+	$$p = parseDir($$p);
+}
+
+sub dos_to_regex {
+	my $m = shift;
+	# replace *.* with *
+	$m =~ s/\*\.\*/\*/g;
+	# replace . with \.
+	$m =~ s/\./\\\./g;
+	# replace * with .*
+	$m =~ s/\*/\.\*/g;
+	# replace $ with \$
+	$m =~ s/\$/\\\$/g;
+	# replace ? with .
+	$m =~ s/\?/./g;
+	# replace [ with \[
+	$m =~ s/\[/\\]/g;
+	# replace ( with \(
+	$m =~ s/\(/\\(/g;
+	$m =~ s/\)/\\)/g;
+	# put ^ at beginning and $ at end
+	return "^$m\$";
+}
+
+sub processDir {
+	my ($d, $pattern) = @_;
+	my $x;
+
+	opendir(DIR, "$d");
+	my @file_list = readdir(DIR);
+	closedir(DIR);
+	if ($numbering) {
+		my $max_number = $first_number;
+		foreach (@file_list) {
+			++$max_number if (!(-d $d . $_) && $_ =~ /$pattern/i);
+		}
+		my $file_number_len = length($max_number);
+		$file_number_len = 2 if ($file_number_len < 2);
+		$file_number_mask = "%0" . $file_number_len . "d";
+	}
+	foreach (sort @file_list) {
+		if ($_ !~ /^\.{1,2}$/) {
+			$x = $d . $_;
+			if (-d $x) {
+				if ($recursing) {
+					return 0 if !processDir($x . ($_ eq "" ? "" : $dirsep),
+					 $pattern);
+				}
+				if ($files_affected ne "f" and $_ =~ /$pattern/i) {
+					return 0 if (!ren_func($d, $_));
+				}
+			}
+			else {
+				if ($files_affected ne "d" and $_ =~ /$pattern/i) {
+					return 0 if (!ren_func($d, $_));
+				}
+			}
+		}
+	}
+	return 1;
+}
+
+sub uppercase {
+	my $string = shift;
+	my $result = "";
+	while ($string =~ /(.)/g) {
+		my $x = $1;
+		$x = chr(ord($x) - 32) if ($x =~ /[\x61-\x7A\xE0-\xFF]/);
+		$result .= $x;
+	}
+	return $result;
+}
+
+sub lowercase {
+	my $string = shift;
+	my $result = "";
+	while ($string =~ /(.)/g) {
+		my $x = $1;
+		$x = chr(ord($x) + 32) if ($x =~ /[\x41-\x5A\xC0-\xDF]/);
+		$result .= $x;
+	}
+	return $result;
+}
+
+sub help {
+	my $reason = shift;
+	print "reason: $reason\n" if ($verbose);
+	print <<EOT;
+ren: rename files using regular expressions
+Usage: ren.pl [-a<d|f>] [-bcgHnNrv] [-l <limit pattern>] <search pattern>
+       <replace pattern> <file> [...]
+       OR
+       ren.pl [-a<d|f>] [-bnrx<ltu>zv] [-l <limit pattern>] <file> [...]
+
+Options:
+-a  limit files affected by ren:
+    d: directories only
+    f: files only
+-c  perform case sensitive comparisons
+-e  perform replacements on entire filename including the extension
+-g  do a global replacement on the pattern
+-H  show regular expression help
+-l  limit replacements to a portion of the filename
+    Example:
+    ren -bg -l "(?:[^-]*\\s+-\\s+(.*))|(.*)" "(?<!')(\\w+)" \\u\\L\$1 *.*
+    will convert to titlecase all words in the filename base that don't follow
+    an apostrophe; if the filename contains a dash, the text following the dash
+    will be searched; otherwise the entire text will be searched
+-n  nothing (test mode): do everything except actually rename the files
+-N  renumber; the next argument should be the beginning number to use.
+    All files must BEGIN with a number already so they can be processed in the
+    correct order.  Recursion should not be used with this switch.
+-r  recurse subdirectories
+-x  special conversions
+    -xl: convert to lowercase
+    -xt: convert to titlecase
+    -xu: convert spaces to underscores
+-v  verbose
+-z  perform common fixes:
+    Replace underscores with spaces
+    Replace smart quotes with apostrophes
+    Replace em dashes with dash characters
+    Replace multiple spaces with a single space
+    Remove leading and trailing spaces in file names
+
+Patterns using spaces, redirection or pipe characters must be enclosed in
+double quotes.
+
+Examples:
+
+Convert filenames to lowercase:
+ren (.*) \\L\$1 *.*  or  ren -xl *.*
+
+Convert base filenames to lowercase and extensions to uppercase:
+ren (.*)(\\..*)\$ \\L\$1\\U\$2 *.*
+
+Convert "artist - album - track - song.mp3" to "artist - song.mp3":
+ren -b "(.*) - (.*) - (.*) - (.*)" "\$4 - \$1" *.mp3
+
+Remove brackets from filenames:
+ren -g "\\[|\\]" "" *.*
+
+Remove brackets and characters between them from filenames:
+ren -g (\\[.*?\\]) "" *.*
+
+Rename files replacing groups of spaces with underscores:
+ren -g \\s+ _ *.*  or  ren -xu *.*
+
+Rename files compressing groups of spaces:
+ren -g \\s+ " " *.*
+
+Convert filenames to titlecase except for extension:
+the hard way: ren -g "(?<![\\.'])(\\w+)" \\u\\L\$1 *.*
+an easier way: ren -bg "(?<!')(\\w+)" \\u\\L\$1 *.*
+the really easy way: ren -xt *.*
+
+Convert filenames to titlecase except for extension; search either characters
+following the first dash or the entire filename base; convert listed articles,
+conjunctions and prepositions to lowercase except at beginning or end of string:
+ren -bg -l "(?:[^-]*\\s+-\\s+(.*))|(.*)" "\\b(?<!')(\\w+)\\b" \\u\\L\$1 *.*
+and then:
+ren -bg -l "(?:[^-]*\\s+-\\s+(.*))|(.*)" "\\b(?<!^)((and)|(an)|(a)|(for)|(in)|(of)|(on)|(or)|(the)|(to)|(with))\\b(?!\$)" \\L\$1 *.*
+OR
+ren -bxt -l "(?:[^-]*\\s+-\\s+(.*))|(.*)" *.*
+EOT
+   exit;
+}
+
+#"
+
+sub showRegexHelp {
+   print <<EOT;
+Metacharacters
+.     Match any character
+^     Match the beginning of the filename
+\$     Match the end of the filename
+\\     Escape the next metacharacter
+\\xHH  Hexadecimal character
+
+Character Count Quantifiers
+*      Match 0 or more times
++      Match 1 or more times
+?      Match 1 or 0 times
+{n}    Match exactly n times
+{n,}   Match at least n times
+{n,m}  Match at least n but not more than m times
+
+Postfix a count quantifier with "?" to cause it to match the minimum number of
+times possible instead of the maximum (the default).
+
+Predefined Character Classes
+Symbol  Description           Definition
+\\d      Digit                 [0-9]
+\\D      Non-digit             [^0-9]
+\\s      Whitespace            [ \\t\\n\\r\\f]
+\\S      Non-whitespace        [^ \\t\\n\\r\\f]
+\\w      Word character        [a-zA-Z0-9_]
+\\W      Non-(word character)  [^a-zA-Z0-9_]
+
+Classes
+Character classes are enclosed in brackets.  Characters may be individually used
+or specified with ranges such as "1-5".  Character metasymbols such as \\w may
+also be used; all other metasymbols (such as . ) lose their special meaning in
+brackets.  If the first character in the brackets is a caret, the test is
+negated.  To test for a bracket, either don't use it as the first character or
+escape it.
+
+Alternation
+You can use a pipe symbol (|) between strings to match any of the strings.  The
+first pattern that matches at the position will be used; if your match strings
+overlap each other, put the longer one first.
+For example:
+(Samwise|Sam)
+
+Grouping
+Characters and character classes can be grouped with parentheses for comparison.
+For example:
+go(d(dess(es)?|s?)|odness|sh)
+matches: god, goddess, goddesses, gods, goodness or gosh
+
+Capturing Substrings
+Enclose substrings to be captured in parentheses.  To reference the substring in
+the search pattern, use \\n where n is the number of the match, the first match
+being \\1.  To reference the match in the replace pattern, use \$n.  To group
+characters but not capture them as substrings, follow the open parenthesis with
+"?:".
+For example:
+ren.pl "arg(?:(?:le)|(?:el))(.*)gle.txt" "re$1.text" *.txt
+would rename "arglebargle.txt" or "argelbargle.txt" to "rebar.text"
+
+Boundary Matching
+\\b  Match a word boundary
+\\B  Match a non-(word boundary)
+
+Case Conversion Codes
+\\l  Convert next character to lowercase
+\\u  Convert next character to titlecase
+\\L  Convert characters to lowercase until \\E
+\\U  Convert characters to uppercase until \\E
+\\E  End case modification
+
+For example:
+To convert the names of text files to lowercase and extensions to uppercase:
+ren -s "(.*)\.(.*)" "\L$1\E.\U$2" *.txt
+EOT
+   exit;
+}

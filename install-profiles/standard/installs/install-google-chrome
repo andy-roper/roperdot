@@ -1,0 +1,17 @@
+#
+# Description: Install script for Google Chrome
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+# https://winaero.com/blog/install-google-chrome-linux-mint-18/
+
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
+if [[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" = gnome ]]; then
+	print-web-file https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+	echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee -a /etc/apt/sources.list.d/chrome.list
+	sudo apt update
+	sudo apt install google-chrome-stable -y
+fi

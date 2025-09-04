@@ -1,0 +1,48 @@
+define_suffix_aliases() {
+	for ext in $ext_array; do
+		alias -s $ext=$1
+		alias -s ${ext:u}=$1
+	done
+}
+
+ext_array=(txt nfo ini srt)
+define_suffix_aliases text-editor-app
+
+ext_array=(css scss htm html xml yml json sql js ts java pl pm py php c cpp h hpp cs)
+define_suffix_aliases code-editor-app
+
+ext_array=(7z zip tgz tar taz rar jar war ear bz bz2 tb2 tbz tbz2 lha lzma tlz xz txz gz z)
+define_suffix_aliases archive-editor-app
+
+ext_array=(cbr cbz cb7 cbt cba)
+define_suffix_aliases comic-viewer-app
+
+ext_array=(jpg jpeg png gif tif tiff bmp tga)
+define_suffix_aliases image-viewer-app
+
+ext_array=(avi divx mkv mp4 mpg mpeg m4v wmv vob ifo mt2s mts)
+define_suffix_aliases video-player-app
+
+ext_array=(mp3 ogg au wav m4b m3u)
+define_suffix_aliases audio-player-app
+
+ext_array=(pdf)
+define_suffix_aliases pdf-viewer-app
+
+ext_array=(azw epub mobi)
+define_suffix_aliases ebook-viewer-app
+
+ext_array=(odt doc docx docm rtf)
+define_suffix_aliases word-processor-app
+
+ext_array=(ods xls xlsx xlsm csv tsv)
+define_suffix_aliases spreadsheet-app
+
+ext_array=(odp ppt pptx pptm)
+define_suffix_aliases presentation-app
+
+ext_array=(md markdown)
+define_suffix_aliases markdown-app
+
+unset ext_array
+unset -f define_suffix_aliases
