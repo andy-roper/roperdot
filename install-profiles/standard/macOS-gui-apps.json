@@ -1,8 +1,8 @@
 [
 	{
 		"app": "iTerm2",
+		"bundle_name": "iTerm",
 		"package": "iterm2",
-		"app_name": "iTerm2",
 		"package_manager": "brew",
 		"desc": "Replacement for the macOS Terminal"
 	},
@@ -52,7 +52,6 @@
 		"app": "Notion",
 		"package": "notion",
 		"package_manager": "brew",
-		"install_script": "install-notion",
 		"groups": ["personal"],
 		"desc": "Note taking/organizing app"
 	},
@@ -107,19 +106,21 @@
 	},
 	{
 		"app": "Eclipse for Java",
+		"bundle_name": "Eclipse",
 		"package": "eclipse-java",
 		"package_manager": "brew",
 		"desc": "Java IDE with built-in CVS client, Git client, XML editor, etc.",
 		"disabledByDefault": true
 	},
 	{
-		"app": "SourceTree",
+		"app": "Sourcetree",
 		"package": "sourcetree",
 		"package_manager": "brew",
 		"desc": "Git client"
 	},
 	{
 		"app": "P4Merge",
+		"bundle_name": "p4v",
 		"package": "p4v",
 		"package_manager": "brew",
 		"desc": "Visual diff and merge tool"
@@ -174,7 +175,7 @@
 		"exclusionGroups": ["work"]
 	},
 	{
-		"app": "Forklift",
+		"app": "ForkLift",
 		"package": "forklift",
 		"package_manager": "brew",
 		"desc": "File manager"
@@ -215,6 +216,7 @@
 	},
 	{
 		"app": "Calibre",
+		"bundle_name": "calibre",
 		"package": "calibre",
 		"package_manager": "brew",
 		"desc": "e-book reader/manager",

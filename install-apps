@@ -218,7 +218,7 @@ main () {
 	    return 0  # Install the app
 	}
 	
-	install_vars=(app app_dir app_name binary desc disabled disable_null_stdin full_app_path include_condition install_command install_prerequisite install_script install_options list_prerequisite package package_manager personal presence_command shortcut_name shortcut_path skip sudo_not_required groups exclusionGroups disabledByDefault)
+	install_vars=(app app_dir app_name binary bundle_name desc disabled disable_null_stdin full_app_path include_condition install_command install_prerequisite install_script install_options list_prerequisite package package_manager personal presence_command shortcut_name shortcut_path skip sudo_not_required groups exclusionGroups disabledByDefault)
 
 	install_shell_apps () {
 	    local app_file="$1" default_installer="$2" have_default_installer install_list=() install_desc_list=() app_count
@@ -317,7 +317,7 @@ main () {
 				if install_prereq_present "$install_prerequisite"; then
 					# Reset colors in case the previous install didn't clean up after itself
 					tput sgr0
-					pause_specified_installations "$app"
+					# pause_specified_installations "$app"
 					if [[ -n "$install_script" ]]; then
 						eval "install_func() { $ROPERDOT_CURRENT_SHELL \"${ROPERDOT_DIR}/install-profiles/$profile/installs/$install_script\"; }"
 					elif [[ -n "$install_command" ]]; then
@@ -380,8 +380,6 @@ main () {
 	    # Get total number of apps from all profiles
 	    app_count=$(python3 "$ROPERDOT_DIR/bin/json-to-simple-vars" "$app_file" count "$base_profile" --optional "${extra_profiles[@]}")
 
-	    pause_specified_installations "Google Chrome"
-
 	    # First pass: determine which apps to install
 	    for ((i=0; i<app_count; i++)); do
 	        # Clear previous variables
@@ -396,35 +394,31 @@ main () {
 	        
 	        should_install_app "$app" "$groups" "$exclusionGroups" "$disabledByDefault" "$install_groups" || continue
 	        
-	        if [[ -n "$app" ]] && ! gui_app_is_present "$app" "$app_dir" "$full_app_path" "$binary" "$package" "$package_manager"; then
+	        if [[ -n "$app" ]] && ! gui_app_is_present "$app" "$app_dir" "$bundle_name" "$full_app_path" "$binary" "$package" "$package_manager"; then
 	            install_list+=("$i")  # Store index
 	            [[ -n "$app_name" ]] && name="$app_name" || name="$app"
 	            [[ -z "$desc" ]] && install_desc_list+=("$name") || install_desc_list+=("$name: $desc")
 	        fi
 	    done
 
-		pause_specified_installations "Google Chrome"
 		[[ -z "$install_desc_list" ]] && return
 		if [[ "$force_gui_app_installs" != "none" ]]; then
 			ask_to_install_app_set "Install commonly used GUI applications" "$force_gui_app_installs" "${install_desc_list[@]}" || return
 		fi
-		pause_specified_installations "Google Chrome"
 
 		# Installation loop
 		for app_index in "${install_list[@]}"; do
+
 			# Clear variables and reload app data
 			for var in "${install_vars[@]}"; do
 				unset "$var"
 			done
-			
-			pause_specified_installations "Google Chrome"
 
 			eval "$(python3 "$ROPERDOT_DIR/bin/json-to-simple-vars" "$app_file" "$app_index" "$base_profile" --optional "${extra_profiles[@]}")"
-			pause_specified_installations "Google Chrome"
 			[[ -n "$app_name" ]] && name="$app_name" || name="$app"
 			# Use original app name for prompting
 			if ask_to_install "$name" "$desc"; then
-				pause_specified_installations "$app"
+				# pause_specified_installations "$app"
 				if [[ -n "$install_script" ]]; then
 					if [[ -n "$install_options" ]]; then
 						eval "install_func() { $ROPERDOT_CURRENT_SHELL \"${ROPERDOT_DIR}/install-profiles/$profile/installs/$install_script\" $install_options; }"
@@ -484,40 +478,27 @@ main () {
 	}
 
 	install_wsltty () {
-		pause_specified_installations "Google Chrome"
 		local local_app_dir="$(win_env_linux_path LOCALAPPDATA)/wsltty"
-		pause_specified_installations "Google Chrome"
 		local app_dir="$(win_env_linux_path APPDATA)/wsltty"
-		pause_specified_installations "Google Chrome"
 		if [[ ! -d "$local_app_dir" ]] && ask_yn_y "Install and configure wsltty (mintty terminal for WSL)" y; then
 			local new_install=true
-			pause_specified_installations "Google Chrome"
 			choco.exe install wsltty -y
-			pause_specified_installations "Google Chrome"
 			if [[ $? -eq 0 ]]; then
-				pause_specified_installations "Google Chrome"
 				# cmd.exe /c "cd C:\ProgramData\chocolatey\lib\wsltty\tools\wslttyinstall && install.bat"
 				cd /mnt/c/ProgramData/chocolatey/lib/wsltty/tools/wslttyinstall && cmd.exe /c "install.bat"
-				pause_specified_installations "Google Chrome"
 				[[ -n $PROCESSING_BASH ]] && create_wsltty_shortcut bash
-				pause_specified_installations "Google Chrome"
 				[[ -n $PROCESSING_ZSH ]] && create_wsltty_shortcut zsh
-				pause_specified_installations "Google Chrome"
 			fi
 		fi
 		if [[ -d "$local_app_dir" ]]; then
-			pause_specified_installations "Google Chrome"
 			if [[ -z $new_install ]]; then
 				ask_yn_y "Apply configuration to wsltty" y || return
 			fi
-			pause_specified_installations "Google Chrome"
 			nice_copy "${ROPERDOT_DIR}/config/apps/wsltty/config" "${app_dir}"
-			pause_specified_installations "Google Chrome"
 			if [[ ! -e "${app_dir}/themes/hybrid" ]]; then
 				[[ -d "${app_dir}/themes" ]] || mkdir "${app_dir}/themes"
 				cp "${ROPERDOT_DIR}/config/color-schemes/mintty/"* "${app_dir}/themes"
 			fi
-			pause_specified_installations "Google Chrome"
 		fi
 	}
 
@@ -678,7 +659,6 @@ EOT
 			
 			echo
 			install_shell_apps "${ROPERDOT_OS_ENV}-shell-apps.json" apt-get
-			pause_specified_installations "Google Chrome"
 			
 			# Install mtr as part of non-shell apps since it has a GUI			
 			if [[ -n "$ROPERDOT_DESKTOP_ENV" ]]; then
@@ -686,9 +666,7 @@ EOT
 					# Windows Subsystem for Linux (WSL)
 					if [[ -n "$HAS_ADMIN_RIGHTS" ]]; then
 						if command -v choco.exe >/dev/null 2>&1; then
-							pause_specified_installations "Google Chrome"
 							install_wsltty
-							pause_specified_installations "Google Chrome"
 							install_gui_apps "windows-gui-apps.json"
 						else
 							cat <<EOT

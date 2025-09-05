@@ -769,8 +769,8 @@ if command -v git >/dev/null 2>&1; then
 	fi
 	if ask_yn_n "Set up git configuration for roperdot" y; then
 		nice_copy config/apps/git/.gitconfig ~/.gitconfig
-		nice_copy config/apps/git/.gitconfig.local ~/.gitconfig.local
 		nice_copy config/apps/git/.gitignore ~/.gitignore
+		[[ -f config/apps/git/.gitconfig.local ]] && nice_copy config/apps/git/.gitconfig.local ~/.gitconfig.local
 		if [[ -n "$ROPERDOT_COLOR_SCHEME" ]]; then
 			source "${ROPERDOT_DIR}/config/color-schemes/source/${ROPERDOT_COLOR_SCHEME}/.git-colors"
 		else
@@ -778,7 +778,7 @@ if command -v git >/dev/null 2>&1; then
 		fi
 	fi
 	case "$ROPERDOT_OS_FAMILY" in
-		darwin) app_path="$(gui_app_path p4merge p4merge)" ;;
+		darwin) app_path="$(gui_app_path p4merge p4merge p4v)" ;;
 		debian) app_path="$(gui_app_path p4merge Perforce)" ;;
 	esac
 	if [[ -n "$app_path" ]] && ask_yn_n "Use P4Merge as the git diff and merge tool" y; then
@@ -802,7 +802,7 @@ if command -v git >/dev/null 2>&1; then
 		git config --global mergetool.p4merge.trustExitCode false
 		git config --global mergetool.keepBackup false
 		if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
-			source_tree_path="$(gui_app_path SourceTree SourceTree)"
+			source_tree_path="$(gui_app_path Sourcetree Sourcetree Sourcetree)"
 			if [[ -n "$source_tree_path" ]]; then
 				git config --global difftool.sourcetree.cmd "opendiff \"\$LOCAL\" \"\$REMOTE\""
 				git config --global mergetool.sourcetree.cmd "${source_tree_path}/Contents/Resources/opendiff-w.sh \"\$LOCAL\" \"\$REMOTE\" -ancestor \"\$BASE\" -merge \"\$MERGED\""

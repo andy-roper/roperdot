@@ -34,15 +34,15 @@ wait_for_continue () {
 }
 
 gui_app_is_present () {
-	gui_app_presence_and_path true "$1" "$2" "$3" "$4" "$5" "$6"
+	gui_app_presence_and_path true "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
 }
 
 gui_app_path() {
-	gui_app_presence_and_path false "$1" "$2" "$3" "$4" "$5" "$6"
+	gui_app_presence_and_path false "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
 }
 
 gui_app_presence_and_path () {
-	local present_only="$1" app="$2" app_dir="$3" full_app_path="$4" app_binary="$5" package="$6" packageManager="$7"
+	local present_only="$1" app="$2" bundle_name="$3" app_dir="$4" full_app_path="$5" app_binary="$6" package="$7" package_manager="$8"
 	local app_path app_name
 	if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
 		if [[ -n "$full_app_path" && "$full_app_path" != "null" ]]; then
@@ -77,29 +77,28 @@ gui_app_presence_and_path () {
 	else
 		case "$ROPERDOT_OS_ENV" in
 			darwin)
-				if [[ "$packageManager" = brew ]]; then
-					if brew list $package &>/dev/null; then
-						app_path="$(brew info $package 2>/dev/null | grep /usr/ | head -1)"
-				        app_path="${app_path% \(*}"
-				    fi
-				elif [[ "$app_dir" =~ [*] ]]; then
-					app_path="$(find /Applications -maxdepth 1 -type d -name "$app_dir" | head -1)"
-					if [[ -z "$app_path" && -d ~/Applications ]]; then
-						app_path="$(find ~/Applications -maxdepth 1 -type d -name "$app_dir" | head -1)"
-					fi
-				elif [[ -d "/Applications/${app_dir}.app" ]]; then
-					app_path="/Applications/${app_dir}.app"
-					if [[ -z "$app_path" && -d ~/Applications ]]; then
-						app_path="~/Applications/${app_dir}.app"
-					fi
-				fi
-				;;
+			    local search_name="${bundle_name:-$app}"
+			    
+			    if [[ -d "/Applications/${search_name}.app" ]]; then
+			        app_path="/Applications/${search_name}.app"
+			    elif [[ -d "$HOME/Applications/${search_name}.app" ]]; then
+			        app_path="$HOME/Applications/${search_name}.app"
+			    elif [[ -d "/System/Applications/${search_name}.app" ]]; then
+			        app_path="/System/Applications/${search_name}.app"
+			    # Handle wildcard app_dir (like SoapUI-*) if no standard location found
+			    elif [[ -n "$app_dir" && "$app_dir" =~ [*] ]]; then
+			        app_path="$(find /Applications -maxdepth 1 -type d -iname "$app_dir" | head -1)"
+			        if [[ -z "$app_path" && -d ~/Applications ]]; then
+			            app_path="$(find ~/Applications -maxdepth 1 -type d -iname "$app_dir" | head -1)"
+			        fi
+			    fi
+			    ;;
 			ubuntu)
-				if [[ -n "$packageManager" ]]; then
+				if [[ -n "$package_manager" ]]; then
 					local app_is_present
-					if [[ "$packageManager" = "apt" || "$packageManager" = "apt-get" ]]; then
+					if [[ "$package_manager" = "apt" || "$package_manager" = "apt-get" ]]; then
 						apt_install_check "$package" && app_is_present=true
-					elif [[ "$packageManager" = "snap" ]]; then
+					elif [[ "$package_manager" = "snap" ]]; then
 						snap list "$package" >/dev/null 2>&1 && app_is_present=true
 					fi
 					if [[ -n "$app_is_present" ]]; then

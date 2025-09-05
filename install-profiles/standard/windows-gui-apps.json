@@ -43,7 +43,7 @@
 		"desc": "Java IDE with built-in CVS client, Git client, XML editor, etc."
 	},
 	{
-		"app": "SourceTree",
+		"app": "Sourcetree",
 		"package": "sourcetree",
 		"package_manager": "choco",
 		"desc": "Git client"
