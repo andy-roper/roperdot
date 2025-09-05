@@ -12,6 +12,30 @@ update-app-binaries will update the scripts in app-bin-bash and app-bin-zsh that
 
 To support file extensions that currently don't have an associated application in zsh, you'll also want to update roperdot/.zsh-suffix-aliases.
 
+### Application Installation JSON Structure
+
+Each OS has (if applicable) a shell apps JSON file and a GUI apps JSON file that defines how applications are installed. These files are located in install-profiles/<profile-name> (install-profiles/standard for the included install profile).
+
+Here's an explanation of the properties of the installation definitions in the JSON files:
+
+| Property            | Description                                                  |
+| ------------------- | ------------------------------------------------------------ |
+| `app`               | Name of the app (referenced during the install)              |
+| `bundle_name`       | (MacOS) Bundle name, i.e. the directory in Applications (if different than app) |
+| `package`           | Package name used by the package manager                     |
+| `package_manager`   | Package manager used to install the application, e.g. brew, apt, choco, etc. |
+| `list_prerequisite` | (Optional) Package manager required to be present in order to include the app in the install list |
+| `binary`            | (Used for shell apps) Binary to check for to determine if the package is already installed |
+| `presence_command`  | (Optional) Command to execute to check if the package is installed (mainly used for libraries) |
+| `install_script`    | (Optional) Script to use to install the application instead of direct installation with the package manager |
+| `install_command`   | (Optional) Command to use to install the application         |
+| `groups`            | (Optional) Array of groups for which to install the application; if not present, the application will be installed regardless of the group(s) designated when installing |
+| `exclusionGroups`   | (Optional) Array of groups for which the application should **not** be installed |
+| `disabledByDefault` | (Optional) Exclude the application from the ones to install **unless** it's in a group and that group is referenced when installing |
+| `sudo_not_required` | (Optional) Don't require sudo to install the application     |
+
+If neither install_script nor install_command are defined, the package_manager will be used to install the application.
+
 *More coming soon*
 
 ## Third-Party Applications
