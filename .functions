@@ -177,6 +177,7 @@ if [[ "$ROPERDOT_CUSTOM_LS" = true ]]; then
 					[[ "$arg" != "." ]] && switches+=("-d")
 				fi
 				local arg_escaped="${arg// /\\ }"
+				arg_escaped="${arg_escaped//'/\\'}"
 	            eval $LS_CMD $LS_SWITCHES ${switches[@]} "$arg_escaped"
 			done
 		fi
