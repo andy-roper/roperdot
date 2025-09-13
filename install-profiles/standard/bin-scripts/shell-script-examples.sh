@@ -14,10 +14,10 @@ f=${1:-$VALUE}  # set f to $1, or to $VALUE if $1 isn't defined
 
 # Execute a block of code if a condition is true or false
 [[ "$var" = alpha ]] && {
-	echo $var equals alpha;
+    echo $var equals alpha;
 }
 [[ "$var" = alpha ]] || {
-	echo $var does not equal alpha;
+    echo $var does not equal alpha;
 }
 
 # Get the length of a string variable value
@@ -112,9 +112,9 @@ my_array[${#my_array[@]}]=()           # zsh
 # Split a string into an array using a single-character delimiter
 str="alpha,beta,gamma,delta"
 # bash
-IFS=',' read -ra my_array <<< "$str" # my_array = ("alpha" "beta" "gamma" "delta")
+IFS=',' read -ra my_array <<< "$str"   # my_array = ("alpha" "beta" "gamma" "delta")
 # zsh
-my_array=("${(@s/,/)str}")           # my_array = ("alpha" "beta" "gamma" "delta")
+my_array=("${(@s/,/)str}")             # my_array = ("alpha" "beta" "gamma" "delta")
 
 # Split a tab-delimited string into an array
 str="alpha\tbeta\tgamma\tdelta"
@@ -130,8 +130,8 @@ delimiter="::"
 str+=$delimiter
 my_array=()
 while [[ $str ]]; do
-	my_array+=( "${str%%"$delimiter"*}" )
-	str=${str#*"$delimiter"}
+    my_array+=( "${str%%"$delimiter"*}" )
+    str=${str#*"$delimiter"}
 done                         # my_array = ("alpha" "beta" "gamma" "delta")
 # zsh
 my_array=("${(@s/::/)str}")  # my_array = ("alpha" "beta" "gamma" "delta")
@@ -185,12 +185,16 @@ for ((i = 0; i < 10; i++)); do echo "in loop"; done
 # Endless loop
 count=0
 while : ; do
-	(( ++count ))
-	[[ $count -gt 5 ]] && break
+    (( ++count ))
+    [[ $count -gt 5 ]] && break
 done
 
 # Check if a command is defined
 command -v some_command >/dev/null 2>&1 && echo yep
+
+# Get the type for a command
+command_type="$(type -t git)"           # bash: returns "builtin", "alias", "function", "file", etc.
+command_type=${"$(whence -w git)"#*: }  # zsh: returns "builtin", "command", "alias", "function", etc.
 
 # Use the binary for a command instead of a function or alias with the same name
 \some_command
@@ -199,12 +203,12 @@ builtin some_command
 
 # Perform an operation on each result from a command
 while IFS= read -r -d '' src_file; do
-	echo $src_file
+    echo $src_file
 done < <(find . -type f -print0)
 
 # Perform an operation on each line of a file
 while IFS= read -r line; do
-	echo $line
+    echo $line
 done < someFile.txt
 
 # Print a heredoc
@@ -240,17 +244,38 @@ else
     echo "Failed: $output"
 fi
 
-# Process command line options with getopts
+# Process simple command line options using getopts
 OPTIND=1
 while getopts "hvf:" opt; do
     case $opt in
         h) show_help; exit 0 ;;
         v) verbose=true ;;
-        f) filename="$OPTARG" ;;
+        f) filename="$OPTARG" ;; # -f some_file.txt
         *) show_help; exit 1 ;;
     esac
 done
 shift $((OPTIND-1))  # Remove processed options from $@
+
+# More complex command line option handling
+if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
+    show_help
+fi
+local type_flag filename_flag case_flag=--ignore-case sort_output
+while [[ "$1" =~ ^- ]]; do
+    # Stop processing options after "--"
+    [[ "$1" == "--" ]] && shift && break
+    # For long options, shift and continue to avoid processing single-character options
+    [[ "$1" == "--all" ]] && type_flag=--unrestricted && shift && continue
+    [[ "$1" == "--filenames" ]] && filename_flag=--files-with-matches && shift && continue
+    # Check for invalid long options OR invalid short options
+    [[ "$1" =~ ^-- || ! "$1" =~ ^-[aAcCeEfFsS]+$ ]] && show_help
+    [[ "$1" =~ [aA] ]] && type_flag=--unrestricted
+    [[ "$1" =~ [cC] ]] && unset case_flag
+    [[ "$1" =~ [eE] ]] && type_flag=NO_HIDDEN
+    [[ "$1" =~ [fF] ]] && filename_flag=--files-with-matches
+    [[ "$1" =~ [sS] ]] && sort_output=true
+    shift
+done
 
 # Read a typed value from the user
 read answer_var
@@ -259,12 +284,21 @@ read answer_var
 read -p "Accept [y/N]? " # bash
 read "?Accept [y/N]? "   # zsh
 
+# Read a keystroke from the user and store it in a variable
+read -p "Accept [y/N]? " answer # bash
+read "?Accept [y/N]? " answer   # zsh
+
+# NOTE: If stdin is already being used (like inside a while/read loop),
+# you'll need to pipe /dev/tty into the read
+read -p "Accept [y/N]? " </dev/tty # bash
+read "?Accept [y/N]? " </dev/tty   # zsh
+
 # Prompt the user to select an option from an array
 PS3="Select an option: "
 while [[ -z "$scheme" ]]; do
-	select scheme in "${schemes[@]}"; do
-		break
-	done
+    select scheme in "${schemes[@]}"; do
+        break
+    done
 done
 # The selected value from the array (not the index) will be stored in the variable
 # The REPLY environment variable will contain the number the user entered
@@ -272,9 +306,9 @@ done
 # Prompt the user to select an option from a static list
 PS3="Select an option: "
 while [[ -z "$scheme" ]]; do
-	select scheme in "option one" "option two" "option three"; do
-		break
-	done
+    select scheme in "option one" "option two" "option three"; do
+        break
+    done
 done
 
 # Prompt the user to select an option from an array and only print one choice per line
@@ -282,9 +316,9 @@ PS3="Select an option: "
 COLUMNS_OLD=$COLUMNS
 COLUMNS=12  # limit the number of columns in which to display the option
 while [[ -z "$scheme" ]]; do
-	select scheme in "${schemes[@]}"; do
-		break
-	done
+    select scheme in "${schemes[@]}"; do
+        break
+    done
 done
 COLUMNS=$COLUMNS_OLD
 
@@ -298,10 +332,10 @@ f="$(find . -maxdepth 1 -type f -printf '%f\n' | sort | fzf --no-sort -0 --heigh
 
 # Case statement with patterns
 case "$filename" in
-    *.txt|*.md)     echo "Text file" ;;
-    *.jpg|*.png)    echo "Image file" ;;
-    [Mm]akefile)    echo "Makefile" ;;
-    *)              echo "Unknown type" ;;
+    *.txt|*.md)  echo "Text file" ;;
+    *.jpg|*.png) echo "Image file" ;;
+    [Mm]akefile) echo "Makefile" ;;
+    *)           echo "Unknown type" ;;
 esac
 
 # Echo directly to the terminal (often used in a function that echoes an output value)
@@ -310,7 +344,7 @@ echo "text" >/dev/tty
 # Pipe usage
 if ! test -t 0; then  # have piped data
     while read -r line || [[ -n "$line" ]]; do
-    	echo $line
+        echo $line
     done < /dev/stdin
 fi
 
@@ -333,11 +367,6 @@ bg_pid=$!
 
 # Wait for background process with timeout
 timeout 10 wait $bg_pid
-
-# Check if a command exists and get its type
-command -v git >/dev/null 2>&1 && echo "git exists"
-command_type="$(type -t git)"           # bash: returns "builtin", "alias", "function", "file", etc.
-command_type=${"$(whence -w git)"#*: }  # zsh: returns "command", "alias", "function", etc.
 
 # Get terminal width
 terminal_width=$(tput cols)
