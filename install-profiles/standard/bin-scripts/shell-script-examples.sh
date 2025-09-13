@@ -20,21 +20,22 @@ f=${1:-$VALUE}  # set f to $1, or to $VALUE if $1 isn't defined
 	echo $var does not equal alpha;
 }
 
-# Get the length of a string
-len=${#str}
+# Get the length of a string variable value
+str=123456
+echo ${#str}     # 6
 
-# Get a substring of a string
+# Get a substring of a string variable value
 str=abcABC123ABCabc
 echo ${str:1}    # bcABC123ABCabc
 echo ${str:7:3}  # 23A
 echo ${str: -4}  # Cabc (last 4 characters of the string)
 
-# Remove substring from the start of a string
+# Remove substring from the start of a string variable value
 str=abcABC123ABCabc
 echo ${str#a*C}   # 123ABCabc
 echo ${str##a*C}  # abc
 
-# Remove substring from the end of a string
+# Remove substring from the end of a string variable value
 str=abcABC123ABCabc
 echo ${str%b*c}   # abcABC123a
 echo ${str%%b*c}  # a
@@ -142,6 +143,21 @@ my_array=("${(@s/::/)str}")  # my_array = ("alpha" "beta" "gamma" "delta")
 v="alpha"
 pattern="^${v}$" && printf '%s\n' "${my_array[@]}" | grep -qP $pattern && echo yep 
 
+# Associative arrays
+declare -A my_hash
+my_hash[key]="value"
+echo ${my_hash[key]}
+
+# Get all keys in an associative array
+echo ${!my_hash[@]}  # bash
+echo ${(k)my_hash}   # zsh
+
+# Get all values in an associative array
+echo ${my_hash[@]}
+
+# Check if key exists in associative array
+[[ -n ${my_hash[key]+x} ]] && echo yep
+
 # Read a file into an array (Bash 4 or later)
 readarray -t my_array < my-file.txt
 
@@ -209,6 +225,33 @@ Line 1
 Line 2
 EOT
 
+# Here strings (alternative to echo | command)
+grep "pattern" <<< "$variable"
+wc -w <<< "count these words"
+
+# Process substitution for commands that need files
+diff <(sort file1) <(sort file2)
+while read -r line; do echo "Line: $line"; done < <(find . -name "*.txt")
+
+# Command substitution with error handling
+if output=$(command 2>&1); then
+    echo "Success: $output"
+else
+    echo "Failed: $output"
+fi
+
+# Process command line options with getopts
+OPTIND=1
+while getopts "hvf:" opt; do
+    case $opt in
+        h) show_help; exit 0 ;;
+        v) verbose=true ;;
+        f) filename="$OPTARG" ;;
+        *) show_help; exit 1 ;;
+    esac
+done
+shift $((OPTIND-1))  # Remove processed options from $@
+
 # Read a typed value from the user
 read answer_var
 
@@ -253,6 +296,14 @@ f="$(cat some-file.txt | sort | fzf --no-sort -0 --height 33% --layout=reverse)"
 echo "Select a file"
 f="$(find . -maxdepth 1 -type f -printf '%f\n' | sort | fzf --no-sort -0 --height 33% --layout=reverse)"
 
+# Case statement with patterns
+case "$filename" in
+    *.txt|*.md)     echo "Text file" ;;
+    *.jpg|*.png)    echo "Image file" ;;
+    [Mm]akefile)    echo "Makefile" ;;
+    *)              echo "Unknown type" ;;
+esac
+
 # Echo directly to the terminal (often used in a function that echoes an output value)
 echo "text" >/dev/tty
 
@@ -262,6 +313,43 @@ if ! test -t 0; then  # have piped data
     	echo $line
     done < /dev/stdin
 fi
+
+# Check if running in terminal vs script
+if test -t 1; then
+    echo "Running in terminal (stdout is a tty)"
+else
+    echo "Output is being redirected or piped"
+fi
+
+# Get the directory of the current script
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+
+# Get the name of the current script without path
+script_name="${0##*/}"
+
+# Get process ID of background job
+some_command &
+bg_pid=$!
+
+# Wait for background process with timeout
+timeout 10 wait $bg_pid
+
+# Check if a command exists and get its type
+command -v git >/dev/null 2>&1 && echo "git exists"
+command_type="$(type -t git)"           # bash: returns "builtin", "alias", "function", "file", etc.
+command_type=${"$(whence -w git)"#*: }  # zsh: returns "command", "alias", "function", etc.
+
+# Get terminal width
+terminal_width=$(tput cols)
+# or
+terminal_width=${COLUMNS:-80}
+
+# Colors and formatting (using tput)
+red=$(tput setaf 1)
+green=$(tput setaf 2)
+bold=$(tput bold)
+reset=$(tput sgr0)
+echo "${red}Error:${reset} ${bold}Something went wrong${reset}"
 
 # trap usage
 trap "rm -f $temp_file >/dev/null" EXIT  # execute command on script exit
@@ -278,3 +366,7 @@ $ kill -SIGUSR1 1001
 # Do multi-line replacement in a file
 # Undefining $/ is the key
 perl -p -i -e 'BEGIN{undef $/;} s/("installed_packages":[^\]]*),(\s*\])/\1\2/s' my-file.json
+
+# Find recently modified files
+find . -type f -mtime -7  # Last 7 days
+find . -type f -mmin -60  # Last 60 minutes
