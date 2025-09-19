@@ -4,11 +4,11 @@ process_script_file () {
 	local f="$(basename "$src_file")"
 	local dst_file="${ROPERDOT_DIR}/bin-${shell}/${f%%.*}"
 	local ext=${f##*.}
-	if [[ $ext = "sh" ]]; then
+	if [[ "$ext" = "sh" ]]; then
 		echo "#!/usr/bin/env ${shell}" > "$dst_file"
 		cat "$src_file" >> "$dst_file"
 	else
-		cp "$src_file" "$dst_file"
+		cp "$src_file" "$dst_file" >/dev/null 2>&1
 	fi
 }
 
@@ -55,6 +55,7 @@ if [[ -n "$ROPERDOT_PROFILES" ]]; then
 	fi
 	for profile in "${profiles[@]}"; do
 		profile_dir="${ROPERDOT_DIR}/install-profiles/${profile}"
+		[[ -d "$profile_dir" ]] || continue
 		process_script_dir "$profile_dir/bin-scripts"
 		[[ -d "$profile_dir/bin-scripts/${ROPERDOT_DESKTOP_ENV}" ]] && process_script_dir "$profile_dir/bin-scripts/${ROPERDOT_DESKTOP_ENV}"
 		[[ -d "$profile_dir/scripts" ]] && \cp -rf "$profile_dir/scripts"/* "${ROPERDOT_DIR}/scripts"
