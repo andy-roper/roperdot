@@ -34,11 +34,11 @@ wait_for_continue () {
 }
 
 gui_app_is_present () {
-	gui_app_presence_and_path true "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
+	gui_app_presence_and_path true "$@"
 }
 
 gui_app_path() {
-	gui_app_presence_and_path false "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
+	gui_app_presence_and_path false "$@"
 }
 
 gui_app_presence_and_path () {

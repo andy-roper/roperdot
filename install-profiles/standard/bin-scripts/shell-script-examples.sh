@@ -267,8 +267,9 @@ while [[ "$1" =~ ^- ]]; do
     # For long options, shift and continue to avoid processing single-character options
     [[ "$1" == "--all" ]] && type_flag=--unrestricted && shift && continue
     [[ "$1" == "--filenames" ]] && filename_flag=--files-with-matches && shift && continue
-    # Check for invalid long options OR invalid short options
+    # Check for invalid long options or invalid short options
     [[ "$1" =~ ^-- || ! "$1" =~ ^-[aAcCeEfFsS]+$ ]] && show_help
+    # Process options in the string
     [[ "$1" =~ [aA] ]] && type_flag=--unrestricted
     [[ "$1" =~ [cC] ]] && unset case_flag
     [[ "$1" =~ [eE] ]] && type_flag=NO_HIDDEN
@@ -379,6 +380,10 @@ green=$(tput setaf 2)
 bold=$(tput bold)
 reset=$(tput sgr0)
 echo "${red}Error:${reset} ${bold}Something went wrong${reset}"
+
+# Enable extended globbing
+shopt -s extglob  # bash
+setopt ksh_glob   # zsh
 
 # trap usage
 trap "rm -f $temp_file >/dev/null" EXIT  # execute command on script exit

@@ -23,6 +23,7 @@ java: Compiler and run-time environment for Java (https://openjdk.java.net/)
 jenv: Tool for managing the JAVA_HOME environment variable (https://www.jenv.be/)
 jq: Utility like sed for JSON data (https://jqlang.org/)
 keychain: Frontend for ssh-agent and ssh-add to help manage SSH and GPG keys (https://www.funtoo.org/Keychain)
+killwin: (Windows) Kills Windows processes by PID or name pattern
 lsusb: (Mac) Lists USB devices
 lynx: Command-line web browser (https://lynx.invisible-island.net/)
 mc: Midnight Commander, a shell-based file manager (http://midnight-commander.org)
@@ -35,6 +36,7 @@ npx: Runs a command from a local or remote npm package (https://docs.npmjs.com/c
 openvpn: VPN client (https://openvpn.net/)
 pbcopy: (Mac) Command-line interface for the clipboard
 pip3: Tool for installing Python 3 packages (https://pip.pypa.io/)
+pswin: (Windows) Lists Windows processes similarly to ps -ef
 pv: Utility for monitoring the progress of data through a pipeline (https://ivarch.com/programs/pv.shtml)
 pygmentize: Generic syntax highlighter for prettifying source code (https://pygments.org/)
 python3: Python language interpreter (https://www.python.org/)

@@ -151,8 +151,10 @@ help <text>        # Find commands whose name/description matches the text
 
 ### Process Management
 - **`killn`** - Kill processes by name pattern matching
+- **`killwin` (Windows)** - Kill Windows processes
 - **`pscpu`** - List processes sorted by CPU usage
 - **`psmem`** - List processes sorted by memory usage
+- **`pswin` (Windows)** - List Windows processes
 
 ### Network Tools
 - **`call-api`** - Call a REST API using curl
