@@ -34,7 +34,6 @@ fi
 
 export ROPERDOT_PROFILES=standard profiles=standard
 . "${ROPERDOT_DIR}/source-scripts/copy-scripts"
-export ROPERDOT_PROFILES=
 [[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && export PATH="${ROPERDOT_DIR}/bin-bash:$PATH" || export PATH="${ROPERDOT_DIR}/bin-zsh:$PATH"
 
 #export LOCALUSR="${ROPERDOT_DIR}/local-usr"

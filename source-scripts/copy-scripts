@@ -21,53 +21,55 @@ process_script_dir () {
 	done
 }
 
-if [[ $ROPERDOT_SHELL_TO_COPY = bash ]]; then
-	bash_path=$(command -v bash)
-	unset ROPERDOT_SHELL_TO_COPY
-elif [[ $ROPERDOT_SHELL_TO_COPY = zsh ]]; then
-	zsh_path=$(command -v zsh)
-	unset ROPERDOT_SHELL_TO_COPY
-else
-	bash_path=$(command -v bash)
-	zsh_path=$(command -v zsh)
-fi
-if [[ -n $bash_path ]]; then
-	[[ -d "${ROPERDOT_DIR}/bin-bash" ]] && \rm -f "${ROPERDOT_DIR}/bin-bash"/* >/dev/null 2>&1
-	mkdir "${ROPERDOT_DIR}/bin-bash" >/dev/null 2>&1
-fi
-if [[ -n $zsh_path ]]; then
-	[[ -d "${ROPERDOT_DIR}/bin-zsh" ]] && \rm -f "${ROPERDOT_DIR}/bin-zsh"/* >/dev/null 2>&1
-	mkdir "${ROPERDOT_DIR}/bin-zsh" >/dev/null 2>&1
-fi
-[[ -d "${ROPERDOT_DIR}/scripts" ]] && \rm -f "${ROPERDOT_DIR}/scripts"/* >/dev/null 2>&1
-mkdir "${ROPERDOT_DIR}/scripts" >/dev/null 2>&1
-if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
-	profiles=()
-	value="$ROPERDOT_PROFILES"
-	while [[ "$value" =~ ^(.*)::(.*) ]]; do
-		profiles+=("${BASH_REMATCH[2]}")
-		value="${BASH_REMATCH[1]}"
+if [[ -n "$ROPERDOT_PROFILES" ]]; then
+	if [[ $ROPERDOT_SHELL_TO_COPY = bash ]]; then
+		bash_path=$(command -v bash)
+		unset ROPERDOT_SHELL_TO_COPY
+	elif [[ $ROPERDOT_SHELL_TO_COPY = zsh ]]; then
+		zsh_path=$(command -v zsh)
+		unset ROPERDOT_SHELL_TO_COPY
+	else
+		bash_path=$(command -v bash)
+		zsh_path=$(command -v zsh)
+	fi
+	if [[ -n $bash_path ]]; then
+		[[ -d "${ROPERDOT_DIR}/bin-bash" ]] && \rm -f "${ROPERDOT_DIR}/bin-bash"/* >/dev/null 2>&1
+		mkdir "${ROPERDOT_DIR}/bin-bash" >/dev/null 2>&1
+	fi
+	if [[ -n $zsh_path ]]; then
+		[[ -d "${ROPERDOT_DIR}/bin-zsh" ]] && \rm -f "${ROPERDOT_DIR}/bin-zsh"/* >/dev/null 2>&1
+		mkdir "${ROPERDOT_DIR}/bin-zsh" >/dev/null 2>&1
+	fi
+	[[ -d "${ROPERDOT_DIR}/scripts" ]] && \rm -f "${ROPERDOT_DIR}/scripts"/* >/dev/null 2>&1
+	mkdir "${ROPERDOT_DIR}/scripts" >/dev/null 2>&1
+	if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
+		profiles=()
+		value="$ROPERDOT_PROFILES"
+		while [[ "$value" =~ ^(.*)::(.*) ]]; do
+			profiles+=("${BASH_REMATCH[2]}")
+			value="${BASH_REMATCH[1]}"
+		done
+		[[ -n "$value" ]] && profiles+=("$value")
+	else
+		profiles=("${(@s/::/)ROPERDOT_PROFILES}")
+	fi
+	for profile in "${profiles[@]}"; do
+		profile_dir="${ROPERDOT_DIR}/install-profiles/${profile}"
+		process_script_dir "$profile_dir/bin-scripts"
+		[[ -d "$profile_dir/bin-scripts/${ROPERDOT_DESKTOP_ENV}" ]] && process_script_dir "$profile_dir/bin-scripts/${ROPERDOT_DESKTOP_ENV}"
+		[[ -d "$profile_dir/scripts" ]] && \cp -rf "$profile_dir/scripts"/* "${ROPERDOT_DIR}/scripts"
 	done
-	[[ -n "$value" ]] && profiles+=("$value")
-else
-	profiles=("${(@s/::/)ROPERDOT_PROFILES}")
+	if command -v npm >/dev/null 2>&1; then
+		while IFS= read -r -d '' d; do
+			if [[ -e "$d/package.json" ]]; then
+				pushd "$d" >/dev/null
+				echo -e "\nCalling npm install in $d"
+				npm install
+				popd >/dev/null
+			fi
+		done < <(find "${ROPERDOT_DIR}/scripts" -mindepth 1 -maxdepth 1 -type d -print0)
+	fi
+	echo 
+	[[ -n $bash_path ]] && find "${ROPERDOT_DIR}/bin-bash" -type f ! -name "*.*" -exec chmod u+x {} \; >/dev/null 2>&1
+	[[ -n $zsh_path ]] && find "${ROPERDOT_DIR}/bin-zsh" -type f ! -name "*.*" -exec chmod u+x {} \; >/dev/null 2>&1
 fi
-for profile in "${profiles[@]}"; do
-	profile_dir="${ROPERDOT_DIR}/install-profiles/${profile}"
-	process_script_dir "$profile_dir/bin-scripts"
-	[[ -d "$profile_dir/bin-scripts/${ROPERDOT_DESKTOP_ENV}" ]] && process_script_dir "$profile_dir/bin-scripts/${ROPERDOT_DESKTOP_ENV}"
-	[[ -d "$profile_dir/scripts" ]] && \cp -rf "$profile_dir/scripts"/* "${ROPERDOT_DIR}/scripts"
-done
-if command -v npm >/dev/null 2>&1; then
-	while IFS= read -r -d '' d; do
-		if [[ -e "$d/package.json" ]]; then
-			pushd "$d" >/dev/null
-			echo -e "\nCalling npm install in $d"
-			npm install
-			popd >/dev/null
-		fi
-	done < <(find "${ROPERDOT_DIR}/scripts" -mindepth 1 -maxdepth 1 -type d -print0)
-fi
-echo 
-[[ -n $bash_path ]] && find "${ROPERDOT_DIR}/bin-bash" -type f ! -name "*.*" -exec chmod u+x {} \; >/dev/null 2>&1
-[[ -n $zsh_path ]] && find "${ROPERDOT_DIR}/bin-zsh" -type f ! -name "*.*" -exec chmod u+x {} \; >/dev/null 2>&1
