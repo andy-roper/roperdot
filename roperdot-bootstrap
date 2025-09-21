@@ -93,12 +93,19 @@ if [[ "$ROPERDOT_CURRENT_SHELL" = zsh && -d ~/homebrew/lib/zsh ]]; then
 fi
 
 do_timing "phase 1c"
-if [[ ! -e "${ROPERDOT_DIR}/bin-${ROPERDOT_CURRENT_SHELL}/e" ]]; then
+if [[ -f "$ROPERDOT_DIR/VERSION" ]]; then
+    CURRENT_VERSION=$(cat "$ROPERDOT_DIR/VERSION" 2>/dev/null | tr -d '\n\r ')
+else
+    CURRENT_VERSION=""
+fi
+if [[ "$CURRENT_VERSION" != "$ROPERDOT_VERSION" ]] || [[ -z "$CURRENT_VERSION" ]]; then
 	echo "Copying scripts to ${ROPERDOT_DIR}/bin-${ROPERDOT_CURRENT_SHELL}"
 	ROPERDOT_SHELL_TO_COPY=$ROPERDOT_CURRENT_SHELL
 	source "${ROPERDOT_DIR}/source-scripts/copy-scripts"
 	unset ROPERDOT_SHELL_TO_COPY
+    sed -i.bak "s/^ROPERDOT_VERSION=.*/ROPERDOT_VERSION=\"$CURRENT_VERSION\"/" ~/roperdot-loader
 fi
+
 do_timing "phase 1d"
 if [[ -n $ROPERDOT_DESKTOP_ENV && ! -e "${ROPERDOT_DIR}/app-bin-${ROPERDOT_CURRENT_SHELL}/text-editor-app" ]]; then
 	echo "Copying scripts to ${ROPERDOT_DIR}/app-bin-${ROPERDOT_CURRENT_SHELL}"

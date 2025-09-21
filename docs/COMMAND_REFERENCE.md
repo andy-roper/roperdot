@@ -221,6 +221,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`keyhelp`** - Show keyboard shortcut information
 - **`now`** - Print current time
 - **`nullify`** - Direct all output for a command to /dev/null
+- **`stage-roperdot`** - Stage roperdot to Github
 
 ### Clipboard Integration
 - **`clipcopy`** - Copy text to system clipboard

@@ -5,7 +5,6 @@ Description: Lists Windows processes similarly to ps -ef
 Author: Andy Roper <andyroper42@gmail.com>
 URL: https://github.com/andy-roper/roperdot
 """
-
 import subprocess
 import csv
 import sys
@@ -22,23 +21,33 @@ def get_current_user():
 
 def help():
     print('''
-pswin: Lists Windows tasks similarly to ps -ef
-Usage: pswin [-g]
-       pswin [-g] <process-name-filter>
+pswin: Lists Windows processes similarly to ps -ef
+Usage: pswin [-gu]
+       pswin [-gu] <process-name-filter>
 Options:
 -g  Use generic 'user' instead of actual username
+-u  Show only user-initiated processes
 '''[1:-1])
     sys.exit(0)
 
 # Parse arguments manually
 generic_user = False
+user_only = False
 process_filter = None
 
 for arg in sys.argv[1:]:
     if arg in ['--help', '-?', '-h']:
         help()
-    elif arg == '-g':
-        generic_user = True
+    elif arg.startswith('-') and not arg.startswith('--'):
+        # Handle combined flags like -gu, -ug, etc.
+        for char in arg[1:]:
+            if char == 'g':
+                generic_user = True
+            elif char == 'u':
+                user_only = True
+            else:
+                print(f"Unknown option: -{char}", file=sys.stderr)
+                sys.exit(1)
     else:
         process_filter = arg
 
@@ -52,6 +61,18 @@ else:
 print(f"{'USER':<12} {'PID':>8} {'MEM':>10} {'CMD'}")
 
 try:
+    # Known system/service processes
+    SYSTEM_PROCESSES = {
+        'system', 'smss.exe', 'csrss.exe', 'wininit.exe', 
+        'winlogon.exe', 'lsass.exe', 'services.exe'
+    }
+    
+    SERVICE_PROCESSES = {
+        'svchost.exe', 'spoolsv.exe', 'dwm.exe', 'audiodg.exe',
+        'fontdrvhost.exe', 'conhost.exe', 'dllhost.exe',
+        'runtimebroker.exe', 'searchindexer.exe', 'wuauclt.exe'
+    }
+    
     result = subprocess.run(['tasklist.exe', '/fo', 'csv'], 
                           capture_output=True, text=True, check=True)
     
@@ -69,12 +90,21 @@ try:
                 continue
             
             # User classification
-            if pid < 500:
+            image_lower = image_name.lower()
+            if image_lower in SYSTEM_PROCESSES:
+                user = "SYSTEM"
+            elif image_lower in SERVICE_PROCESSES:
+                user = "SERVICE"
+            elif pid < 500:
                 user = "SYSTEM"
             elif pid < 1000:
                 user = "SERVICE"
             else:
                 user = user_label
+            
+            # Skip system/service processes if -u flag is used
+            if user_only and user in ["SYSTEM", "SERVICE"]:
+                continue
             
             # Show meaningful columns only
             print(f"{user:<12} {pid:>8} {mem_usage:>10} {image_name}")

@@ -43,6 +43,7 @@ python3: Python language interpreter (https://www.python.org/)
 ruby: Compiler/interpreter for the Ruby programming language (https://www.ruby-lang.org/)
 speedtest-cli: Command-line interface for testing internet bandwidth with speedtest.net (https://github.com/sivel/speedtest-cli)
 ssh-copy-id: Uses locally available keys to authorize logins on remote machines (https://www.ssh.com/ssh/copy-id)
+stage-roperdot: Stages roperdot to Github
 telnet: Telnet client
 telnetd: Telnet client for servers using DARPA standard TELNET protocol
 terminal-notifier: Tool to send macOS user notifications (https://github.com/julienXX/terminal-notifier)
