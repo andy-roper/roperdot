@@ -36,4 +36,6 @@ git add .
 git commit -m "v$NEW_VERSION: $COMMIT_MESSAGE"
 git push
 
+sed -i.bak "s/^export ROPERDOT_VERSION=.*/export ROPERDOT_VERSION=$NEW_VERSION/" ~/roperdot-loader
+
 echo "Released v$NEW_VERSION"
