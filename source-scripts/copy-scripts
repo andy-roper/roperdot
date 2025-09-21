@@ -33,15 +33,15 @@ if [[ -n "$ROPERDOT_PROFILES" ]]; then
 		zsh_path=$(command -v zsh)
 	fi
 	if [[ -n $bash_path ]]; then
-		[[ -d "${ROPERDOT_DIR}/bin-bash" ]] && \rm -f "${ROPERDOT_DIR}/bin-bash"/* >/dev/null 2>&1
-		mkdir "${ROPERDOT_DIR}/bin-bash" >/dev/null 2>&1
+		[[ -d "${ROPERDOT_DIR}/bin-bash" ]] && \rm -rf "${ROPERDOT_DIR}/bin-bash" >/dev/null 2>&1
+		mkdir "${ROPERDOT_DIR}/bin-bash"
 	fi
 	if [[ -n $zsh_path ]]; then
-		[[ -d "${ROPERDOT_DIR}/bin-zsh" ]] && \rm -f "${ROPERDOT_DIR}/bin-zsh"/* >/dev/null 2>&1
-		mkdir "${ROPERDOT_DIR}/bin-zsh" >/dev/null 2>&1
+		[[ -d "${ROPERDOT_DIR}/bin-zsh" ]] && \rm -rf "${ROPERDOT_DIR}/bin-zsh" >/dev/null 2>&1
+		mkdir "${ROPERDOT_DIR}/bin-zsh"
 	fi
-	[[ -d "${ROPERDOT_DIR}/scripts" ]] && \rm -f "${ROPERDOT_DIR}/scripts"/* >/dev/null 2>&1
-	mkdir "${ROPERDOT_DIR}/scripts" >/dev/null 2>&1
+	[[ -d "${ROPERDOT_DIR}/scripts" ]] && \rm -rf "${ROPERDOT_DIR}/scripts" >/dev/null 2>&1
+	mkdir "${ROPERDOT_DIR}/scripts"
 	if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
 		profiles=()
 		value="$ROPERDOT_PROFILES"
