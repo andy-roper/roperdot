@@ -1,0 +1,7 @@
+.git/
+node_modules/
+*.tmp
+*.log
+.DS_Store
+.Trashes
+Thumbs.db

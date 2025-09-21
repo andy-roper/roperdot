@@ -615,7 +615,7 @@ EOT
 			searchpath="$2"
 		fi
 
-		fd -gH ${switches[@]} "$pattern" "$searchpath"
+		fd -gH --no-ignore-vcs ${switches[@]} "$pattern" "$searchpath"
 	}
 
 	_fsz () {
@@ -660,7 +660,7 @@ EOT
 		if [[ -n $total_only ]]; then
 			if [[ -n $recursing ]]; then
 				if [[ -n $human_readable ]]; then
-					fdfind -gH "$pattern" "$searchpath" -X du -b | awk '
+					fdfind --no-ignore-vcs -gH "$pattern" "$searchpath" -X du -b | awk '
 					function human(x) {
 					    if (x<1000) {return x} else {x/=1024}
 					    s="KMGTEPZY";
@@ -670,11 +670,11 @@ EOT
 					}
 					{ total += $1 }; END { print human(total) }'
 				else
-					fdfind -gH "$pattern" "$searchpath" -X du -b | awk '{ total += $1 }; END { printf "%'\''d\n", total }'
+					fdfind --no-ignore-vcs -gH "$pattern" "$searchpath" -X du -b | awk '{ total += $1 }; END { printf "%'\''d\n", total }'
 				fi
 			else
 				if [[ -n $human_readable ]]; then
-					fdfind -d 1 -t f -gH "$pattern" "$searchpath" -X du -b | awk '
+					fdfind --no-ignore-vcs -d 1 -t f -gH "$pattern" "$searchpath" -X du -b | awk '
 					function human(x) {
 					    if (x<1000) {return x} else {x/=1024}
 					    s="KMGTEPZY";
@@ -684,13 +684,13 @@ EOT
 					}
 					{ total += $1 }; END { print human(total) }'
 				else
-					fdfind -d 1 -t f -gH "$pattern" "$searchpath" -X du -b | awk '{ total += $1 }; END { printf "%'\''d\n", total }'
+					fdfind --no-ignore-vcs -d 1 -t f -gH "$pattern" "$searchpath" -X du -b | awk '{ total += $1 }; END { printf "%'\''d\n", total }'
 				fi
 			fi
 		else
 			if [[ -n $recursing ]]; then
 				if [[ -n $human_readable ]]; then
-					fdfind -gH "$pattern" "$searchpath" -X du -b | awk '
+					fdfind --no-ignore-vcs -gH "$pattern" "$searchpath" -X du -b | awk '
 					function human(x) {
 					    if (x<1000) {return x} else {x/=1024}
 					    s="KMGTEPZY";
@@ -700,11 +700,11 @@ EOT
 					}
 					{ total += $1; printf "%s\t", human($1); for(i=2;i<=NF;i++) printf $i" "; print "" }; END { print human(total) }'
 				else
-					fdfind -gH "$pattern" "$searchpath" -X du -b | awk '{ total += $1; printf "%'\''d\t", $1; for(i=2;i<=NF;i++) printf $i" "; print "" }; END { printf "%'\''d\n", total }'
+					fdfind --no-ignore-vcs -gH "$pattern" "$searchpath" -X du -b | awk '{ total += $1; printf "%'\''d\t", $1; for(i=2;i<=NF;i++) printf $i" "; print "" }; END { printf "%'\''d\n", total }'
 				fi
 			else
 				if [[ -n $human_readable ]]; then
-					fdfind -d 1 -t f -gH "$pattern" "$searchpath" -X du -b | awk '
+					fdfind --no-ignore-vcs -d 1 -t f -gH "$pattern" "$searchpath" -X du -b | awk '
 					function human(x) {
 					    if (x<1000) {return x} else {x/=1024}
 					    s="KMGTEPZY";
@@ -714,7 +714,7 @@ EOT
 					}
 					{ total += $1; printf "%s\t", human($1); for(i=2;i<=NF;i++) printf $i" "; print "" }; END { print human(total) }'
 				else
-					fdfind -d 1 -t f -gH "$pattern" "$searchpath" -X du -b | awk '{ total += $1; printf "%'\''d\t", $1; for(i=2;i<=NF;i++) printf $i" "; print "" }; END { printf "%'\''d\n", total }'
+					fdfind --no-ignore-vcs -d 1 -t f -gH "$pattern" "$searchpath" -X du -b | awk '{ total += $1; printf "%'\''d\t", $1; for(i=2;i<=NF;i++) printf $i" "; print "" }; END { printf "%'\''d\n", total }'
 				fi
 			fi
 		fi

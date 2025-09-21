@@ -6,7 +6,7 @@
 # URL: https://github.com/andy-roper/roperdot
 #
 
-verbose=false
+verbose=
 
 # Scripts to exclude from help generation
 EXCLUDED_SCRIPTS=(
@@ -207,8 +207,8 @@ load_static_entries() {
 }
 
 # Main execution
+echo "Generating roperdot help file..." >&2
 if [[ -n "$verbose" ]]; then
-	echo "Generating roperdot help file..." >&2
 	echo "Configuration directory: $HELP_CONFIG_DIR" >&2
 	echo "Output file: $OUTPUT_FILE" >&2
 	echo "" >&2

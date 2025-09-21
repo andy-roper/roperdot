@@ -610,6 +610,11 @@ EOT
 	fi
 
 	. ~/roperdot-loader
+
+	if ! cmp -s ~/.fdignore "${ROPERDOT_DIR}/.fdignore"; then
+		[[ -f ~/.fdignore ]] && mv ~/.fdignore ~/.fdignore.bak >/dev/null 2>&1
+		cp "${ROPERDOT_DIR}/.fdignore" ~/.fdignore >/dev/null 2>&1
+	fi
 	
 	if [[ -n "$ROPERDOT_DESKTOP_ENV" ]]; then
 		update_config_files
