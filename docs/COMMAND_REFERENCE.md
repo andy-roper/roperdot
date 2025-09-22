@@ -173,7 +173,7 @@ help <text>        # Find commands whose name/description matches the text
   - **`DELETE`** - HTTP DELETE requests
 
 ### System Utilities
-- **`bounce-wifi`** - Restart wireless network interface
+- **`bounce-wifi` (Windows)** - Restart wireless network interface
 - **`burn` (Mac)** - Burn a disc image to a CD/DVD/Blu-Ray without verification
 - **`eject` (Mac)** - Eject a disc
 - **`empty_trash` (Mac)** - Empty the Trash on all mounted volumes and the main drive and clears sleepimage

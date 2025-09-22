@@ -611,6 +611,8 @@ EOT
 
 	. ~/roperdot-loader
 
+	# Copy .fdignore to home directory if necessary
+	# ~/.fdignore needs to be present to prevent .gitignore from being used to exclude files/directories
 	if ! cmp -s ~/.fdignore "${ROPERDOT_DIR}/.fdignore"; then
 		[[ -f ~/.fdignore ]] && mv ~/.fdignore ~/.fdignore.bak >/dev/null 2>&1
 		cp "${ROPERDOT_DIR}/.fdignore" ~/.fdignore >/dev/null 2>&1
