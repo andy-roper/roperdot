@@ -8,6 +8,13 @@
 echo "This script is not meant to be executed; it's a set of bash and zsh scripting examples."
 exit 0
 
+# Check if we're in bash or zsh
+if [[ "$0" == *"zsh"* ]]; then
+    shell=zsh
+elif [[ "$0" == *"bash"* ]]; then
+    shell=bash
+fi
+
 # Use a default value in an expression with "-"
 export color_scheme=${color_scheme:-hybrid}  # export value of color_scheme, or "hybrid" if it's not defined
 f=${1:-$VALUE}  # set f to $1, or to $VALUE if $1 isn't defined
@@ -85,6 +92,15 @@ len=${#my_array[@]}
 
 # Append values to array
 my_array+=("delta" "epsilon")
+
+# Get the first element of an array
+first_element="${my_array[0]}"  # bash
+first_element="${my_array[1]}"  # zsh
+
+# Loop over an array
+for element in "${my_array[@]}"; do
+	echo "element: $element"
+done
 
 # Concatenate arrays
 array_one+=("${array_two[@]}")
