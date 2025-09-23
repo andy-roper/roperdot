@@ -113,6 +113,13 @@
 		"disabledByDefault": true
 	},
 	{
+		"app": "Oracle SQL Developer",
+		"appDir": "SQLDeveloper.app",
+		"install_script": "install-sql-developer",
+		"groups": ["work"],
+		"desc": "Oracle SQL Developer"
+	},
+	{
 		"app": "Sourcetree",
 		"package": "sourcetree",
 		"package_manager": "brew",

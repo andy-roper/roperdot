@@ -20,21 +20,20 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-===============================================================================
+===========================================================================
 
 THIRD-PARTY SOFTWARE LICENSES
 
 This repository includes software components with different licenses:
 
 1. xterm-color-count
-   Location: install-profiles/standard/bin-scripts/xterm-color-count.sh
-   Copyright (c) Victor Engmark
-   License: GNU General Public License v3.0
-   Source: https://github.com/l0b0/xterm-color-count
-   License Text: https://www.gnu.org/licenses/gpl-3.0.txt
+   Location: install-profiles/standard/bin-scripts/xterm-color-count.sh  
+   Copyright (c) Victor Engmark  
+   License: GNU General Public License v3.0  
+   Source: https://github.com/l0b0/xterm-color-count  
+   License Text: https://www.gnu.org/licenses/gpl-3.0.txt  
    The script was modified for zsh compatibility.
-   
 
-===============================================================================
+===========================================================================
 
 For complete license texts of third-party components, see the LICENSES directory.

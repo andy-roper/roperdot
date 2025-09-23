@@ -28,6 +28,7 @@ Here's an explanation of the properties of the installation definitions in the J
 | `binary`            | (Used for shell apps) Binary to check for to determine if the package is already installed |
 | `presence_command`  | (Optional) Command to execute to check if the package is installed (mainly used for libraries) |
 | `install_script`    | (Optional) Script to use to install the application instead of direct installation with the package manager |
+| `appDir`            | (Optional) Directory to check for within the applications directory to determine if the application is installed; used with `install_script` for GUI applications |
 | `install_command`   | (Optional) Command to use to install the application         |
 | `groups`            | (Optional) Array of groups for which to install the application; if not present, the application will be installed regardless of the group(s) designated when installing |
 | `exclusionGroups`   | (Optional) Array of groups for which the application should **not** be installed |
@@ -88,16 +89,43 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
 - Update other OSes’ shell-apps JSON files to take same approach used for MacOS for Python apps/libraries
   - Remove html5print and xml2json
   - Add cssbeautifier, beautifulsoup4 and xmltodict
-- Update other OSes' shell apps
+- Update other OSes' installed shell apps
   - Add awscli, ffmpeg, gifsicle (if available)
-- Update other OSes’ GUI apps
+- Update other OSes’ installed GUI apps
   - Add Brave browser; disable WebStorm
+- Consider adding VMware Fusion (Mac) or VMware Workstation Pro (others) to installs
+
+- Consider adding additional AWS apps to installs
+
+  - aws-sam-cli (awssamcli in Chocolatey), session-manager-plugin, terraform
+
+- Consider adding a space visualizer install to Mint and Ubuntu GUI apps, either QDirStat or Baobab
+
+- Add comment to install scripts that rely on a hardcoded version number/URL that I can grep on like:
+
+  \# Hardcoded version reference: SQL Developer v23.1.1.345.2114, last updated on 9/23/2025
+
+  - Create a script named “list-hardcoded-installs” to do a recursive grep to list them
+
 - Finish implementing change scheme
-- Formalize support for alternate/multiple installation profiles
+- Revisit installing non-standard installation
+
+  - Need to support a different/second install profile
+  - Need to support installing a second profile after installing standard
+- Integrate eza, a modern ls alternative: https://github.com/eza-community/eza
+- Integrate bat, a modern cat alternative: https://github.com/sharkdp/bat
+- Other apps to evaluate and possibly integrate:
+
+  - [btop](https://github.com/aristocratos/btop): resource monitor
+  - [choose](https://github.com/theryangeary/choose): human-friendly cut/awk alternative
+  - [delta](https://github.com/dandavison/delta): syntax-highlighting pager for git, diff, grep and blame
+  - [duf](https://github.com/muesli/duf): disk usage/free utility
+  - [dust](https://github.com/bootandy/dust): more intuitive version of du
+  - [httpie](https://github.com/httpie/cli): user-friendly HTTP client
+  - [procs](https://github.com/dalance/procs): modern ps alternative
 - Update VS Code configuration when switching scheme (colors only)
-- Build install for Oracle SQL Developer
-  - https://www.oracle.com/database/sqldeveloper/technologies/download/
-  - Will need to check for Java to determine which file to download
-  - May be available via choco or apt-get
+- Update install for Oracle SQL Developer to support Windows and Linux
 - Institute use of print_important_message during after after install
+
+  - Use while installing to print important messages and to accumulate them to re-print them at the end of the install
   - Use for things like running update-vscode-settings for VS Code, importing iTerm2 profile, etc.

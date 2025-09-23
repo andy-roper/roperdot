@@ -34,7 +34,7 @@ By default, running install.sh will perform an interactive installation. The `--
 
 On Windows, you should install [Chocolatey](https://chocolatey.org) first if you plan to install GUI applications with roperdot.
 
-Installation can be done on macOS even as a non-admin user. Homebrew will be installed in ~/homebrew and applications in ~/Applications.
+Installation can be done on MacOS even as a non-admin user. Homebrew will be installed in ~/homebrew and applications in ~/Applications.
 
 After installing, either source ~/roperdot-loader or restart your shell.
 

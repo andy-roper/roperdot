@@ -1,0 +1,62 @@
+#
+# Description: Install script for SQL Developer
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+# Last updated for current version of the application on 23 Sep 2025
+
+APP_VERSION="24.3.1.347.1826"
+download_url="https://download.oracle.com/otn_software/java/sqldeveloper/sqldeveloper-${APP_VERSION}-macos-x64.app.zip"
+
+cleanup() {
+    if [[ -d "$temp_dir" ]]; then
+        popd 2>/dev/null || true
+        rm -rf "$temp_dir"
+    fi
+}
+
+install_sql_developer() {
+    temp_dir="$(mktemp -d)"
+    local download_file="$temp_dir/sqldeveloper.zip"
+    
+    trap cleanup EXIT
+    
+    if [[ -d "/Applications/SQLDeveloper.app" ]] || [[ -d "$HOME/Applications/SQLDeveloper.app" ]]; then
+        echo "SQL Developer already installed"
+        return 0
+    fi
+    
+    mkdir -p "$temp_dir"
+    pushd "$temp_dir"
+    
+    echo "Downloading $download_url"
+    if ! curl -L -o "$download_file" "$download_url" >/dev/null; then
+        echo "Download failed"
+        return 1
+    fi
+    
+    unzip -q "$download_file"
+    
+    if [[ -d "SQLDeveloper.app" ]]; then
+        if [[ -d "$HOME/Applications" ]]; then
+            mv "SQLDeveloper.app" "$HOME/Applications/"
+            echo "SQL Developer installed to $HOME/Applications/SQLDeveloper.app"
+        else
+            mv "SQLDeveloper.app" "/Applications/"
+            echo "SQL Developer installed to /Applications/SQLDeveloper.app"
+        fi
+    else
+        echo "Expected SQLDeveloper.app not found in archive"
+        ls -la
+        return 1
+    fi
+    
+    return 0
+}
+
+if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
+    install_sql_developer
+else
+    echo "SQL Developer install is currently only available for MacOS"
+fi

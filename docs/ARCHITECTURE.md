@@ -4,17 +4,15 @@
 
 ```bash
 roperdot/
-├── install.sh                  # Main installation script
-├── roperdot-bootstrap          # Core bootstrap script loaded by shells
-├── 
 ├── Core Configuration:
 ├── .aliases                    # Cross-platform aliases
+├── .bash_prompt                # bash prompt
 ├── .functions                  # Cross-platform functions
 ├── .inputrc                    # Readline key bindings
-├── .bash_prompt                # bash prompt
 ├── .roperdot-os-*              # OS-specific settings
 ├── .zsh-suffix-aliases         # Associates file extensions with commands in zsh
 ├── define-colors               # Defines bash prompt colors
+├── roperdot-bootstrap          # Core bootstrap script loaded by shells
 ├── 
 ├── Scripts and Binaries:
 ├── app-bin-bash/               # Application scripts for bash (created during install)
@@ -28,6 +26,7 @@ roperdot/
 ├── source-scripts/             # Utility scripts (sourced in other scripts)
 ├── 
 ├── Installation System:
+├── install.sh                  # Main installation script
 ├── install-apps                # Application installer script
 ├── install-profiles/           # Installation profiles
 ├── ├── standard/               # Default installation profile
@@ -40,7 +39,7 @@ roperdot/
 ├── 
 ├── Configuration:
 ├── config/
-├── ├── apps/                   # App configuration files  
+├── ├── apps/                   # App configuration files
 ├── ├── color-schemes/          # Unified color schemes
 ├── └── help-definitions/       # Help text for aliases, functions and binaries
 ```
@@ -50,7 +49,8 @@ roperdot/
 ```bash
 .bash_history            # bash command history
 .bashrc                  # bash configuration and initialization
-.fzf.bash                # fzf fuzzy finder integration for zsh
+.fdignore                # files and directories for fd to ignore when searching
+.fzf.bash                # fzf fuzzy finder integration for bash
 .fzf.zsh                 # fzf fuzzy finder integration for zsh
 .lesshst                 # Less pager command history
 roperdot-help.txt        # help text for roperdot commands; searched with help command
