@@ -412,7 +412,7 @@ lsd () {
 }
 
 # List all files, long format, colorized, permissions in octal
-function la {
+la () {
 	if [[ "$ROPERDOT_OS_ENV" = "darwin" ]] && command -v gls >/dev/null 2>&1; then
 		# Use gls (GNU ls) - gets ISO date format
 		__ls -l --group-directories-first --time-style=long-iso "$@" | awk '
@@ -447,6 +447,56 @@ function la {
 		   printf(" %9s  %10s %5s  %6s  %s %s %s\n", $3, $6, $7, $5, $8, $9, $10);
 		}'
 	fi
+}
+
+lh () {
+    __ls -la --color=always --time-style=long-iso --group-directories-first "$@" | awk '
+    BEGIN {
+        OFS = " "
+    }
+    NR == 1 {
+        if ($1 == "total") {
+            total_kb = $2
+            total_bytes = total_kb * 1024
+            
+            if (total_bytes >= 1073741824) {
+                # GB range -> show in MB
+                printf "total %.0fM\n", total_bytes/1048576
+            } else if (total_bytes >= 1048576 || total_bytes >= 100000) {
+                # MB range OR bytes that would be 6+ digits -> show in KB
+                printf "total %.0fK\n", total_bytes/1024
+            } else {
+                # Smaller totals -> show in bytes (≤5 digits)
+                printf "total %dB\n", total_bytes
+            }
+        } else {
+            print
+        }
+        next
+    }
+    {
+        # Convert size to human readable (shift down one unit level, max 5 digits)
+        size = $5
+        if (size >= 1073741824) {
+            # GB range -> show in MB
+            human = sprintf("%.0fM", size/1048576)
+        } else if (size >= 1048576 || size >= 100000) {
+            # MB range OR bytes that would be 6+ digits -> show in KB
+            human = sprintf("%.0fK", size/1024)
+        } else {
+            # Smaller files -> show in bytes (≤5 digits)
+            human = sprintf("%dB", size)
+        }
+        
+        # Print with proper column alignment
+        printf "%-11s %2s %-8s %-8s %8s %s %s", $1, $2, $3, $4, human, $6, $7
+        
+        # Handle filename and any remaining fields (like symlink targets)
+        for(i=8; i<=NF; i++) {
+            printf " %s", $i
+        }
+        printf "\n"
+    }'
 }
 
 if [[ $ROPERDOT_CURRENT_SHELL = bash ]]; then

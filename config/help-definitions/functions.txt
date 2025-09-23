@@ -15,6 +15,7 @@ gifify: (Mac) Converts a video to an animated GIF
 hexdiff: Compares files in binary/hex mode
 jsondiff: Compares JSON files
 la: ls showing permissions in octal
+lh: ls -alh showing 5 digits of precision for sizes
 lsd: ls that only shows directories
 mdd: Creates a directory and changes directory into it
 modtime: Prints the modified time for a file in a format that's compatible with touch

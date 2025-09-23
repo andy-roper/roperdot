@@ -58,6 +58,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`lb`** - ls with one filename per line
 - **`lf`** - ls that shows full paths to files, one filename per line
 - **`lfr`** - Recursive lf
+- **`lh`** - Similar to `ls -alh`, but shows 5 digits of precision for sizes
 - **`lsd`** - ls that only shows directories
 - **`lsz`** - ls sorted by size ascending
 - **`lt`** - ls sorted by modified time ascending
