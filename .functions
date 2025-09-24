@@ -184,6 +184,10 @@ if [[ "$ROPERDOT_CUSTOM_LS" = true ]]; then
 		fi
 		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && shopt -u dotglob || setopt no_glob_dots
 	}
+else
+    __ls () {
+        ls "$@"
+    }
 fi
 
 if [[ "$ROPERDOT_CUSTOM_CP" = true ]]; then

@@ -58,6 +58,12 @@ else
 	if [[ $ROPERDOT_OS_ENV = darwin && "$(command -v ls)" = "/bin/ls" ]]; then
 		alias ls='\ls $LS_SWITCHES -lA'
 		alias lw='\ls $LS_SWITCHES -A'
+	elif [[ $ROPERDOT_OS_ENV = darwin ]] && command -v gls >/dev/null 2>&1; then
+		alias ls='gls $LS_SWITCHES -lA --group-directories-first --time-style=long-iso'
+		alias lw='gls $LS_SWITCHES -A --group-directories-first --time-style=long-iso'
+		alias lt='gls $LS_SWITCHES -lA -tr --time-style=long-iso'
+		alias lsz='gls $LS_SWITCHES -lA -Sr --time-style=long-iso'
+		alias lb='gls $LS_SWITCHES -1 -A'
 	else
 		alias ls='\ls $LS_SWITCHES -lA --group-directories-first --time-style=long-iso'
 		alias lw='\ls $LS_SWITCHES -A --group-directories-first --time-style=long-iso'
