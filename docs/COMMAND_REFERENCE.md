@@ -118,6 +118,7 @@ help <text>        # Find commands whose name/description matches the text
 ## Development and Text Processing
 
 ### Text/Data Formatting
+- **`clip2bullets`** - Converts a bulleted presentation slide image in the clipboard to text
 - **`d2u`** - Uses dos2unix to change linefeeds for Unix compatibility
 - **`format`** - Beautify and format various file types: JSON, SQL, JavaScript, HTML, CSS and XML
 - **`format-clip`** - Pretty-print JSON, SQL, Javascript, HTML, XML or CSS and write the output to the clipboard; accepts file input, piped input or clipboard input
@@ -207,9 +208,11 @@ help <text>        # Find commands whose name/description matches the text
 ## Additional Utilities
 
 ### Calculation/Conversion
+- **`clip2png`** - Saves an image in the clipboard as a PNG file
 - **`gifify` (Mac)** - Convert a video to an animated GIF
 - **`h2d`** - Convert hexadecimal number to decimal
 - **`m`** - Evaluate a mathematical expression
+- **`png2text`** - Converts a PNG image to text
 - **`random`** - Echo a random value between a lower and upper bound
 - **`roll`** - Evaluate a dice notation expression
 - **`rolln`** - Evaluate a dice notation expression an arbitrary number of times

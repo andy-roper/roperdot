@@ -1,0 +1,14 @@
+#
+# Description: Install script for Tesseract
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+	brew install tesseract
+elif [[ "$ROPERDOT_OS_TYPE" = "linux" ]]; then
+	sudo apt install tesseract-ocr
+else
+	echo "Unsupported OS for Tesseract install"
+fi
