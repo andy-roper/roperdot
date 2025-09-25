@@ -197,7 +197,7 @@
 		"presence_command": "$python_bin -c 'import colored' >/dev/null 2>&1",
 		"install_command": "install-python-package colored",
 		"sudo_not_required": true,
-		"desc": "Python module for color and formatting in terminals; extensively used by roperdot"
+		"desc": "Python module for color and formatting in terminals"
 	},
 	{
 		"app": "js-beautify",
@@ -279,6 +279,18 @@
 		"binary": "dos2unix",
 		"package": "dos2unix",
 		"desc": "Utilities for converting files with DOS line breaks to Unix format and vice versa"
+	},
+	{
+		"app": "pngpaste",
+		"binary": "pngpaste",
+		"package": "pngpaste",
+		"desc": "Pastes PNG into files"
+	},
+	{
+		"app": "Tesseract",
+		"binary": "tesseract",
+		"package": "tesseract",
+		"desc": "OCR engine library"
 	},
 	{
 		"app": "z",

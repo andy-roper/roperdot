@@ -96,3 +96,29 @@ Much of this is controlled by roperdot/source-scripts/initialize-colors which ut
 ## fzf Integration
 
 fzf is used by multiple commands (cd, cdd, cds, e, up and v) for selection of files and directories. The fzf plugin is also used in vim.
+
+## Adding New Scripts
+
+Scripts should be created in the installation profile (usually install-profile/standard) in the bin-scripts directory. The scripts should be created without a shebang line and should be compatible with both bash and zsh.
+
+You'll need to source roperdot/source/copy-scripts afterwards for the scripts to be copied to bin-bash and bin-zsh.
+
+## Adding New GUI App Scripts
+
+Support for the new script must be added to install-profiles/standard/bin-scripts/update-app-binaries.sh.
+
+For each operating system which supports the application, a call to create the script for the application must be added. Examples for MacOS:
+
+```bash
+create_binary_script_mac itunes "open -a iTunes"
+
+create_browser_script_mac "$(app_path 'Google Chrome')" chrome "open -a \"Google Chrome\""
+```
+
+The application name used in the create binary script call must be added to a create_app_script call to assign that application to an application type. default_app is set before the calls to create_app_script to designate the default application to use if no matching app script is present for the application type. Multiple applications can be specified so that if one is not present, usage will fall back to another application. Example for MacOS:
+
+```bash
+create_app_script code-editor-app code sublime textwrangler textedit
+```
+
+After making these updates, you'll need to source roperdot/source/refresh-roperdot. That will update the update-app-binaries script in bin-bash and bin-zsh and to call the script to update the scripts in app-bin-bash and app-bin-zsh.

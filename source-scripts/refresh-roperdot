@@ -1,0 +1,8 @@
+echo "Sourcing copy-scripts"
+source "${ROPERDOT_DIR}/source-scripts/copy-scripts"
+echo
+echo "Calling update-app-binaries"
+update-app-binaries
+echo
+echo "Generating help"
+generate-help

@@ -206,7 +206,7 @@
 		"presence_command": "$python_bin -c 'import colored' >/dev/null 2>&1",
 		"install_script": "install-colored",
 		"sudo_not_required": true,
-		"desc": "Python module for color and formatting in terminals; extensively used by roperdot"
+		"desc": "Python module for color and formatting in terminals"
 	},
 	{
 		"app": "js-beautify",

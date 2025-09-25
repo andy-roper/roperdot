@@ -16,7 +16,7 @@ Note: I've made many changes recently and while MacOS support is solid, the othe
 
 **Shell-GUI Integration**: While working in your terminal you can launch GUI apps when needed (`e` for editing, `v` for viewing, `fm` for file manager). Files will be opened in an application based on the file type and the available software.
 
-**Unified Color Schemes**: Consistent color theming is used for the prompt, `ls`, `diff`, `less` (using [Pygments](https://pygments.org/docs/cmdline/)), `man` pages, `git`, `vim`, and many shell commands (using [generic colouriser](https://github.com/garabik/grc)).
+**Unified Color Schemes**: Consistent color theming is used for the prompt, `ls`, `diff`, `less` (using [Pygments](https://pygments.org/docs/cmdline/)), `man` pages, `git`, `git-blame-colored` (uses the Python [colored](https://pypi.org/project/colored/) library), `vim`, and many shell commands (using [generic colouriser](https://github.com/garabik/grc)).
 
 **Enhanced Functionality**: Dozens of functions, aliases and scripts covering navigation, development, system administration, and file management. For details, see **[COMMAND_REFERENCE](docs/COMMAND_REFERENCE.md)**.
 

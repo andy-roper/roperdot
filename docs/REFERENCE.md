@@ -43,31 +43,117 @@ If neither install_script nor install_command are defined, the package_manager w
 
 roperdot makes use of a number of excellent third party terminal applications.
 
-- **`ag`** - [The Silver Searcher](https://github.com/ggreer/the_silver_searcher) - Fast code search
+### Compression and Archives
+
+- **[`p7zip`](https://p7zip.sourceforge.net/)** - Archive manager with support for 7z and many other formats
+- **[`rar`](https://www.rarlab.com/)** - RAR archive support
+- **[`zopfli`](https://github.com/google/zopfli)** - Advanced compression library
+
+### Development Environments and Managers
+
+- **[`Java`](https://openjdk.org/)** - Java runtime and development
+- **[`jENV`](https://www.jenv.be/)** - Java environment manager
+- **[`Node.js`](https://nodejs.org/)** - JavaScript runtime
+- **[`nvm`](https://github.com/nvm-sh/nvm)** - Node version manager
+- **[`pipx`](https://pipx.pypa.io/stable/)** - Python application isolation
+- **[`Python setuptools`](https://setuptools.pypa.io/)** - Python package tools
+- **[`wheel`](https://wheel.readthedocs.io/)** - Python package distribution
+
+### Development Tools
+
+- **[`gh`](https://cli.github.com/)** - GitHub CLI
+- **[`git`](https://git-scm.com/)** - Version control system
+- **[`git-lfs`](https://git-lfs.github.com/)** - Git large file storage
+- **[`jq`](https://jqlang.org/)** - JSON processor and formatter
+- **[`Neovim`](https://neovim.io/)** - Modern Vim editor
+- **[`shellcheck`](https://www.shellcheck.net/)** - Shell script linter
+- **[`Vim/vimdiff`](https://www.vim.org/)** - Text editor and diff tool
+- **[`xmllint`](http://xmlsoft.org/xmllint.html)** - XML parsing and validation
+
+### Multimedia and Graphics
+
+- **[`FFmpeg`](https://ffmpeg.org/)** - Video/audio processing
+- **[`gifsicle`](https://www.lcdf.org/gifsicle/)** - GIF manipulation
+- **[`ImageMagick`](https://imagemagick.org/)** - Image editing suite
+- **[`pngpaste`](https://github.com/jcsalterego/pngpaste)** - Pastes PNG into files on MacOS
+- **[`tesseract`](https://github.com/tesseract-ocr/tesseract)** - OCR engine library
+
+### Network and Security
+
+- **[`AWS CLI`](https://aws.amazon.com/cli/)** - Amazon Web Services CLI
+- **[`keychain`](https://www.funtoo.org/Keychain)** - SSH key management
+- **[`lynx`](https://lynx.browser.org/)** - Text-based web browser
+- **[`mtr`](https://github.com/traviscross/mtr)** - Network diagnostic tool
+- **[`OpenVPN`](https://openvpn.net/)** - VPN client
+- **[`speedtest-cli`](https://github.com/sivel/speedtest-cli)** - Test internet connection speed
+- **[`ssh-copy-id`](https://www.ssh.com/academy/ssh/copy-id)** - Use locally available keys to authorize logins on remote machines
+- **[`testssl`](https://testssl.sh/)** - TLS/SSL security testing
+- **[`tnftp/tnftpd`](https://ftp.netbsd.org/pub/NetBSD/misc/tnftp/)** - FTP client/server
+
+### Package Managers and Tools
+
+- **[`apt-file`](https://packages.debian.org/stable/apt-file)** - Debian package content search
+- **[`Linuxbrew`](https://docs.brew.sh/Homebrew-on-Linux)** - Homebrew for Linux
+
+### Python Libraries
+
+- **[`BeautifulSoup4`](https://www.crummy.com/software/BeautifulSoup/)** - Python library for HTML/XML parsing
+- **[`colored`](https://pypi.org/project/colored/)** - Python module for adding color and formatting to terminal output
+- **[`cryptography`](https://cryptography.io/)** - Python cryptography module
+- **[`jsoncomment`](https://pypi.org/project/jsoncomment/)** - Python JSON parser wrapper for parsing files with nonstandard formatting
+- **[`py-rolldice`](https://pypi.org/project/py-rolldice/)** - Python module for evaluating dice notation
+- **[`sqlparse`](https://pypi.org/project/sqlparse/)** - Python module for parsing and formatting SQL
+- **[`tabulate`](https://pypi.org/project/tabulate/)** - Python module for pretty-printing tabular data
+- **[`xmltodict`](https://pypi.org/project/xmltodict/)** - Python module for converting XML to dictionary
+
+### Python-Based Tools
+
+- **[`cssbeautifier`](https://pypi.org/project/cssbeautifier/)** - Python script for beautifying CSS
+- **[`jsbeautifier`](https://pypi.org/project/jsbeautifier/)** - Python script for formatting JavaScript/CSS/HTML
+
+### Shell Customization
+
 - **[`diff-so-fancy`](https://github.com/so-fancy/diff-so-fancy)** - Formatter and colorizer for git diff
-- **[`dos2unix`](https://dos2unix.sourceforge.io/)** - Convert line endings between formats
+- **`grc`** - [Generic colouriser](https://github.com/garabik/grc) for command output
+- **`pygmentize`** - [Pygments](https://pygments.org/) - Syntax highlighter
+- **[`starship`](https://starship.rs/)** - Modern cross-shell prompt
+- **[`ydiff`](https://github.com/ymattw/ydiff)** - Diff colorization tool
+
+### Shell Enhancements
+
+- **`mc`** - [Midnight Commander](http://midnight-commander.org/) - Shell-based file manager
+- **[`pv`](https://www.ivarch.com/programs/pv.shtml)** - Pipeline progress monitor
+- **[`tree`](https://gitlab.com/OldManProgrammer/unix-tree)** - Directory structure visualization
+- **[`xclip`](https://github.com/astrand/xclip)** - X11 clipboard interface
+- **[`z`](https://github.com/rupa/z)** - Jump to frequently used directories based on usage patterns
+
+### System Monitoring and Utilities
+
 - **[`entr`](https://eradman.com/entrproject/)** - Run commands when files change
+- **[`htop`](https://htop.dev/)** - Interactive process monitor
+- **[`ncdu`](https://dev.yorhel.nl/ncdu)** - NCurses disk usage analyzer
+- **[`terminal-notifier`](https://github.com/julienXX/terminal-notifier)** - macOS notifications
+
+### Text and File Processing
+
+- **`ag`** - [The Silver Searcher](https://github.com/ggreer/the_silver_searcher) - Fast code search
+- **[`dos2unix`](https://dos2unix.sourceforge.io/)** - Convert line endings between formats
 - **[`fd`](https://github.com/sharkdp/fd)** - Modern, fast alternative to find command
 - **[`fzf`](https://github.com/junegunn/fzf)** - Fuzzy finder integration throughout the system
 - **[`gawk`](https://www.gnu.org/software/gawk/)** - GNU awk for advanced text processing
-- **[`gh`](https://cli.github.com/)** - GitHub CLI
-- **`grc`** - [Generic colouriser](https://github.com/garabik/grc) for command output
-- **[`htop`](https://htop.dev/)** - Interactive process monitor
-- **[`hub`](https://hub.github.com/)** - Extension for command-line git
-- **[`jq`](https://jqlang.org/)** - JSON processor and formatter
-- **[`keychain`](https://www.funtoo.org/Keychain)** - SSH key management
-- **`mc`** - [Midnight Commander](http://midnight-commander.org) - Shell-based file manager
-- **[`mtr`](https://github.com/traviscross/mtr)** - Network diagnostic tool
-- **[`ncdu`](https://dev.yorhel.nl/ncdu)** - NCurses disk usage analyzer
-- **[`p7zip`](https://p7zip.sourceforge.net/)** - Archive manager with support for 7z and many other formats
-- **`pygmentize`** - [Pygments](https://pygments.org/) - Syntax highlighter
-- **[`shellcheck`](https://www.shellcheck.net/)** - Shell script linter
-- **[`speedtest-cli`](https://github.com/sivel/speedtest-cli)** - Test internet connection speed
-- **[`ssh-copy-id`](https://www.ssh.com/academy/ssh/copy-id)** - Use locally available keys to authorize logins on remote machines
-- **[`starship`](https://starship.rs/)** - Modern cross-shell prompt
-- **[`testssl`](https://testssl.sh/)** - TLS/SSL security testing
-- **[`tree`](https://gitlab.com/OldManProgrammer/unix-tree)** - Directory structure visualization
-- **[`z`](https://github.com/rupa/z)** - Jump to frequently used directories based on usage patterns
+- **[`VBinDiff`](https://www.cjmweb.net/vbindiff/)** - Binary file comparison
+
+### Frequently Already Installed
+
+- **[`curl`](https://curl.se/)** - Tool for transferring data from/to servers
+- **[`net-tools`](https://sourceforge.net/projects/net-tools/)** - Networking toolkit (ifconfig, netstat, etc.)
+- **[`Python 3`](https://www.python.org/)** - Python programming language
+- **[`Python 3 pip`](https://pip.pypa.io/)** - Python package installer
+- **[`Ruby`](https://www.ruby-lang.org/)** - Ruby programming language
+- **[`telnet`](https://www.telnet.org/)** - Telnet client
+- **[`telnetd`](https://www.telnet.org/)** - Telnet server
+- **[`unzip`](http://infozip.sourceforge.net/UnZip.html)** - Archive extraction utility
+- **[`wget`](https://www.gnu.org/software/wget/)** - File downloader
 
 ## History
 
@@ -108,6 +194,12 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
   - Create a script named “list-hardcoded-installs” to do a recursive grep to list them
 
 - Finish implementing change scheme
+- Test upgrading to a later Python version (e.g. 3.13)
+
+  - Need to ask user about switching to newer version instead of arbitrarily doing so
+  - Will need to reinstall Python packages for scripts in bin to use it properly
+  - Will need to update installs to add install/upgrade to latest python version
+  - `brew install python` or `brew upgrade python`
 - Revisit installing non-standard installation
 
   - Need to support a different/second install profile
