@@ -101,6 +101,7 @@ roperdot makes use of a number of excellent third party terminal applications.
 - **[`colored`](https://pypi.org/project/colored/)** - Python module for adding color and formatting to terminal output
 - **[`cryptography`](https://cryptography.io/)** - Python cryptography module
 - **[`jsoncomment`](https://pypi.org/project/jsoncomment/)** - Python JSON parser wrapper for parsing files with nonstandard formatting
+- **[`playwright`](https://playwright.dev/python/)** - Python library for browser automation
 - **[`py-rolldice`](https://pypi.org/project/py-rolldice/)** - Python module for evaluating dice notation
 - **[`sqlparse`](https://pypi.org/project/sqlparse/)** - Python module for parsing and formatting SQL
 - **[`tabulate`](https://pypi.org/project/tabulate/)** - Python module for pretty-printing tabular data
@@ -179,6 +180,16 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
   - Add awscli, ffmpeg, gifsicle (if available)
 - Update other OSes’ installed GUI apps
   - Add Brave browser; disable WebStorm
+- Add installation of Playwright Python library to other OSes' shell-apps JSON files
+
+- Add install of Windows fonts in WSL:
+
+  ```bash
+  sudo apt update
+  echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula boolean true" | sudo debconf-set-selections
+  sudo apt install -y ttf-mscorefonts-installer
+  ```
+
 - Consider adding VMware Fusion (Mac) or VMware Workstation Pro (others) to installs
 
 - Consider adding additional AWS apps to installs

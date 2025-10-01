@@ -1,0 +1,11 @@
+#
+# Description: Install script for Playwright Python library
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+python3 -m pip install playwright
+
+# Install the Chromium browser for Playwright
+python3 -m playwright install chromium

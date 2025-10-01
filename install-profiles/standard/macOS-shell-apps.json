@@ -245,6 +245,13 @@
 		"groups": ["personal"]
 	},
 	{
+		"app": "playwright",
+		"presence_command": "$python_bin -c 'import playwright' >/dev/null 2>&1",
+		"install_script": "install-playwright",
+		"sudo_not_required": true,
+		"desc": "Python library for browser automation"
+	},
+	{
 		"app": "generic colouriser",
 		"binary": "grc",
 		"package": "grc",

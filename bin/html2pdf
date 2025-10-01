@@ -1,0 +1,194 @@
+#!/usr/bin/env python3
+"""
+Description: Converts HTML files to PDF
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+
+python3 -m pip install playwright
+python3 -m playwright install chromium
+
+Installing Windows fonts in WSL:
+sudo apt update
+echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula boolean true" | sudo debconf-set-selections
+sudo apt install -y ttf-mscorefonts-installer
+"""
+
+import argparse
+import sys
+import os
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+
+def find_html_files(directory):
+    html_files = list(Path(directory).glob("*.html"))
+    html_files.extend(Path(directory).glob("*.htm"))
+    return sorted(html_files)
+
+def convert_html_to_pdf(html_file, output_file, page):
+    try:
+        # Convert to absolute path for file:// URL
+        html_path = html_file.resolve()
+        
+        # Load the HTML file
+        page.goto(f"file://{html_path}", wait_until="networkidle")
+
+        # Generate PDF
+        page.pdf(
+            path=str(output_file),
+            format="A4",
+            print_background=True,
+            margin={
+                "top": "0.5in",
+                "bottom": "0.5in", 
+                "left": "0.5in",
+                "right": "0.5in"
+            },
+            prefer_css_page_size=True
+        )
+        
+        return True
+        
+    except Exception as e:
+        print(f"Error processing {html_file.name}: {e}")
+        return False
+
+def process_html_files(html_files, output_dir=None):
+    if not html_files:
+        print("No HTML files to process.")
+        return True
+    
+    print(f"Found {len(html_files)} HTML files to process...")
+    
+    success_count = 0
+    
+    with sync_playwright() as p:
+        # Launch browser
+        browser = p.chromium.launch(headless=True)
+        
+        try:
+            page = browser.new_page()
+            
+            for html_file in html_files:
+                # Determine output file path
+                if output_dir:
+                    # Use specified output directory
+                    output_path = Path(output_dir)
+                    output_path.mkdir(parents=True, exist_ok=True)
+                    pdf_filename = html_file.stem + ".pdf"
+                    output_file = output_path / pdf_filename
+                else:
+                    # Use same directory as source file
+                    pdf_filename = html_file.stem + ".pdf"
+                    output_file = html_file.parent / pdf_filename
+                
+                print(f"Processing: {html_file.name} -> {output_file}")
+                
+                if convert_html_to_pdf(html_file, output_file, page):
+                    print(f"Successfully created: {output_file}")
+                    success_count += 1
+                
+        finally:
+            browser.close()
+    
+    print(f"\nBatch processing complete! {success_count}/{len(html_files)} files converted successfully.")
+    return True
+
+def parse_arguments():
+    args = sys.argv[1:]
+    
+    # Check if last argument is a directory (potential output dir)
+    potential_output = Path(args[-1]) if len(args) > 1 else None
+    
+    # Separate HTML files from potential output directory
+    html_files = []
+    output_dir = None
+    
+    # If we have multiple args and the last one is a directory that doesn't end in .html/.htm
+    if (len(args) > 1 and 
+        potential_output and 
+        potential_output.is_dir() and 
+        not str(potential_output).lower().endswith(('.html', '.htm'))):
+        # Last argument is output directory
+        output_dir = str(potential_output)
+        file_args = args[:-1]
+    else:
+        # All arguments are input files/directories
+        file_args = args
+    
+    for arg in file_args:
+        path = Path(arg)
+        
+        if not path.exists():
+            print(f"Error: '{arg}' does not exist.")
+            continue
+        
+        if path.is_dir():
+            # Add all HTML files from directory
+            html_files.extend(find_html_files(path))
+        elif path.suffix.lower() in ['.html', '.htm']:
+            # Add individual HTML file
+            html_files.append(path)
+        else:
+            print(f"Skipping invalid argument '{arg}'")
+    
+    return html_files, output_dir
+
+def check_dependencies():
+    # Check if chromium is installed
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            browser.close()
+    except Exception as e:
+        print("Error: Chromium browser is not available.")
+        print("Install with: python3 -m playwright install chromium")
+        return False
+    
+    return True
+
+def main():
+    if len(sys.argv) < 2 or '--help' in sys.argv or '-h' in sys.argv or '-?' in sys.argv:
+        help_text = """
+html2pdf: Converts HTML files to PDF
+
+Usage:
+    html2pdf <input-directory>                     # Convert all HTML files in directory
+    html2pdf <input-directory> <output-directory>  # Convert all, output to specific dir
+    html2pdf file1.html file2.html                 # Convert specific files to same dirs
+    html2pdf file1.html file2.html <output-dir>    # Convert specific files to output dir
+
+Examples:
+    html2pdf ./html-dir
+    html2pdf ./html-dir ./pdfs
+    html2pdf file1.html file2.html
+    html2pdf file1.html file2.html ./output/
+
+html2pdf uses the Playwright module and also requires chromium to be installed for
+playwright.
+
+If you're using WSL on Windows, you'll also want to install ttf-mscorefonts-installer
+for accurate font rendering.
+"""
+        print(help_text.strip())
+        return 0
+    
+    # Check dependencies before processing
+    if not check_dependencies():
+        return 1
+    
+    # Parse arguments and get files to process
+    html_files, output_dir = parse_arguments()
+    
+    if not html_files:
+#        print("No HTML files found to process.")
+        return 1
+    
+    # Process files
+    if process_html_files(html_files, output_dir):
+        return 0
+    else:
+        return 1
+
+if __name__ == "__main__":
+    sys.exit(main())

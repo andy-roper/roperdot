@@ -217,6 +217,15 @@ command_type=${"$(whence -w git)"#*: }  # zsh: returns "builtin", "command", "al
 command some_command
 builtin some_command
 
+# Perform an operation on each file in a directory
+for file in ../*; do
+	dir=$(dirname "$file")
+	basename=$(basename "$file")
+	name="${basename%.*}"
+	ext="${file##*.}"
+	echo "dir: $dir; name: $name; extension: $ext"
+done
+
 # Perform an operation on each result from a command
 while IFS= read -r -d '' src_file; do
     echo $src_file

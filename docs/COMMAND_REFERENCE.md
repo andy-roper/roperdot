@@ -211,6 +211,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`clip2png`** - Saves an image in the clipboard as a PNG file
 - **`gifify` (Mac)** - Convert a video to an animated GIF
 - **`h2d`** - Convert hexadecimal number to decimal
+- **`html2pdf`** - Converts HTML files to PDF
 - **`m`** - Evaluate a mathematical expression
 - **`png2text`** - Converts a PNG image to text
 - **`random`** - Echo a random value between a lower and upper bound

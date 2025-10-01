@@ -21,7 +21,10 @@ unset_dot_glob () {
 }
 
 if [[ "$ROPERDOT_CUSTOM_CD" = true ]]; then
-	[[ "$ROPERDOT_CURRENT_SHELL" = zsh ]] && compdef __cd=cd
+	if [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
+		compdef __cd=cd
+		compdef cd=cd
+	fi
 	__cd () {
 		if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
 			cat <<EOT
@@ -128,7 +131,10 @@ EOT
 fi
 
 if [[ "$ROPERDOT_CUSTOM_LS" = true ]]; then
-	[[ "$ROPERDOT_CURRENT_SHELL" = zsh ]] && compdef __ls=ls
+	if [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
+		compdef __ls=ls
+		compdef ls=ls
+	fi
 	# Apply color switch in LS_SWITCHES to all ls commands unless output is being piped
 	# Show the contents of a symlink directory argument instead of the symlink itself
 	# Use the -d switch for non-directory arguments to suppress single-level recursion into directories
@@ -191,7 +197,10 @@ else
 fi
 
 if [[ "$ROPERDOT_CUSTOM_CP" = true ]]; then
-	[[ "$ROPERDOT_CURRENT_SHELL" = zsh ]] && compdef __cp=cp
+	if [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
+		compdef __cp=cp
+		compdef cp=cp
+	fi
 	__cp () {
 		# Turn globbing back on
 		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && set +f || set +F
@@ -258,7 +267,10 @@ if [[ "$ROPERDOT_CUSTOM_CP" = true ]]; then
 fi
 
 if [[ "$ROPERDOT_CUSTOM_MV" = true ]]; then
-	[[ "$ROPERDOT_CURRENT_SHELL" = zsh ]] && compdef __mv=mv
+	if [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
+		compdef __mv=mv
+		compdef mv=mv
+	fi
 	__mv () {
 		# Turn globbing back on
 		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && set +f || set +F
@@ -320,7 +332,10 @@ if [[ "$ROPERDOT_CUSTOM_MV" = true ]]; then
 fi
 
 if [[ "$ROPERDOT_CUSTOM_RM" = true ]]; then
-	[[ "$ROPERDOT_CURRENT_SHELL" = zsh ]] && compdef __rm=rm
+	if [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
+		compdef __rm=rm
+		compdef rm=rm
+	fi
 	__rm () {
 		# Turn globbing back on
 		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && set +f || set +F

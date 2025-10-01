@@ -22,6 +22,7 @@ git-lfs: Used to work with large files in Git repositories (https://git-lfs.gith
 git: Client for the Git distributed version control system (https://git-scm.com/)
 grc: Frontend that auto-selects color configs for common commands (https://github.com/garabik/grc)
 grcat: Colorizes text from stdin using regex-based configuration files (https://github.com/garabik/grc)
+html2pdf: Converts HTML files to PDF
 htop: More informative version of top (https://hisham.hm/htop/)
 java: Compiler and run-time environment for Java (https://openjdk.java.net/)
 jenv: Tool for managing the JAVA_HOME environment variable (https://www.jenv.be/)
