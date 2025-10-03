@@ -29,8 +29,9 @@ EOT
 	exit 0
 }
 
+[[ $# -lt 2 || "$1" == "-h" || "$1" == "--help" || "$1" == "-?" ]] && help
+
 special_folder=Desktop
-[[ $# -lt 2 ]] && help
 shortcut="$1"
 target="$2"
 [[ "$target" =~ "/" ]] && target="$(wslpath -w "$target")"

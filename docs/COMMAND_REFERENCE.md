@@ -86,8 +86,10 @@ help <text>        # Find commands whose name/description matches the text
 - **`fs`** - Display file status for a file using stat
 - **`modtime`** - Print the modified time for a file in a format that's compatible with touch
 - **`rmdsstore` (Mac)** - Remove *.DS_Store under the current directory
+- **`pwdwin` (Windows)** - Show the present working directory as a Windows path
 - **`vb`** - View a file in binary/hex mode
 - **`vt`** - View a file in text mode
+- **`winpath` (Windows)** - Show the Windows path for a file
 
 ### Searching
 - **`apt-file`** - Indexes available package contents to allow you to search for a file among them

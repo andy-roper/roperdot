@@ -1463,7 +1463,7 @@ man () {
 	command man "$@"
 }
 
-if [[ "$ROPERDOT_OS_ENV" = ubuntu && "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
+if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
 	mount-drive () {
 		if [[ $# -eq 0 || "$1" == "-?" || "$1" == "-h" || "$1" == "--help" ]]; then
 			cat <<EOT
@@ -1483,11 +1483,59 @@ EOT
 		fi
 		sudo mount -t drvfs "$1:" "/mnt/$1"
 	}
-fi
 
-if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
-	wkilln () {
-		taskkill.exe /im "$1*"
+	apply_mapped_drive () {
+		local winpath="$1"
+	    local distro_name unc_path mapped_drive
+	    
+	    distro_name="$WSL_DISTRO_NAME"
+	    unc_path="\\\\wsl.localhost\\${distro_name}"
+	    
+	    # Check if there's a mapped drive to this UNC path
+	    # Handle both "OK Z:" and "   Z:" formats (status column may be empty)
+	    mapped_drive=$(net.exe use 2>/dev/null | grep -i "wsl.localhost\\\\${distro_name}" | awk '{for(i=1;i<=NF;i++) if($i ~ /^[A-Z]:$/) print $i}' | tr -d '\r')
+	    
+	    if [[ -n "$mapped_drive" ]]; then
+	        winpath="${winpath//${unc_path}/${mapped_drive}}"
+	    fi
+
+	    printf '%s' "$winpath"
+	}
+
+	pwdwin () {
+	    if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
+	        cat <<EOT
+pwdwin: Show the present working directory as a Windows path
+Usage: pwdwin
+EOT
+	        return
+	    fi
+	    
+	    local winpath
+	    winpath=$(wslpath -w "$(pwd)")
+	    
+	    if [[ "$winpath" == *wsl.localhost* ]]; then
+	    	winpath="$(apply_mapped_drive "$winpath")"
+	    fi
+	    
+	    printf '%s\n' "$winpath"
+	}
+
+	winpath () {
+		if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
+			cat <<EOT
+winpath: Show the Windows path for a file
+Usage: winpath <file>
+EOT
+			return
+		fi
+        
+        local winpath
+        winpath=$(wslpath -w "$1")
+        if [[ "$winpath" == *wsl.localhost* ]]; then
+	    	winpath="$(apply_mapped_drive "$winpath")"
+	    fi
+	    printf '%s\n' "$winpath"
 	}
 fi
 

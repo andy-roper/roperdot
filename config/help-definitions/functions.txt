@@ -21,9 +21,11 @@ mdd: Creates a directory and changes directory into it
 modtime: Prints the modified time for a file in a format that's compatible with touch
 mount-drive: (Windows) Mounts a drive in /mnt
 nullify: Directs all output for a command to /dev/null
+pwdwin: (Windows) Shows the present working directory as a Windows path
 setnf: Shows values of environment variables and function definitions (with the function contents suppressed)
 shell_switch: (Mac) Switches to the designated shell
 t: Creates a temporary directory within the current directory and changes directorye to it
 up: Changes to a selected parent directory, to the first parent directory that matches a string argument or up n directories where n is the count argument
 webmify: (Mac) Converts a video into the webm format
 win_env: (Windows) Gets the value of a Windows environment variable
+winpath: (Windows) Shows the Windows path for a file

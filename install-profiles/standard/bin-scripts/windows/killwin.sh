@@ -1,5 +1,5 @@
 #
-# Description: Kills Windows processes by PID or name pattern
+# Description: (Windows) Kills Windows processes by PID or name pattern
 #
 # Author: Andy Roper <andyroper42@gmail.com>
 # URL: https://github.com/andy-roper/roperdot
