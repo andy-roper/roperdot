@@ -75,6 +75,7 @@ roperdot makes use of a number of excellent third party terminal applications.
 - **[`FFmpeg`](https://ffmpeg.org/)** - Video/audio processing
 - **[`gifsicle`](https://www.lcdf.org/gifsicle/)** - GIF manipulation
 - **[`ImageMagick`](https://imagemagick.org/)** - Image editing suite
+- **`pdfinfo`** - PDF metadata inspection (part of [poppler-utils](https://poppler.freedesktop.org/))
 - **[`pngpaste`](https://github.com/jcsalterego/pngpaste)** - Pastes PNG into files on MacOS
 - **[`tesseract`](https://github.com/tesseract-ocr/tesseract)** - OCR engine library
 
@@ -173,9 +174,10 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
 ## To Do/Future Plans
 
 - Test and retool Ubuntu/Mint/WSL (Ubuntu) installs if necessary after the recent MacOS-centric retooling
-- Update other OSes’ shell-apps JSON files to take same approach used for MacOS for Python apps/libraries
+- Update other OSes’ shell-apps JSON files similarly to how the MacOS one was updated
   - Remove html5print and xml2json
-  - Add cssbeautifier, beautifulsoup4 and xmltodict
+  - Add cssbeautifier, beautifulsoup4 and xmltodict Python libraries
+  - Add the poppler-utils package
 - Update other OSes' installed shell apps
   - Add awscli, ffmpeg, gifsicle (if available)
 - Update other OSes’ installed GUI apps

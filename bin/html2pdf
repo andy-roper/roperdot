@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Description: Converts HTML files to PDF
+Description: Converts HTML files to PDF with optional dynamic footer support
 
 Author: Andy Roper <andyroper42@gmail.com>
 URL: https://github.com/andy-roper/roperdot
@@ -25,7 +25,58 @@ def find_html_files(directory):
     html_files.extend(Path(directory).glob("*.htm"))
     return sorted(html_files)
 
-def convert_html_to_pdf(html_file, output_file, page):
+def load_footer_function(footer_code_file):
+    """
+    Load footer generation function from external Python file.
+    
+    The external file should contain a 'generate_footer(page)' function that:
+    - Takes a Playwright page object as input
+    - Returns a footer template HTML string, or None for no footer
+    
+    Args:
+        footer_code_file: Path to Python file containing footer generation logic
+        
+    Returns:
+        Callable or None: The generate_footer function, or None if not found
+    """
+    if not footer_code_file:
+        return None
+    
+    footer_path = Path(footer_code_file)
+    if not footer_path.exists():
+        print(f"Warning: Footer code file '{footer_code_file}' not found")
+        return None
+    
+    try:
+        # Load the Python module dynamically
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("footer_module", footer_path)
+        footer_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(footer_module)
+        
+        # Look for a 'generate_footer' function
+        if hasattr(footer_module, 'generate_footer'):
+            return footer_module.generate_footer
+        else:
+            print(f"Warning: Footer code file must contain a 'generate_footer(page)' function")
+            return None
+    except Exception as e:
+        print(f"Error loading footer code: {e}")
+        return None
+
+def convert_html_to_pdf(html_file, output_file, page, footer_function=None):
+    """
+    Convert a single HTML file to PDF.
+    
+    Args:
+        html_file: Path to input HTML file
+        output_file: Path to output PDF file
+        page: Playwright page object
+        footer_function: Optional function that takes page and returns footer HTML
+        
+    Returns:
+        bool: True if successful, False otherwise
+    """
     try:
         # Convert to absolute path for file:// URL
         html_path = html_file.resolve()
@@ -33,19 +84,44 @@ def convert_html_to_pdf(html_file, output_file, page):
         # Load the HTML file
         page.goto(f"file://{html_path}", wait_until="networkidle")
 
-        # Generate PDF
-        page.pdf(
-            path=str(output_file),
-            format="A4",
-            print_background=True,
-            margin={
+        # Try to generate footer template if function provided
+        footer_template = None
+        if footer_function:
+            try:
+                footer_template = footer_function(page)
+            except Exception as e:
+                print(f"  Warning: Footer generation failed: {e}")
+
+        # Build PDF options
+        pdf_options = {
+            "path": str(output_file),
+            "format": "A4",
+            "print_background": True,
+            "prefer_css_page_size": True
+        }
+        
+        if footer_template:
+            # With custom footer, add space at bottom
+            pdf_options["margin"] = {
                 "top": "0.5in",
-                "bottom": "0.5in", 
+                "bottom": "0.75in",  # Extra space for footer
                 "left": "0.5in",
                 "right": "0.5in"
-            },
-            prefer_css_page_size=True
-        )
+            }
+            pdf_options["display_header_footer"] = True
+            pdf_options["footer_template"] = footer_template
+            pdf_options["header_template"] = "<div></div>"  # Empty header
+        else:
+            # No footer, use standard margins
+            pdf_options["margin"] = {
+                "top": "0.5in",
+                "bottom": "0.5in",
+                "left": "0.5in",
+                "right": "0.5in"
+            }
+        
+        # Generate PDF
+        page.pdf(**pdf_options)
         
         return True
         
@@ -53,7 +129,18 @@ def convert_html_to_pdf(html_file, output_file, page):
         print(f"Error processing {html_file.name}: {e}")
         return False
 
-def process_html_files(html_files, output_dir=None):
+def process_html_files(html_files, output_dir=None, footer_function=None):
+    """
+    Process multiple HTML files and convert them to PDF.
+    
+    Args:
+        html_files: List of Path objects to HTML files
+        output_dir: Optional output directory path
+        footer_function: Optional footer generation function
+        
+    Returns:
+        bool: True if all conversions successful
+    """
     if not html_files:
         print("No HTML files to process.")
         return True
@@ -84,7 +171,7 @@ def process_html_files(html_files, output_dir=None):
                 
                 print(f"Processing: {html_file.name} -> {output_file}")
                 
-                if convert_html_to_pdf(html_file, output_file, page):
+                if convert_html_to_pdf(html_file, output_file, page, footer_function):
                     print(f"Successfully created: {output_file}")
                     success_count += 1
                 
@@ -95,7 +182,25 @@ def process_html_files(html_files, output_dir=None):
     return True
 
 def parse_arguments():
+    """
+    Parse command line arguments.
+    
+    Returns:
+        tuple: (html_files, output_dir, footer_code_file)
+    """
     args = sys.argv[1:]
+    footer_code_file = None
+    
+    # Look for --footer-code parameter
+    i = 0
+    while i < len(args):
+        if args[i] == '--footer-code' and i + 1 < len(args):
+            footer_code_file = args[i + 1]
+            # Remove both the flag and its value
+            args.pop(i)
+            args.pop(i)
+            break
+        i += 1
     
     # Check if last argument is a directory (potential output dir)
     potential_output = Path(args[-1]) if len(args) > 1 else None
@@ -132,9 +237,10 @@ def parse_arguments():
         else:
             print(f"Skipping invalid argument '{arg}'")
     
-    return html_files, output_dir
+    return html_files, output_dir, footer_code_file
 
 def check_dependencies():
+    """Check if required dependencies are installed."""
     # Check if chromium is installed
     try:
         with sync_playwright() as p:
@@ -147,22 +253,38 @@ def check_dependencies():
     
     return True
 
-def main():
-    if len(sys.argv) < 2 or '--help' in sys.argv or '-h' in sys.argv or '-?' in sys.argv:
-        help_text = """
-html2pdf: Converts HTML files to PDF
+def print_help():
+    """Print help text and return success code."""
+    help_text = """
+html2pdf: Converts HTML files to PDF with optional dynamic footer support
 
 Usage:
     html2pdf <input-directory>                     # Convert all HTML files in directory
     html2pdf <input-directory> <output-directory>  # Convert all, output to specific dir
     html2pdf file1.html file2.html                 # Convert specific files to same dirs
     html2pdf file1.html file2.html <output-dir>    # Convert specific files to output dir
+    
+    # With custom footer generation:
+    html2pdf --footer-code footer.py <input-directory>
+    html2pdf --footer-code footer.py file.html <output-dir>
 
 Examples:
     html2pdf ./html-dir
     html2pdf ./html-dir ./pdfs
     html2pdf file1.html file2.html
     html2pdf file1.html file2.html ./output/
+    html2pdf --footer-code spell-footer.py ./spell-sheets ./pdfs
+
+Footer Code:
+    The --footer-code parameter accepts a Python file that contains a generate_footer(page)
+    function. This function receives a Playwright page object and should return either:
+    - A string containing HTML for the footer template
+    - None to generate PDF without footer
+    
+    Example footer code file:
+        def generate_footer(page):
+            title = page.title()
+            return f'<div style="text-align: center;">{title} - Page <span class="pageNumber"></span></div>'
 
 html2pdf uses the Playwright module and also requires chromium to be installed for
 playwright.
@@ -170,22 +292,35 @@ playwright.
 If you're using WSL on Windows, you'll also want to install ttf-mscorefonts-installer
 for accurate font rendering.
 """
-        print(help_text.strip())
-        return 0
+    print(help_text.strip())
+    return 0
+
+def main():
+    # Check for help flags first
+    if '--help' in sys.argv or '-h' in sys.argv or '-?' in sys.argv:
+        return print_help()
     
     # Check dependencies before processing
     if not check_dependencies():
         return 1
     
     # Parse arguments and get files to process
-    html_files, output_dir = parse_arguments()
+    html_files, output_dir, footer_code_file = parse_arguments()
     
+    # Show help if no HTML files were found and no arguments given
     if not html_files:
-#        print("No HTML files found to process.")
+        if len(sys.argv) < 2:
+            return print_help()
+        # else: errors already printed by parse_arguments()
         return 1
     
+    # Load footer function if specified
+    footer_function = load_footer_function(footer_code_file)
+    if footer_code_file and not footer_function:
+        print("Warning: Proceeding without footer generation")
+    
     # Process files
-    if process_html_files(html_files, output_dir):
+    if process_html_files(html_files, output_dir, footer_function):
         return 0
     else:
         return 1

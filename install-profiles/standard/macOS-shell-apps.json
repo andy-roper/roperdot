@@ -306,6 +306,13 @@
 		"desc": "Tool for changing to directories based on recent usage and frequency of use"
 	},
 	{
+		"app": "pdfinfo",
+		"binary": "pdfinfo",
+		"package": "poppler",
+		"list_prerequisite": "brew",
+		"desc": "PDF utilities including pdfinfo for inspecting PDF metadata"
+	},
+	{
 		"app": "Midnight Commander",
 		"binary": "mc",
 		"package": "midnight-commander",

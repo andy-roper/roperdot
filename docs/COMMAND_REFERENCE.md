@@ -215,6 +215,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`h2d`** - Convert hexadecimal number to decimal
 - **`html2pdf`** - Converts HTML files to PDF
 - **`m`** - Evaluate a mathematical expression
+- **`pdfcount`** - Counts the number of pages in a set of PDFs
 - **`png2text`** - Converts a PNG image to text
 - **`random`** - Echo a random value between a lower and upper bound
 - **`roll`** - Evaluate a dice notation expression

@@ -21,6 +21,7 @@ roperdot/
 ├── bin/                        # Portable scripts (Perl, Python, shell)
 ├── bin-bash/                   # Bash-specific scripts (created during install)
 ├── bin-zsh/                    # Zsh-specific scripts (created during install)
+├── examples/                   # Example scripts
 ├── extra-bin/                  # Additional utilities
 ├── os-bin/                     # OS-specific scripts
 ├── source-scripts/             # Utility scripts (sourced in other scripts)
