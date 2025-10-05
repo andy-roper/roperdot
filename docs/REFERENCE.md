@@ -75,7 +75,6 @@ roperdot makes use of a number of excellent third party terminal applications.
 - **[`FFmpeg`](https://ffmpeg.org/)** - Video/audio processing
 - **[`gifsicle`](https://www.lcdf.org/gifsicle/)** - GIF manipulation
 - **[`ImageMagick`](https://imagemagick.org/)** - Image editing suite
-- **`pdfinfo`** - PDF metadata inspection (part of [poppler-utils](https://poppler.freedesktop.org/))
 - **[`pngpaste`](https://github.com/jcsalterego/pngpaste)** - Pastes PNG into files on MacOS
 - **[`tesseract`](https://github.com/tesseract-ocr/tesseract)** - OCR engine library
 
@@ -99,14 +98,15 @@ roperdot makes use of a number of excellent third party terminal applications.
 ### Python Libraries
 
 - **[`BeautifulSoup4`](https://www.crummy.com/software/BeautifulSoup/)** - Python library for HTML/XML parsing
-- **[`colored`](https://pypi.org/project/colored/)** - Python module for adding color and formatting to terminal output
+- **[`colored`](https://pypi.org/project/colored/)** - Python library for adding color and formatting to terminal output
 - **[`cryptography`](https://cryptography.io/)** - Python cryptography module
 - **[`jsoncomment`](https://pypi.org/project/jsoncomment/)** - Python JSON parser wrapper for parsing files with nonstandard formatting
 - **[`playwright`](https://playwright.dev/python/)** - Python library for browser automation
-- **[`py-rolldice`](https://pypi.org/project/py-rolldice/)** - Python module for evaluating dice notation
-- **[`sqlparse`](https://pypi.org/project/sqlparse/)** - Python module for parsing and formatting SQL
-- **[`tabulate`](https://pypi.org/project/tabulate/)** - Python module for pretty-printing tabular data
-- **[`xmltodict`](https://pypi.org/project/xmltodict/)** - Python module for converting XML to dictionary
+- **[`py-rolldice`](https://pypi.org/project/py-rolldice/)** - Python library for evaluating dice notation
+- **[`pypdf`](https://pypi.org/project/pypdf/)** - Python library for PDF manipulation
+- **[`sqlparse`](https://pypi.org/project/sqlparse/)** - Python library for parsing and formatting SQL
+- **[`tabulate`](https://pypi.org/project/tabulate/)** - Python library for pretty-printing tabular data
+- **[`xmltodict`](https://pypi.org/project/xmltodict/)** - Python library for converting XML to dictionary
 
 ### Python-Based Tools
 
@@ -174,14 +174,17 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
 ## To Do/Future Plans
 
 - Test and retool Ubuntu/Mint/WSL (Ubuntu) installs if necessary after the recent MacOS-centric retooling
+
 - Update other OSes’ shell-apps JSON files similarly to how the MacOS one was updated
   - Remove html5print and xml2json
-  - Add cssbeautifier, beautifulsoup4 and xmltodict Python libraries
-  - Add the poppler-utils package
+  - Add cssbeautifier, beautifulsoup4, pypdf and xmltodict Python libraries
+  
 - Update other OSes' installed shell apps
   - Add awscli, ffmpeg, gifsicle (if available)
+  
 - Update other OSes’ installed GUI apps
   - Add Brave browser; disable WebStorm
+  
 - Add installation of Playwright Python library to other OSes' shell-apps JSON files
 
 - Add install of Windows fonts in WSL:
@@ -200,6 +203,9 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
 
 - Consider adding a space visualizer install to Mint and Ubuntu GUI apps, either QDirStat or Baobab
 
+- Figure out how to eliminate warning from mergepdfs and pdfcount scripts:
+  WARNING: (<class 'ply.yacc.VersionError'>, VersionError('yacc table file version is out of date'), <traceback object at 0x7fbbd69a0b00>)
+
 - Add comment to install scripts that rely on a hardcoded version number/URL that I can grep on like:
 
   \# Hardcoded version reference: SQL Developer v23.1.1.345.2114, last updated on 9/23/2025
@@ -207,18 +213,23 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
   - Create a script named “list-hardcoded-installs” to do a recursive grep to list them
 
 - Finish implementing change scheme
+
 - Test upgrading to a later Python version (e.g. 3.13)
 
   - Need to ask user about switching to newer version instead of arbitrarily doing so
   - Will need to reinstall Python packages for scripts in bin to use it properly
   - Will need to update installs to add install/upgrade to latest python version
   - `brew install python` or `brew upgrade python`
+  
 - Revisit installing non-standard installation
 
   - Need to support a different/second install profile
   - Need to support installing a second profile after installing standard
+  
 - Integrate eza, a modern ls alternative: https://github.com/eza-community/eza
+
 - Integrate bat, a modern cat alternative: https://github.com/sharkdp/bat
+
 - Other apps to evaluate and possibly integrate:
 
   - [btop](https://github.com/aristocratos/btop): resource monitor
@@ -228,8 +239,11 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
   - [dust](https://github.com/bootandy/dust): more intuitive version of du
   - [httpie](https://github.com/httpie/cli): user-friendly HTTP client
   - [procs](https://github.com/dalance/procs): modern ps alternative
+  
 - Update VS Code configuration when switching scheme (colors only)
+
 - Update install for Oracle SQL Developer to support Windows and Linux
+
 - Institute use of print_important_message during after after install
 
   - Use while installing to print important messages and to accumulate them to re-print them at the end of the install

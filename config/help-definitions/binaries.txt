@@ -6,6 +6,7 @@ brew: Homebrew package manager for Linux (https://brew.sh/)
 css-beautify: Python script for beautifying CSS (https://pypi.org/project/cssbeautifier/)
 curl: Tool for transferring data from/to a server (https://curl.se/)
 diff-so-fancy: Formats and beautifies diff output (https://github.com/so-fancy/diff-so-fancy)
+dig: DNS lookup tool for querying domain records
 dos2unix: Utilities for converting files with DOS line breaks to Unix format and vice versa (https://dos2unix.sourceforge.io/)
 eject: (Mac) Ejects a disc
 entr: Utility for running arbitrary commands when files change (https://eradman.com/entrproject/)
@@ -22,7 +23,6 @@ git-lfs: Used to work with large files in Git repositories (https://git-lfs.gith
 git: Client for the Git distributed version control system (https://git-scm.com/)
 grc: Frontend that auto-selects color configs for common commands (https://github.com/garabik/grc)
 grcat: Colorizes text from stdin using regex-based configuration files (https://github.com/garabik/grc)
-html2pdf: Converts HTML files to PDF
 htop: More informative version of top (https://hisham.hm/htop/)
 java: Compiler and run-time environment for Java (https://openjdk.java.net/)
 jenv: Tool for managing the JAVA_HOME environment variable (https://www.jenv.be/)
@@ -39,19 +39,19 @@ netstat: Networking toolkit (e.g. ifconfig and netstat)
 node: JavaScript run-time environment that executes JavaScript code server-side (https://nodejs.org/)
 npm: Node package manager (https://www.npmjs.com/)
 npx: Runs a command from a local or remote npm package (https://docs.npmjs.com/cli/v8/commands/npx)
+nslookup: Queries DNS servers for domain name resolution
 nvim: Neovim, a modern Vim editor (https://neovim.io/)
 nvm: Node version manager (https://github.com/nvm-sh/nvm)
 openvpn: VPN client (https://openvpn.net/)
-p7zip: Archive manager with support for 7z and many other formats (https://p7zip.sourceforge.net/)
+p7zip: Archive manager with support for 7z and many other compression formats (https://p7zip.sourceforge.net/)
 pbcopy: (Mac) Command-line interface for the clipboard
 pip3: Tool for installing Python 3 packages (https://pip.pypa.io/)
 pipx: Python application isolation (https://pipx.pypa.io/stable/)
 pngpaste: (Mac) Pastes PNG into files on MacOS (https://github.com/jcsalterego/pngpaste)
-pswin: (Windows) Lists Windows processes similarly to ps -ef
 pv: Utility for monitoring the progress of data through a pipeline (https://ivarch.com/programs/pv.shtml)
 pygmentize: Generic syntax highlighter for prettifying source code (https://pygments.org/)
 python3: Python language interpreter (https://www.python.org/)
-rar: RAR archive support (https://www.rarlab.com/)
+rar: RAR archive/compression tool (https://www.rarlab.com/)
 ruby: Compiler/interpreter for the Ruby programming language (https://www.ruby-lang.org/)
 shellcheck: Shell script linter (https://www.shellcheck.net/)
 speedtest-cli: Command-line interface for testing internet bandwidth with speedtest.net (https://github.com/sivel/speedtest-cli)

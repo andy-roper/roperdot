@@ -1,0 +1,135 @@
+#!/usr/bin/env python3
+"""
+Description: Combines PDFs into a single PDF
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+"""
+
+from pypdf import PdfReader, PdfWriter
+from pathlib import Path
+import sys
+import atexit
+
+def cleanup_ply_files():
+    """Clean up PLY cache files from current directory"""
+    for file in ['lextab.py', 'yacctab.py', 'parsetab.py', 'parser.out']:
+        try:
+            Path(file).unlink(missing_ok=True)
+        except:
+            pass
+
+# Register cleanup to run when script exits
+atexit.register(cleanup_ply_files)
+
+def help():
+	print('''
+mergepdfs: combine PDFs into a single PDF
+
+Usage:
+mergepdfs <output_pdf_name> <source_pdf_1> <source_pdf_2> [...]
+mergepdfs <output_pdf_name> <doc-list.txt>
+
+This script combines PDFs into an output PDF, and will adds blank pages as necessary to
+ensure each individual PDF's content begins on a new page.
+
+If a document list file is used, each named file will be included in the output PDF in the
+order its referenced.
+'''[1:-1])
+	quit()
+
+verbose = False
+
+def merge_pdfs_with_padding(pdf_files, output_file):
+    """Merge PDFs, ensuring each starts on an odd page (right side when printed duplex)"""
+    writer = PdfWriter()
+    
+    for pdf_file in pdf_files:
+        print(f"Adding: {pdf_file.name}")
+        reader = PdfReader(pdf_file)
+        num_pages = len(reader.pages)
+        
+        # Add all pages from this PDF
+        for page in reader.pages:
+            writer.add_page(page)
+        
+        # If odd number of pages, add a blank page
+        if num_pages % 2 == 1:
+            if verbose:
+                print(f"  → {num_pages} pages, adding blank page")
+            # Create blank page same size as last page
+            last_page = reader.pages[-1]
+            blank_page = writer.add_blank_page(
+                width=last_page.mediabox.width,
+                height=last_page.mediabox.height
+            )
+        else:
+            if verbose:
+                print(f"  → {num_pages} pages, no padding needed")
+    
+    print(f"\nWriting merged PDF: {output_file}")
+    with open(output_file, 'wb') as f:
+        writer.write(f)
+
+    if verbose:
+        print(f"Total pages in output: {len(writer.pages)}")
+
+def read_doc_list(list_file):
+    """Read PDF filenames from a text file, one per line"""
+    pdf_files = []
+    base_dir = list_file.parent
+    
+    with open(list_file, 'r') as f:
+        for line_num, line in enumerate(f, 1):
+            line = line.strip()
+            # Skip empty lines and comments
+            if not line or line.startswith('#'):
+                continue
+            
+            # Support both absolute and relative paths
+            pdf_path = Path(line)
+            if not pdf_path.is_absolute():
+                pdf_path = base_dir / pdf_path
+            
+            if not pdf_path.exists():
+                print(f"Warning: Line {line_num}: File not found: {pdf_path}")
+                print(f"  Skipping...")
+            else:
+                pdf_files.append(pdf_path)
+    
+    return pdf_files
+
+def main():
+    args = sys.argv[1:]
+    if len(args) < 2 or args[0] in ['--help', '-?', '-h']:
+        help()
+
+    output_file = sys.argv[1]
+    second_arg = Path(sys.argv[2])
+    
+    # Check if second argument is a text file (doc list mode)
+    if second_arg.suffix.lower() in ['.txt', '.list']:
+        print(f"Reading document list from: {second_arg}")
+        input_files = read_doc_list(second_arg)
+        
+        if not input_files:
+            print("Error: No valid PDF files found in document list")
+            sys.exit(1)
+            
+        print(f"Merging {len(input_files)} PDFs\n")
+    else:
+        # Direct PDF arguments mode
+        input_files = [Path(f) for f in sys.argv[2:]]
+        
+        # Verify all input files exist
+        missing = [f for f in input_files if not f.exists()]
+        if missing:
+            print("Error: These files don't exist:")
+            for f in missing:
+                print(f"  - {f}")
+            sys.exit(1)
+    
+    merge_pdfs_with_padding(input_files, output_file)
+
+if __name__ == '__main__':
+    main()

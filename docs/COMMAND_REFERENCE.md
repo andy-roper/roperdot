@@ -77,13 +77,14 @@ help <text>        # Find commands whose name/description matches the text
 - **`rd`** - Remove a directory (same as `rmdir`)
 - **`ren`** - Regex-based file renaming with pattern matching
 - **`rm` (enhanced)** - File removal defaults to interactive unless overridden with an option
-- **`rt`** - Recursive text replacement in files
+- **`rt`** - Replace text in files using regex patterns
 - **`rtr`** - Recursive text replacement with regex patterns
 
 ### File Utilities
 - **`abs-path`** - Echo the absolute path for a path including resolving "..." as "../.." in the path
 - **`chmox`** - `chmod u+x`
 - **`fs`** - Display file status for a file using stat
+- **`mergepdfs`** - Merge multiple PDFs into a single PDF
 - **`modtime`** - Print the modified time for a file in a format that's compatible with touch
 - **`rmdsstore` (Mac)** - Remove *.DS_Store under the current directory
 - **`pwdwin` (Windows)** - Show the present working directory as a Windows path

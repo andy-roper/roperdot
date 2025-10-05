@@ -68,7 +68,7 @@ roperdot-loader          # defines ROPERDOT env vars and loads roperdot-bootstra
 
 ## Starship Prompt
 
-As I migrated from powershell10k to [Starship](https://starship.rs/), I discovered several of the features I used previously weren't directly supported in their prompt.
+As I migrated from [powerlevel10k](https://github.com/romkatv/powerlevel10k) to [Starship](https://starship.rs/), I discovered several of the features I used previously weren't directly supported in the Starship prompt.
 
 I wrote functions that do that work instead by setting environment variables that are used in the prompt. See set_git_info, set_status_info and set_dir_stack_info in roperdot-bootstrap.
 

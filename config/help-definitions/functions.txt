@@ -1,4 +1,3 @@
-abs-path: Echoes the absolute path for a path including resolving "..." as "../.." in the path
 bindiff: Compares files in binary/hex mode
 camera_used_by: (Mac) Checks to see which apps are using the camera
 cdclip: Changes to the directory contained in the clipboard

@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+"""
+Description: Counts physical pages for printing PDFs
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+"""
+import warnings
+import sys
+import os
+import atexit
+from pathlib import Path
+from pypdf import PdfReader
+import argparse
+
+# Suppress ply warnings
+warnings.filterwarnings("ignore")
+
+def cleanup_ply_files():
+    """Clean up PLY cache files from current directory"""
+    for file in ['lextab.py', 'yacctab.py', 'parsetab.py', 'parser.out']:
+        try:
+            Path(file).unlink(missing_ok=True)
+        except:
+            pass
+
+# Register cleanup to run when script exits
+atexit.register(cleanup_ply_files)
+
+def show_help():
+    help_text = """
+pdfcount: count physical pages for printing PDFs
+Usage: pdfcount [--single] [directory]
+
+pdfcount will count the number of pages in PDFs either in the specified directory
+or the current directory if not directory is specified. By default it will provide
+a total of the number of physical pages required to print them assuming they'll be
+printed double-sided.
+
+Use of the --single option will provide a similar count but for single-sided
+printing.
+"""
+    print(help_text.strip())
+    return 0
+
+def count_pdf_pages(pdf_path):
+    try:
+        reader = PdfReader(pdf_path)
+        return len(reader.pages)
+    except Exception as e:
+        print(f"Error reading {pdf_path}: {e}", file=sys.stderr)
+        return 0
+
+def calculate_physical_sheets(pages, single_sided=False):
+    if single_sided:
+        return pages
+    else:
+        return (pages + 1) // 2
+
+def pluralize(count, word):
+    return f"{count} {word}{'s' if count != 1 else ''}"
+
+def main():
+    if len(sys.argv) > 1 and sys.argv[1] in ['-?', '-h', '--help']:
+        return show_help()
+    
+    parser = argparse.ArgumentParser(
+        description="Count physical pages for printing PDFs",
+        add_help=False
+    )
+    parser.add_argument('--single', action='store_true',
+                        help='Calculate for single-sided printing')
+    parser.add_argument('directory', nargs='?', default='.',
+                        help='Directory to scan (default: current directory)')
+    
+    args = parser.parse_args()
+    
+    directory = Path(args.directory)
+    if not directory.exists():
+        print(f"Directory not found: {args.directory}", file=sys.stderr)
+        sys.exit(1)
+    
+    pdf_files = list(directory.glob("*.pdf"))
+    if not pdf_files:
+        print(f"No PDF files found in {directory}")
+        sys.exit(1)
+    
+    total_physical = 0
+    
+    for pdf_file in sorted(pdf_files):
+        pages = count_pdf_pages(pdf_file)
+        if pages > 0:
+            physical = calculate_physical_sheets(pages, args.single)
+            total_physical += physical
+            
+            print(f"{pdf_file}: {pluralize(pages, 'page')} = {pluralize(physical, 'physical sheet')}")
+    
+    print("---")
+    print(f"Total physical sheets: {total_physical}")
+
+if __name__ == "__main__":
+    main()

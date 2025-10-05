@@ -252,6 +252,13 @@
 		"desc": "Python library for browser automation"
 	},
 	{
+		"app": "pypdf",
+		"presence_command": "$python_bin -c 'import pypdf' >/dev/null 2>&1",
+		"install_command": "install-python-package pypdf",
+		"sudo_not_required": true,
+		"desc": "Python library for PDF manipulation"
+	},
+	{
 		"app": "generic colouriser",
 		"binary": "grc",
 		"package": "grc",
@@ -304,13 +311,6 @@
 		"binary": "_z",
 		"install_script": "install-z",
 		"desc": "Tool for changing to directories based on recent usage and frequency of use"
-	},
-	{
-		"app": "pdfinfo",
-		"binary": "pdfinfo",
-		"package": "poppler",
-		"list_prerequisite": "brew",
-		"desc": "PDF utilities including pdfinfo for inspecting PDF metadata"
 	},
 	{
 		"app": "Midnight Commander",
