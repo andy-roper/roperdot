@@ -208,6 +208,10 @@ help <text>        # Find commands whose name/description matches the text
 - **`sha256`** - Generate a SHA256 checksum for text data
 - **`sha256bin`** - Generate a SHA256 checksum for binary data
 
+### AWS
+
+- **`check-aws-usage`** - Displays usage information for AWS resources
+
 ## Additional Utilities
 
 ### Calculation/Conversion

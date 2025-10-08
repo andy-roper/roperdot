@@ -9,49 +9,82 @@ help () {
 clip2png: save an image in the clipboard as a PNG file
 Usage: clip2png [--markdown] <output_file>
        clip2png [--markdown] --next <base_name>
+       clip2png [--markdown] --next --base-name-file <file> 
 
 Options:
---markdown          Store markdown for the image in the clipboard
---next <base_name>  Create the next available numbered file (e.g., "Saved 03.png")
-                    Supports 2-digit indexes (01-99)
+--base-name-file <file>  File which contains the base name to use
+--markdown               Store markdown for the image in the clipboard
+--next [base_name]       Create the next available numbered file (e.g., "Saved 03.png")
+                         Supports 2-digit indexes (01-99)
+                         base_name is required if --base-name-file is not used
+
+If the clip2png_dir environment variable is defined, that will be used as the
+destination directory for creating images unless the output file contains a path.
+Otherwise, the current directory will be used.
+
+If the markdown option is used and clip2png_markdown_dir is defined, that will
+be used as the directory in the src attribute in the returned markdown.
+Otherwise, the directory used will be ./images.
 EOT
 	exit 0
 }
 
 [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]] && help
-while [[ "$1" =~ ^-- ]]; do
-	if [[ "$1" == "--markdown" ]]; then
-		storing_markdown=true
-		shift
-	elif [[ "$1" == "--next" ]]; then
-		shift
-		if [[ $# -eq 0 ]]; then
-			echo "Error: --next option requires a base name" >&2
-			exit 1
-		fi
-		
-		base_name="$1"
-		
-		for i in {01..99}; do
-			candidate="${base_name} ${i}.png"
-			if [[ ! -f "$candidate" ]]; then
-				png_path="$candidate"
-				break
-			fi
-		done
-		
-		if [[ -z "$png_path" ]]; then
-			echo "Error: All numbered files from ${base_name} 01.png to ${base_name} 99.png already exist" >&2
-			exit 1
+
+while [[ $# -ne 0 ]]; do
+	if [[ "$1" =~ ^-- ]]; then
+		if [[ "$1" == "--markdown" ]]; then
+			storing_markdown=true
+		elif [[ "$1" == "--next" ]]; then
+			processing_next=true
+		elif [[ "$1" == "--base-name-file" ]]; then
+			using_base_name_file=true
+		else
+			help
 		fi
 	else
-		shift
+		if [[ -n "$using_base_name_file" ]]; then
+			if [[ ! -f "$1" ]]; then
+				echo "Error: file specified with --base-name-file not found"
+				exit 1
+			fi
+			value="$(cat "$1")"
+		else
+			value="$1"
+		fi
 	fi
+	shift
 done
 
-if [[ -z "$png_path" ]]; then
-	png_path="$1"
-	[[ -z "$png_path" ]] && help
+[[ -z "$value" || -d "$value" ]] && help
+
+path_prefix=
+if [[ ! "$value" =~ / && -n "$clip2png_dir" ]]; then
+	if [[ ! -d "$clip2png_dir" ]]; then
+		echo "Error: destination directory $clip2png_dir not found"
+		exit 1
+	fi
+	path_prefix="$clip2png_dir"
+	[[ "$path_prefix" =~ /$ ]] || path_prefix="${path_prefix}/"
+fi
+
+if [[ -n "$processing_next" ]]; then
+	base_name="${path_prefix}$value"
+	
+	for i in {01..99}; do
+		candidate="${base_name} ${i}.png"
+		if [[ ! -f "$candidate" ]]; then
+			png_path="$candidate"
+			break
+		fi
+	done
+	
+	if [[ -z "$png_path" ]]; then
+		echo "Error: All numbered files from ${base_name} 01.png to ${base_name} 99.png already exist" >&2
+		exit 1
+	fi
+else
+	png_path="${path_prefix}$value"
 fi
 
 [[ "$png_path" == *".png" ]] || png_path="${png_path}.png"
@@ -86,7 +119,7 @@ else
 	fi
 fi
 
-if [[ -n "storing_markdown" ]]; then
+if [[ -n "$storing_markdown" ]]; then
 	if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
 		clip_app=clip.exe
 	elif [[ "$ROPERDOT_DESKTOP_ENV" = "mac" ]]; then
@@ -94,6 +127,9 @@ if [[ -n "storing_markdown" ]]; then
 	else
 		clip_app="xclip -selection clipboard"
 	fi
-	name="${png_path%.*}"
-	echo "<img src=\"./images/${png_path}\" alt=\"${name}\" align=\"left\"/>" | $clip_app
+	filename=$(basename "$png_path")
+	name="${filename%.*}"
+	dir="$clip2png_markdown_dir"
+	[[ -n "$dir" ]] || dir="./images"
+	echo "<img src=\"${dir}/${filename}\" alt=\"${name}\" align=\"left\"/>" | $clip_app
 fi
