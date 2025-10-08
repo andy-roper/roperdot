@@ -259,9 +259,9 @@ if [[ "$ROPERDOT_CUSTOM_CP" = true ]]; then
 		fi
 		trap unset_dot_glob EXIT
 		if [[ -n "$use_cwd" ]]; then
-			eval "\cp ${switches[@]} $arg_str ."
+			eval "\cp ${switches[@]} -- $arg_str ."
 		else
-			eval "\cp ${switches[@]} $arg_str"
+			eval "\cp ${switches[@]} -- $arg_str"
 		fi
 	}
 fi
@@ -324,9 +324,9 @@ if [[ "$ROPERDOT_CUSTOM_MV" = true ]]; then
 		fi
 		trap unset_dot_glob EXIT
 		if [[ -n "$use_cwd" ]]; then
-			eval "\mv ${switches[@]} $arg_str ."
+			eval "\mv ${switches[@]} -- $arg_str ."
 		else
-			eval "\mv ${switches[@]} $arg_str"
+			eval "\mv ${switches[@]} -- $arg_str"
 		fi
 	}
 fi
@@ -371,7 +371,7 @@ if [[ "$ROPERDOT_CUSTOM_RM" = true ]]; then
 			setopt globdots
 		fi
 		trap unset_dot_glob EXIT
-		eval "\rm ${switches[@]} $arg_str"
+		eval "\rm ${switches[@]} -- $arg_str"
 	}
 fi
 
@@ -431,7 +431,7 @@ lsd () {
 }
 
 # List all files, long format, colorized, permissions in octal
-la () {
+function la () {
 	if [[ "$ROPERDOT_OS_ENV" = "darwin" ]] && command -v gls >/dev/null 2>&1; then
 		# Use gls (GNU ls) - gets ISO date format
 		__ls -l --group-directories-first --time-style=long-iso "$@" | awk '

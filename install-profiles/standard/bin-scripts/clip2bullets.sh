@@ -34,6 +34,8 @@ if [[ -f "$temp_img" && -s "$temp_img" ]]; then
 		sed 's/^. /- /' | \
 		# combine consecutive lines for the same bullet point
 		sed ':a; /^- /{N; /\n[^-]/{ s/\n/ /; ba}}' | \
+		# escape asterisks
+		sed 's/\*/\\*/g' | \
 		# replace mdash and ndash
 		sed 's/—/\&mdash;/g; s/–/\&ndash;/g' | \
 		# replace pipe with 1
@@ -42,6 +44,8 @@ if [[ -f "$temp_img" && -s "$temp_img" ]]; then
 		sed ':loop; s/\([0-9]\)O/\10/g; t loop' | \
 		# replace I/0 with I/O
 		sed 's/I\/0/I\/O/g' | \
+		# replace $3 with S3
+		sed 's/\$3/S3/g' | \
 		# fix MiB and GiB
 		sed 's/mib/MiB/gI; s/gib/GiB/gI' | \
 		# replace 0 followed by letters with O
