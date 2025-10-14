@@ -627,9 +627,10 @@ EOT
 				execute_command () { sudo apt-get -y update; }
 				execute_with_retry "Update of apt-get failed."
 				
-				echo "Installing libgconf-2-4"
-				execute_command () { sudo apt-get -y install gconf2-common libgconf-2-4; }
-				execute_with_retry "Install of libgconf-2-4 failed."
+				# Commented on 10/14/2025 after seeing install errors in WSL/Ubuntu
+				# echo "Installing libgconf-2-4"
+				# execute_command () { sudo apt-get -y install gconf2-common libgconf-2-4; }
+				# execute_with_retry "Install of libgconf-2-4 failed."
 				
 				echo
 				if ask_yn_n "build-essential is required for building the installs of several applications; install it" y; then
