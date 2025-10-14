@@ -116,7 +116,7 @@ else
 fi
 
 if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
-	ROPERDOT_DESKTOP_VERSION="$(wmic.exe os get caption | tail -2 | head -1 | sed -E 's/^Microsoft Windows ([[:digit:]]+).*/\1/')"
+	ROPERDOT_DESKTOP_VERSION="$(/mnt/c/Windows/System32/wbem/wmic.exe os get caption | tail -2 | head -1 | sed -E 's/^Microsoft Windows ([[:digit:]]+).*/\1/')"
 fi
 
 export ROPERDOT_OS_TYPE ROPERDOT_OS_NAME ROPERDOT_OS_VERSION ROPERDOT_OS_ENV ROPERDOT_OS_CODENAME ROPERDOT_OS_FAMILY ROPERDOT_DESKTOP_ENV ROPERDOT_DESKTOP_VERSION ROPERDOT_KERNEL_ARCH ROPERDOT_WSL ROPERDOT_WSL_V1 HAS_ADMIN_RIGHTS
