@@ -15,7 +15,11 @@ echo -e "${warning_text}NOTE: you may need to press Enter twice when prompted by
 sudo mkdir -p /home/linuxbrew/.linuxbrew
 sudo chown -R $USER:$(id -gn) /home/linuxbrew/.linuxbrew
 if [[ -n "$accept_recommended" ]]; then
-	print-web-file https://raw.githubusercontent.com/Homebrew/install/master/install.sh | bash < /dev/null
+	echo "fnord install 1"
+	curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh | bash < /dev/null
+	# print-web-file https://raw.githubusercontent.com/Homebrew/install/master/install.sh | bash < /dev/null
 else
-	print-web-file https://raw.githubusercontent.com/Homebrew/install/master/install.sh | bash
+	echo "fnord install 2"
+	curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh | bash
+	# print-web-file https://raw.githubusercontent.com/Homebrew/install/master/install.sh | bash
 fi

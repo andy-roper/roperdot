@@ -338,8 +338,6 @@ main () {
 					fi
 					[[ -n "$show_start_times" ]] && echo "Start time: $(date +"%r")"
 
-					[[ -f ~/roperdot/bin-zsh/install-python-package ]] && echo "Script exists"
-
 					install_app || return
 					if [[ "$app" = "Linuxbrew" ]]; then
 						export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin"
