@@ -16,7 +16,7 @@ if [[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" = gnome ]]; then
 	sudo apt update
 	sudo apt install filezilla -y
 elif [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
-	choco install -y filezilla
+	choco install -y --ignore-pending-reboot filezilla
 
 	zip_file="${ROPERDOT_DIR}/install-profiles/personal/config-files/FileZilla.zip"
 	if [[ -f "$zip_file" ]]; then

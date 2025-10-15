@@ -9,7 +9,7 @@
 . "${ROPERDOT_DIR}/source-scripts/install-script-functions"
 
 if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
-	choco install -y vscode
+	choco install -y --ignore-pending-reboot vscode
 	. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
 	def_win_env_linux_path ProgramFiles
 	[[ -d "${ProgramFiles}/Microsoft VS Code" ]] || exit 0

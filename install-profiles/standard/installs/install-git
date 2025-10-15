@@ -7,7 +7,7 @@
 
 . "${ROPERDOT_DIR}/source-scripts/install-script-functions"
 
-choco install -y git
+choco install -y --ignore-pending-reboot git
 if [[ ! -f /usr/bin/git ]]; then
 	if [[ -f "${rd_program_files}/Git" ]]; then
 		ln -s "${rd_program_files}/Git/bin/git.exe" /usr/bin/git

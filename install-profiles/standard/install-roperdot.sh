@@ -329,6 +329,31 @@ if [[ -z "$skip_to_installs" ]]; then
 		fi
 	fi
 
+	locale_needs_setup=
+	if [[ "$ROPERDOT_OS_FAMILY" == "debian" ]]; then
+		if ! dpkg -l locales &>/dev/null; then
+		    locale_needs_setup=true
+		elif ! locale -a 2>/dev/null | grep -q "en_US.UTF-8"; then
+		    # Package exists but locale not generated
+		    locale_needs_setup=true
+		fi
+	fi
+
+	if [[ -n "$locale_needs_setup" ]]; then
+		if [[ -n "$has_sudo" ]]; then
+		    if ask_yn_y "Set up en_US.UTF-8 as the default locale?" y; then
+		    	echo "Installing and configuring locale..."
+		        sudo apt install locales
+		        sudo locale-gen en_US.UTF-8
+		        sudo update-locale LANG=en_US.UTF-8
+		        echo "Locale setup complete. You may need to restart your shell."
+		    fi
+		else
+	        echo "Skipping locale setup due to lack of sudo access."
+    	    echo "To set it up manually: sudo apt install locales && sudo locale-gen en_US.UTF-8"
+		fi
+	fi
+
 	case $ROPERDOT_OS_FAMILY in
 		darwin)
 			command -v brew > /dev/null 2>&1 && export PACKAGE_MANAGER=brew ;;

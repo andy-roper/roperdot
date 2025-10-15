@@ -16,7 +16,7 @@ if [[ "$ROPERDOT_OS_ENV" = darwin ]]; then
 	fi
 	sublime_text_dir="$HOME/Library/Application Support/Sublime Text 3"
 elif [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
-	choco install -y sublimetext3 || exit $?
+	choco install -y --ignore-pending-reboot sublimetext3 || exit $?
 	source "${ROPERDOT_DIR}/source-scripts/win-env-functions"
 	sublime_text_dir="$(win_env_linux_path APPDATA)/Sublime Text 3"
 	[[ "$(desktop_shortcut_exists "Sublime Text 3")" ]] || create-windows-shortcut "Sublime Text 3" "%PROGRAMFILES%\Sublime Text 3\sublime_text.exe"

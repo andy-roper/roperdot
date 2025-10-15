@@ -6,7 +6,7 @@
 #
 
 if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
-	choco install -y virtualbox
+	choco install -y --ignore-pending-reboot virtualbox
 
 	zip_file="${ROPERDOT_DIR}/install-profiles/personal/config-files/VirtualBox.zip"
 	if [[ -f "$zip_file" ]]; then
