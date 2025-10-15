@@ -187,7 +187,6 @@
 	{
 		"app": "jsoncomment",
 		"presence_command": "$python_bin -c 'import jsoncomment' >/dev/null 2>&1",
-		"install_script_OLD": "install-jsoncomment",
 		"install_command": "install-python-package jsoncomment",
 		"sudo_not_required": true,
 		"desc": "Python script for wrapping JSON parsing"
@@ -237,7 +236,7 @@
 	{
 		"app": "colored",
 		"presence_command": "$python_bin -c 'import colored' >/dev/null 2>&1",
-		"install_script": "install-colored",
+		"install_command": "install-python-package colored",
 		"sudo_not_required": true,
 		"desc": "Python module for color and formatting in terminals"
 	},
@@ -251,7 +250,7 @@
 	{
 		"app": "html5-print",
 		"presence_command": "$python_bin -c 'import html5print' >/dev/null 2>&1",
-		"install_script": "install-html5-print",
+		"install_command": "install-python-package html5print",
 		"sudo_not_required": true,
 		"desc": "Python script for beautifying HTML, CSS and JavaScript"
 	},

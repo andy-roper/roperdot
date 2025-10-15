@@ -17,7 +17,7 @@ EOT
 	exit 0
 fi
 
-DEBUGGING=true
+# DEBUGGING=true
 . "${ROPERDOT_DIR}/source-scripts/debug"
 debug "install-python-package start"
 
