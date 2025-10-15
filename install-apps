@@ -218,7 +218,7 @@ main () {
 	    return 0  # Install the app
 	}
 	
-	install_vars=(app app_dir app_name binary bundle_name desc disabled disable_null_stdin full_app_path include_condition install_command install_prerequisite install_script install_options list_prerequisite package package_manager personal presence_command shortcut_name shortcut_path skip sudo_not_required groups exclusionGroups disabledByDefault)
+	install_vars=(app app_dir app_name binary bundle_name desc disabled disable_null_stdin full_app_path include_condition install_command install_prerequisite install_script install_options list_prerequisite package package_manager package_manager_options personal presence_command shortcut_name shortcut_path skip sudo_not_required groups exclusionGroups disabledByDefault)
 
 	install_shell_apps () {
 	    local app_file="$1" default_installer="$2" have_default_installer install_list=() install_desc_list=() app_count
@@ -440,12 +440,12 @@ main () {
 						ubuntu|mint|debian)
 							if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
 								# WSL
-								install_func() { choco.exe install -y "$package"; }
+								install_func() { choco.exe install -y $package_manager_options "$package"; }
 							else
 								if [[ "$package_manager" = apt || "$package_manager" = "apt-get" ]]; then
-									install_func() { sudo apt install "$package" -y; }
+									install_func() { sudo apt install $package_manager_options $package" -y; }
 								elif [[ "$package_manager" = snap ]]; then
-									install_func() { sudo snap install "$package"; }
+									install_func() { sudo snap install $package_manager_options "$package"; }
 								fi
 							fi
 							;;

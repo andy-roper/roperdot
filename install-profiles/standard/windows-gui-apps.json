@@ -4,6 +4,7 @@
 		"package": "googlechrome",
 		"subdir": "Google/Chrome",
 		"package_manager": "choco",
+		"package_manager_options": "--ignore_checksums"
 		"desc": "Web browser"
 	},
 	{
