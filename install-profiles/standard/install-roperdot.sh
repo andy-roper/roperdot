@@ -30,6 +30,7 @@ if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
 	def_win_env_linux_path LOCALAPPDATA app_local_path
 	def_win_env_linux_path PROGRAMFILES program_files_path
 	def_win_env_linux_path "PROGRAMFILES(X86)" program_files_86_path
+	def_win_env_linux_path USERPROFILE user_profile
 fi
 
 export ROPERDOT_PROFILES=standard profiles=standard
@@ -663,8 +664,6 @@ EOT
 	fi
 
 	debug "Font check: ROPERDOT_DESKTOP_ENV: $ROPERDOT_DESKTOP_ENV"
-	echo "fnord: LOCALAPPDATA: $LOCALAPPDATA"
-	echo "fnord: USERPROFILE: $USERPROFILE"
 	save_resume_point 6
 	if [[ -z "$resume_step" || "$resume_step" -le 6 ]]; then
 		if [[ -n "$ROPERDOT_DESKTOP_ENV" ]]; then
