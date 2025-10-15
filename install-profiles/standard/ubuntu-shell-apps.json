@@ -187,7 +187,8 @@
 	{
 		"app": "jsoncomment",
 		"presence_command": "$python_bin -c 'import jsoncomment' >/dev/null 2>&1",
-		"install_script": "install-jsoncomment",
+		"install_script_OLD": "install-jsoncomment",
+		"install_command": "install-python-package jsoncomment",
 		"sudo_not_required": true,
 		"desc": "Python script for wrapping JSON parsing"
 	},
