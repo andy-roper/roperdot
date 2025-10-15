@@ -72,13 +72,24 @@ get_font_dir() {
     case "$ROPERDOT_DESKTOP_ENV" in
         "windows")
             # Always use per-user font directory (no admin required)
+#            if [[ -n "$LOCALAPPDATA" ]]; then
+#                echo "$LOCALAPPDATA/Microsoft/Windows/Fonts"
+#            elif [[ -n "$USERPROFILE" ]]; then
+#                echo "$USERPROFILE/AppData/Local/Microsoft/Windows/Fonts"
+#            else
+#                echo "$HOME/AppData/Local/Microsoft/Windows/Fonts"
+#            fi
+            # Use /mnt/c path so it maps to actual Windows filesystem
             if [[ -n "$LOCALAPPDATA" ]]; then
-                echo "$LOCALAPPDATA/Microsoft/Windows/Fonts"
+                # Convert Windows path to WSL /mnt/c path
+                local win_path="${LOCALAPPDATA//\\//}"
+                echo "/mnt/c/Users/$(whoami)/AppData/Local/Microsoft/Windows/Fonts"
             elif [[ -n "$USERPROFILE" ]]; then
-                echo "$USERPROFILE/AppData/Local/Microsoft/Windows/Fonts"
+                echo "/mnt/c/Users/$(whoami)/AppData/Local/Microsoft/Windows/Fonts"
             else
-                echo "$HOME/AppData/Local/Microsoft/Windows/Fonts"
+                echo "/mnt/c/Users/$(whoami)/AppData/Local/Microsoft/Windows/Fonts"
             fi
+            ;;
             ;;
         "mac")
             echo "$HOME/Library/Fonts"

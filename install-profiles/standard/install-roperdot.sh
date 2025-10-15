@@ -663,6 +663,8 @@ EOT
 	fi
 
 	debug "Font check: ROPERDOT_DESKTOP_ENV: $ROPERDOT_DESKTOP_ENV"
+	echo "fnord: LOCALAPPDATA: $LOCALAPPDATA"
+	echo "fnord: USERPROFILE: $USERPROFILE"
 	save_resume_point 6
 	if [[ -z "$resume_step" || "$resume_step" -le 6 ]]; then
 		if [[ -n "$ROPERDOT_DESKTOP_ENV" ]]; then
