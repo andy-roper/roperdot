@@ -4,6 +4,19 @@ command -v choco.exe >/dev/null 2>&1 && choco () { choco.exe $@; }
 command -v unpack >/dev/null 2>&1 || . "${ROPERDOT_DIR}/source-scripts/unpack"
 command -v nice_copy >/dev/null 2>&1 || . "${ROPERDOT_DIR}/source-scripts/nice-copy"
 
+install_app_from_git () {
+	nice_copy z.sh "${ROPERDOT_DIR}/extra-bin"
+	dos2unix "${ROPERDOT_DIR}/extra-bin/z.sh"
+
+	if [[ -d /usr/local/share/man/man1 ]]; then
+		nice_copy z.1 /usr/local/share/man/man1
+	elif [[ -d /usr/share/man/man1 ]]; then
+		nice_copy z.1 /usr/share/man/man1
+	else
+		echo "Unable to copy z manpage to man directory."
+	fi
+}
+
 get_from_git () {
 	local return_code=0
 	local git_url=$1

@@ -277,8 +277,9 @@ elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
 	groups $USER | grep -q admin && export has_sudo=true
 else
 	echo Checking for sudo access...
-#		sudo -l | tee /dev/tty | grep "ALL) ALL" >/dev/null && export has_sudo=true
-	sudo -l | grep "ALL) ALL" >/dev/null && export has_sudo=true
+#	sudo -l | tee /dev/tty | grep "ALL) ALL" >/dev/null && export has_sudo=true
+#	sudo -l | grep "ALL) ALL" >/dev/null && export has_sudo=true
+	sudo -n true 2>/dev/null && export has_sudo=true
 fi
 
 if [[ -n "$resume_step" && "$resume_step" -gt 6 ]]; then
