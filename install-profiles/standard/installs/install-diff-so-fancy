@@ -8,6 +8,8 @@
 . "${ROPERDOT_DIR}/source-scripts/install-script-functions"
 . "${ROPERDOT_DIR}/source-scripts/nice-copy"
 
+echo "fnord has_sudo in install-diff-so-fancy: $has_sudo"
+read
 if [[ -n "$has_sudo" ]] && command -v brew >/dev/null 2>&1; then
 	brew install diff-so-fancy
 else
