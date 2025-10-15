@@ -37,4 +37,5 @@ if [[ -n "$pip_bin" ]]; then
     fi
 else
 	echo "Could not find a suitable installer; aborting installation of $package"
+	exit 1
 fi
