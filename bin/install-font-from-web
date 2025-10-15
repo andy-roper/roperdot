@@ -142,6 +142,9 @@ get_font_display_name() {
     display_name="${display_name// Medium/ Medium}"
     display_name="${display_name// SemiBold/ SemiBold}"
     display_name="${display_name// BoldItalic/ Bold Italic}"
+
+    # Remove multiple spaces
+    display_name=$(echo "$display_name" | sed 's/  */ /g')
     
     echo "$display_name"
 }
@@ -160,6 +163,10 @@ register_windows_fonts() {
         return 0
     fi
     
+    # Convert WSL font directory to Windows path for registry
+    local windows_font_dir
+    windows_font_dir=$(wslpath -w "$font_dir")
+    
     # Always use per-user registry
     local registry_hive="HKCU"
     local registry_path="SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts"
@@ -167,35 +174,23 @@ register_windows_fonts() {
     log_info "Registering fonts in Windows user registry..."
     local registered_count=0
     
-	for font_file in "$font_files_dir"/*.ttf "$font_files_dir"/*.otf; do
-	    if [[ -f "$font_file" ]]; then 
-	        local filename=$(basename "$font_file")
-	        log_info "Attempting to install: $filename"
-	        
-	        if cp "$font_file" "$font_dir/" 2>/dev/null; then
-	            log_info "Installed: $filename"
-	            installed_files+=("$font_file")
-	            ((installed_count++))
-	        else
-	            log_error "Failed to install: $filename"
-	            # Continue with other files instead of exiting
-	        fi
-	    fi
-	done
-
-	for font_file in "${installed_files[@]}"; do
-	    local filename=$(basename "$font_file")
-	    local display_name=$(get_font_display_name "$filename")
-	    local font_type="(TrueType)"
-	    
-	    # Add to Windows registry
-	    if reg.exe add "$registry_hive\\$registry_path" /v "$display_name $font_type" /t REG_SZ /d "$filename" /f >/dev/null 2>&1; then
-	        log_info "Registered: $display_name"
-	        ((registered_count++))
-	    else
-	        log_warning "Failed to register: $display_name"
-	    fi
-	done
+    # Register each font file (no need to copy again - already done in install_fonts)
+    for font_file in "${installed_files[@]}"; do
+        local filename=$(basename "$font_file")
+        local display_name=$(get_font_display_name "$filename")
+        local font_type="(TrueType)"
+        
+        # For user fonts, registry needs the full path
+        local registry_value="$windows_font_dir\\$filename"
+        
+        # Add to Windows registry
+        if reg.exe add "$registry_hive\\$registry_path" /v "$display_name $font_type" /t REG_SZ /d "$registry_value" /f >/dev/null 2>&1; then
+            log_info "Registered: $display_name"
+            ((registered_count++))
+        else
+            log_warning "Failed to register: $display_name"
+        fi
+    done
     
     if [[ $registered_count -gt 0 ]]; then
         log_success "Registered $registered_count fonts in user registry"
