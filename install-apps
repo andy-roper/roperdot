@@ -343,6 +343,9 @@ main () {
 					install_app || return
 					if [[ "$app" = "Linuxbrew" ]]; then
 						export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin"
+						hash -r
+						echo "fnord new PATH for Linuxbrew: $PATH"
+						read
 					elif [[ "$app" = "Python" && -z "$python_bin" ]]; then
 						if command -v python >/dev/null 2>&1; then
 							export python_bin=python
