@@ -14,6 +14,7 @@ install_app_from_git () {
 
 echo "fnord Checking for install-python-package"
 command -v install-python-package >/dev/null 2>&1 && echo "install-python-package is present"
+read
 
 if [[ -n "$has_sudo" ]] && command -v brew >/dev/null 2>&1; then
 	brew install diff-so-fancy
