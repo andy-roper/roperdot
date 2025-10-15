@@ -51,10 +51,26 @@ fi
 install_ext () {
 	if [[ -n "$regular_install" ]]; then
 		if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
-			# [[ -d ~/.vscode-server/"$1" ]] || code --install-extension "$1"
 			if [[ ! -d ~/.vscode-server/"$1" ]]; then
-				echo "Doing: code --install-extension \"$1\""
-				code --verbose --install-extension "$1"
+				if ! code --install-extension "$1"; then
+					echo "DNS issue encountered while installing VSCode extension"
+					echo "Backing up and updating /etc/wsl.conf and /etc/resolv.conf"
+					[[ -f /etc/wsl.conf.bak ]] || sudo cp /etc/wsl.conf /etc/wsl.conf.bak
+					[[ -f /etc/resolv.conf.bak ]] || sudo cp /etc/resolv.conf /etc/resolv.conf.bak
+					sudo cat << EOT > /etc/wsl.conf
+[network]
+generateResolvConf = false
+EOT
+
+					sudo cat << EOT > /etc/resolv.conf
+nameserver 8.8.8.8
+nameserver 1.1.1.1
+nameserver 10.255.255.254
+search mshome.net
+EOT
+					echo "DNS fix applied, retrying extension install..."
+					code --install-extension "$1"
+				fi
 			fi
 		else
 			[[ -d ~/.vscode/"$1" ]] || code --install-extension "$1"
