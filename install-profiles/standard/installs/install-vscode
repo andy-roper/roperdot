@@ -54,15 +54,20 @@ install_ext () {
 			if [[ ! -d ~/.vscode-server/"$1" ]]; then
 				if ! code --install-extension "$1"; then
 					echo "DNS issue encountered while installing VSCode extension"
-					echo "Backing up and updating /etc/wsl.conf and /etc/resolv.conf"
-					[[ -f /etc/wsl.conf.bak ]] || sudo cp /etc/wsl.conf /etc/wsl.conf.bak
-					[[ -f /etc/resolv.conf.bak ]] || sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-					sudo cat << EOT > /etc/wsl.conf
+					if [[ ! -f /etc/wsl.conf.bak ]]; then
+						echo "Backing up /etc/wsl.conf"
+						sudo cp /etc/wsl.conf /etc/wsl.conf.bak
+					fi
+					if [[ ! -f /etc/resolv.conf.bak ]]; then
+						echo "Backing up /etc/resolv.conf"
+						sudo cp /etc/resolv.conf /etc/resolv.conf.bak
+					fi
+					echo "Updating /etc/wsl.conf and /etc/resolv.conf"
+					sudo cat << EOT | sudo tee /etc/wsl.conf > /dev/null
 [network]
 generateResolvConf = false
 EOT
-
-					sudo cat << EOT > /etc/resolv.conf
+					sudo cat << EOT | sudo tee /etc/resolv.conf > /dev/null
 nameserver 8.8.8.8
 nameserver 1.1.1.1
 nameserver 10.255.255.254
