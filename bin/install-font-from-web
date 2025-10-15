@@ -69,8 +69,6 @@ is_font_installed() {
 }
 
 get_font_dir() {
-	echo "fnord: LOCALAPPDATA: $LOCALAPPDATA"
-	echo "fnord: USERPROFILE: $USERPROFILE"
     case "$ROPERDOT_DESKTOP_ENV" in
         "windows")
             # Always use per-user font directory (no admin required)
@@ -267,7 +265,9 @@ main() {
             exit 0
         fi
     fi
-    
+
+	echo "fnord: LOCALAPPDATA: $LOCALAPPDATA"
+	echo "fnord: USERPROFILE: $USERPROFILE"
     # Get font installation directory
     FONT_DIR=$(get_font_dir)
     log_info "Font directory: $FONT_DIR"
