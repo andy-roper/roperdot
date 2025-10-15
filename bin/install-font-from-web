@@ -182,6 +182,20 @@ register_windows_fonts() {
 	        fi
 	    fi
 	done
+
+	for font_file in "${installed_files[@]}"; do
+	    local filename=$(basename "$font_file")
+	    local display_name=$(get_font_display_name "$filename")
+	    local font_type="(TrueType)"
+	    
+	    # Add to Windows registry
+	    if reg.exe add "$registry_hive\\$registry_path" /v "$display_name $font_type" /t REG_SZ /d "$filename" /f >/dev/null 2>&1; then
+	        log_info "Registered: $display_name"
+	        ((registered_count++))
+	    else
+	        log_warning "Failed to register: $display_name"
+	    fi
+	done
     
     if [[ $registered_count -gt 0 ]]; then
         log_success "Registered $registered_count fonts in user registry"

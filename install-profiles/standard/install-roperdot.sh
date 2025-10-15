@@ -662,10 +662,10 @@ EOT
 		echo
 	fi
 
-	debug "Font check: ROPERDOT_OS_TYPE: $ROPERDOT_OS_TYPE"
+	debug "Font check: ROPERDOT_DESKTOP_ENV: $ROPERDOT_DESKTOP_ENV"
 	save_resume_point 6
 	if [[ -z "$resume_step" || "$resume_step" -le 6 ]]; then
-		if [[ -n "$ROPERDOT_OS_TYPE" ]]; then
+		if [[ -n "$ROPERDOT_DESKTOP_ENV" ]]; then
 			# Install Hack Nerd fonts
 			"${ROPERDOT_DIR}/bin/install-font-from-web" 'Hack Nerd Font' 'Hack' 'https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.tar.xz' 'HackNerdFontMono-Regular.ttf'
 		fi
