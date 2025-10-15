@@ -24,11 +24,11 @@ else
 	else
 		. "${ROPERDOT_DIR}/source-scripts/find-pip"
 		if [[ -n "$pip_bin" ]]; then
-			install-python-package jsbeautifier && copy_script && js_beautify_installed=true
+			install-python-package jsbeautifier && js_beautify_installed=true
 #			if $pip_bin install --help 2>&1 | grep -q "break-system-packages"; then
-#			    $pip_bin install --user --break-system-packages jsbeautifier && copy_script
+#			    $pip_bin install --user --break-system-packages jsbeautifier # && copy_script
 #			else
-#			    $pip_bin install --user jsbeautifier && copy_script
+#			    $pip_bin install --user jsbeautifier # && copy_script
 #			fi
 #			js_beautify_installed=true
 		else
@@ -43,8 +43,5 @@ if [[ -n "$js_beautify_installed" && ! -f ~/.jsbeautifyrc ]]; then
     "indent_size": 4
 }
 EOT
-
-echo "fnord Pausing at end of js-beautify install"
-read
 
 fi

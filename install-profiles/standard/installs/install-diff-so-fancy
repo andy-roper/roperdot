@@ -17,5 +17,3 @@ if [[ -n "$has_sudo" ]] && command -v brew >/dev/null 2>&1; then
 else
 	get_from_git https://github.com/so-fancy/diff-so-fancy diff-so-fancy
 fi
-
-
