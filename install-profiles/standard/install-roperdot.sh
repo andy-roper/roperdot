@@ -279,7 +279,7 @@ else
 	echo Checking for sudo access...
 #	sudo -l | tee /dev/tty | grep "ALL) ALL" >/dev/null && export has_sudo=true
 #	sudo -l | grep "ALL) ALL" >/dev/null && export has_sudo=true
-	sudo -n true 2>/dev/null && export has_sudo=true
+	groups $USER | grep -qE '\b(sudo|adm|admin|wheel)\b' && export has_sudo=true
 	echo "fnord has_sudo: $has_sudo"
 	read
 fi
