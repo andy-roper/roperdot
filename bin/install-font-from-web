@@ -69,6 +69,8 @@ is_font_installed() {
 }
 
 get_font_dir() {
+	echo "fnord: LOCALAPPDATA: $LOCALAPPDATA"
+	echo "fnord: USERPROFILE: $USERPROFILE"
     case "$ROPERDOT_DESKTOP_ENV" in
         "windows")
             # Always use per-user font directory (no admin required)
@@ -89,7 +91,6 @@ get_font_dir() {
             else
                 echo "/mnt/c/Users/$(whoami)/AppData/Local/Microsoft/Windows/Fonts"
             fi
-            ;;
             ;;
         "mac")
             echo "$HOME/Library/Fonts"
