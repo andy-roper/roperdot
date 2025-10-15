@@ -334,7 +334,7 @@ main () {
 					else
 						[[ -z "$package" ]] && package="$binary"
 						if [[ "$ROPERDOT_DESKTOP_ENV" = windows && "$list_prerequisite" = choco ]]; then
-							install_func() { if [[ -n "$has_sudo" ]]; then choco install -y --force $package; else install_windows_binary; fi }
+							install_func() { if [[ -n "$has_sudo" ]]; then choco install -y --ignore-pending-reboot --force $package; else install_windows_binary; fi }
 						elif [[ "$ROPERDOT_OS_FAMILY" = debian && "$install_prerequisite" = brew ]]; then
 							install_func() { brew install $package; }
 						elif [[ "$install_prerequisite" = pip3 ]]; then
@@ -488,7 +488,7 @@ main () {
 		local app_dir="$(win_env_linux_path APPDATA)/wsltty"
 		if [[ ! -d "$local_app_dir" ]] && ask_yn_y "Install and configure wsltty (mintty terminal for WSL)" y; then
 			local new_install=true
-			choco.exe install wsltty -y
+			choco.exe install wsltty -y --ignore-pending-reboot
 			if [[ $? -eq 0 ]]; then
 				# cmd.exe /c "cd C:\ProgramData\chocolatey\lib\wsltty\tools\wslttyinstall && install.bat"
 				cd /mnt/c/ProgramData/chocolatey/lib/wsltty/tools/wslttyinstall && cmd.exe /c "install.bat"

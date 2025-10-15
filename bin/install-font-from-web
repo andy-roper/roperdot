@@ -41,8 +41,19 @@ log_warning() { echo -e "${COLOR_YELLOW}[WARNING]${NC} $1"; }
 log_error() { echo -e "${COLOR_RED}[ERROR]${NC} $1"; }
 
 is_font_installed() {
-    case "$ROPERDOT_OS_TYPE" in
-        "linux")
+    case "$ROPERDOT_DESKTOP_ENV" in
+        "windows")
+            # Check Windows per-user font directories first, then system
+            [[ -f "$LOCALAPPDATA/Microsoft/Windows/Fonts/$CHECK_FILENAME" ]] && return 0
+            [[ -f "$USERPROFILE/AppData/Local/Microsoft/Windows/Fonts/$CHECK_FILENAME" ]] && return 0
+            [[ -f "/c/Windows/Fonts/$CHECK_FILENAME" ]] && return 0
+            ;;
+        "mac")
+            # Check macOS font directories
+            [[ -f ~/Library/Fonts/$CHECK_FILENAME ]] && return 0
+            [[ -f /Library/Fonts/$CHECK_FILENAME ]] && return 0
+            ;;
+        *)
             # Check using fc-list first
             if command -v fc-list >/dev/null 2>&1; then
                 fc-list | grep -i "${FONT_FAMILY}" >/dev/null 2>&1 && return 0
@@ -53,33 +64,12 @@ is_font_installed() {
             [[ -f /usr/share/fonts/truetype/*/$CHECK_FILENAME ]] && return 0
             [[ -f /usr/local/share/fonts/$CHECK_FILENAME ]] && return 0
             ;;
-        "mac")
-            # Check macOS font directories
-            [[ -f ~/Library/Fonts/$CHECK_FILENAME ]] && return 0
-            [[ -f /Library/Fonts/$CHECK_FILENAME ]] && return 0
-            ;;
-        "windows")
-            # Check Windows per-user font directories first, then system
-            [[ -f "$LOCALAPPDATA/Microsoft/Windows/Fonts/$CHECK_FILENAME" ]] && return 0
-            [[ -f "$USERPROFILE/AppData/Local/Microsoft/Windows/Fonts/$CHECK_FILENAME" ]] && return 0
-            [[ -f "/c/Windows/Fonts/$CHECK_FILENAME" ]] && return 0
-            ;;
     esac
     return 1
 }
 
 get_font_dir() {
-    case "$ROPERDOT_OS_TYPE" in
-        "linux")
-            if [[ -d "$HOME/.fonts" ]] && [[ -n "$(find "$HOME/.fonts" -name "*.ttf" -o -name "*.otf" 2>/dev/null | head -1)" ]]; then
-                echo "$HOME/.fonts"
-            else
-                echo "$HOME/.local/share/fonts"
-            fi
-            ;;
-        "mac")
-            echo "$HOME/Library/Fonts"
-            ;;
+    case "$ROPERDOT_DESKTOP_ENV" in
         "windows")
             # Always use per-user font directory (no admin required)
             if [[ -n "$LOCALAPPDATA" ]]; then
@@ -90,9 +80,15 @@ get_font_dir() {
                 echo "$HOME/AppData/Local/Microsoft/Windows/Fonts"
             fi
             ;;
+        "mac")
+            echo "$HOME/Library/Fonts"
+            ;;
         *)
-            log_error "Unsupported OS type: $ROPERDOT_OS_TYPE"
-            exit 1
+            if [[ -d "$HOME/.fonts" ]] && [[ -n "$(find "$HOME/.fonts" -name "*.ttf" -o -name "*.otf" 2>/dev/null | head -1)" ]]; then
+                echo "$HOME/.fonts"
+            else
+                echo "$HOME/.local/share/fonts"
+            fi
             ;;
     esac
 }
@@ -155,7 +151,7 @@ register_windows_fonts() {
     local font_dir="$1"
     local installed_files=("${@:2}")
     
-    if [[ "$ROPERDOT_OS_TYPE" != "windows" ]]; then
+    if [[ "$ROPERDOT_DESKTOP_ENV" != "windows" ]]; then
         return 0
     fi
     
@@ -223,16 +219,16 @@ install_fonts() {
     log_success "Installed $installed_count font files"
     
     # Platform-specific post-installation
-    case "$ROPERDOT_OS_TYPE" in
-        "linux")
+    case "$ROPERDOT_DESKTOP_ENV" in
+        "windows")
+            register_windows_fonts "$font_dir" "${installed_files[@]}"
+            ;;
+        *)
             if command -v fc-cache >/dev/null 2>&1; then
                 log_info "Updating font cache..."
                 fc-cache -fv
                 log_success "Font cache updated"
             fi
-            ;;
-        "windows")
-            register_windows_fonts "$font_dir" "${installed_files[@]}"
             ;;
     esac
 }
@@ -290,7 +286,7 @@ main() {
     install_fonts "$font_files_dir" "$FONT_DIR"
     
     # Platform-specific post-installation
-    case "$ROPERDOT_OS_TYPE" in
+    case "$ROPERDOT_DESKTOP_ENV" in
         "mac")
             log_info "Note: You may need to restart applications to see the new font"
             ;;
@@ -308,8 +304,8 @@ main() {
     fi
 }
 
-if [[ -z "$ROPERDOT_OS_TYPE" ]]; then
-    log_error "ROPERDOT_OS_TYPE environment variable is not set"
+if [[ -z "$ROPERDOT_DESKTOP_ENV" ]]; then
+    log_error "ROPERDOT_DESKTOP_ENV environment variable is not set"
     exit 1
 fi
 
