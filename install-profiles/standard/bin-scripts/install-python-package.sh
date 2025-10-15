@@ -29,7 +29,12 @@ debug "Installing python package $package"
 debug "pip_bin: $pip_bin"
 if [[ -n "$pip_bin" ]]; then
 	debug "Installing with $pip_bin"
-	$pip_bin install --user "$package"
+    if $pip_bin install --help 2>&1 | grep -q "break-system-packages"; then
+        debug "System supports --break-system-packages, assuming externally-managed"
+        $pip_bin install --user --break-system-packages "$package"
+    else
+        $pip_bin install --user "$package"
+    fi
 else
 	echo "Could not find a suitable installer; aborting installation of $package"
 fi

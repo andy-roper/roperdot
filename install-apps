@@ -342,12 +342,6 @@ main () {
 					if [[ "$app" = "Linuxbrew" ]]; then
 						export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin"
 						hash -r
-					    echo "fnord PATH has linuxbrew: $(echo $PATH | grep -o '/home/linuxbrew/.linuxbrew/bin')"
-					    echo "fnord Directory exists: $(test -d /home/linuxbrew/.linuxbrew/bin && echo YES || echo NO)"
-					    echo "fnord Brew file exists: $(test -f /home/linuxbrew/.linuxbrew/bin/brew && echo YES || echo NO)"
-					    echo "fnord Brew executable: $(test -x /home/linuxbrew/.linuxbrew/bin/brew && echo YES || echo NO)"
-					    echo "fnord Directory contents: $(ls -la /home/linuxbrew/.linuxbrew/bin/ 2>/dev/null | head -5)"
-					    read
 					elif [[ "$app" = "Python" && -z "$python_bin" ]]; then
 						if command -v python >/dev/null 2>&1; then
 							export python_bin=python
