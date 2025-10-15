@@ -6,7 +6,8 @@ command -v nice_copy >/dev/null 2>&1 || . "${ROPERDOT_DIR}/source-scripts/nice-c
 
 install_app_from_git () {
 	nice_copy z.sh "${ROPERDOT_DIR}/extra-bin"
-	dos2unix "${ROPERDOT_DIR}/extra-bin/z.sh"
+	# dos2unix "${ROPERDOT_DIR}/extra-bin/z.sh"
+	sed -i 's/\r$//' "${ROPERDOT_DIR}/extra-bin/z.sh"
 
 	if [[ -d /usr/local/share/man/man1 ]]; then
 		nice_copy z.1 /usr/local/share/man/man1
