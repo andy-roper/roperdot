@@ -9,7 +9,8 @@ Import the .Xresources data at http://terminal.sexy for comparison
 For colors that weren't matched well, run compare-colors to find the best color, e.g. compare-colors black 16 232 233 234 235 236
 Update color-defs.txt and repeat until the set looks good
 Run gen-color-files to generate the color files for the scheme, e.g. gen-color-files newscheme
-Use http://terminal.sexy to export mintty and iTerm2 themes and place the contents for each in theme files in directories under roperdot/config/color-schemes
+Use http://terminal.sexy to export an iTerm2 theme and save the theme file in roperdot/config/color-schemes/iTerm2
+Use http://terminal.sexy to export a JSON Scheme, use convert-terminal-scheme to convert that to Windows Terminal format, and place the resulting JSON in roperdot/config/color-schemes/windows_terminal
 
 
 
@@ -26,9 +27,10 @@ Select iTerm2
 Click Export
 Copy the text
 Update the file in roperdot/config/color-schemes/iTerm2
-Select MinTTY
-Click Export
-Copy the text
-Update the file in roperdot/config/color-schemes/mintty
-Copy the updated mintty file to ~/.mintty/themes
+Select JSON Scheme
+Click Download
+Save the JSON file
+Run convert-terminal-scheme on the saved JSON file
+Update the file in roperdot/config/color-schemes/windows_terminal
+Run configure-windows-terminal to refresh the schemes for Windows Terminal
 Run compare-color-scheme again to compare and verify

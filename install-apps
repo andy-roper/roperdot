@@ -471,41 +471,22 @@ main () {
 		done
 	}
 
-	create_wsltty_shortcut () {
-		# $1 example: zsh
-		# $2 (optional) example: /bin/zsh
-		[[ "$(desktop_shortcut_exists "${script}")" = "true" ]] && return
-		def_win_env_win_path_multiple LOCALAPPDATA APPDATA USERPROFILE
-		local wslttyDir="$LOCALAPPDATA\wsltty"
-		local target="$wslttyDir\bin\mintty"
-		local icon="$wslttyDir\wsl.ico"
-		local args="--WSL= --configdir=\" & chr(34) & \"%APPDATA%\wsltty\" & chr(34) & \" ${2:-/bin/$1}"
-		create-windows-shortcut "WSL $1" "$target" --icon-source "$icon" --desc "Terminal" --args "$args" --working-dir "$USERPROFILE"
-	}
-
-	install_wsltty () {
-		local local_app_dir="$(win_env_linux_path LOCALAPPDATA)/wsltty"
-		local app_dir="$(win_env_linux_path APPDATA)/wsltty"
-		if [[ ! -d "$local_app_dir" ]] && ask_yn_y "Install and configure wsltty (mintty terminal for WSL)" y; then
-			local new_install=true
-			choco.exe install wsltty -y --ignore-pending-reboot
-			if [[ $? -eq 0 ]]; then
-				# cmd.exe /c "cd C:\ProgramData\chocolatey\lib\wsltty\tools\wslttyinstall && install.bat"
-				cd /mnt/c/ProgramData/chocolatey/lib/wsltty/tools/wslttyinstall && cmd.exe /c "install.bat"
-				[[ -n $PROCESSING_BASH ]] && create_wsltty_shortcut bash
-				[[ -n $PROCESSING_ZSH ]] && create_wsltty_shortcut zsh
-			fi
-		fi
-		if [[ -d "$local_app_dir" ]]; then
-			if [[ -z $new_install ]]; then
-				ask_yn_y "Apply configuration to wsltty" y || return
-			fi
-			nice_copy "${ROPERDOT_DIR}/config/apps/wsltty/config" "${app_dir}"
-			if [[ ! -e "${app_dir}/themes/hybrid" ]]; then
-				[[ -d "${app_dir}/themes" ]] || mkdir "${app_dir}/themes"
-				cp "${ROPERDOT_DIR}/config/color-schemes/mintty/"* "${app_dir}/themes"
-			fi
-		fi
+	create_wsl_terminal_shortcut () {
+	    local shell="$1"
+	    [[ "$(desktop_shortcut_exists "WSL $shell")" = "true" ]] && return
+	    
+	    def_win_env_win_path_multiple LOCALAPPDATA USERPROFILE
+	    
+	    # Windows Terminal executable path
+	    local target="$LOCALAPPDATA\\Microsoft\\WindowsApps\\wt.exe"
+	    
+	    # Arguments to launch specific WSL profile with shell
+	    local args="--profile Ubuntu -- $shell"
+	    
+	    # Use Windows Terminal icon (or you could specify a custom one)
+	    local icon="$LOCALAPPDATA\\Microsoft\\WindowsApps\\wt.exe"
+	    
+	    create-windows-shortcut "WSL $shell" "$target" --icon-source "$icon" --desc "WSL Ubuntu with $shell" --args "$args" --working-dir "$USERPROFILE"
 	}
 
 	[[ -z "$ROPERDOT_OS_ENV" ]] && . "${ROPERDOT_DIR}/source-scripts/detect-os"
@@ -671,9 +652,10 @@ EOT
 			if [[ -n "$ROPERDOT_DESKTOP_ENV" ]]; then
 				if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
 					# Windows Subsystem for Linux (WSL)
+					[[ -n $PROCESSING_BASH ]] && create_wsl_terminal_shortcut bash
+					[[ -n $PROCESSING_ZSH ]] && create_wsl_terminal_shortcut zsh
 					if [[ -n "$HAS_ADMIN_RIGHTS" ]]; then
 						if command -v choco.exe >/dev/null 2>&1; then
-							install_wsltty
 							install_gui_apps "windows-gui-apps.json"
 						else
 							cat <<EOT

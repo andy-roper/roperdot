@@ -1732,7 +1732,7 @@ switch_windows_terminal_theme() {
     # Get Windows LOCALAPPDATA path
     local localappdata_windows=$(cmd.exe /c echo %LOCALAPPDATA% 2>/dev/null | tr -d '\r')
     if [[ -z "$localappdata_windows" ]]; then
-        echo "❌ Could not get LOCALAPPDATA"
+        echo "Error: could not get LOCALAPPDATA"
         return 1
     fi
     

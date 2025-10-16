@@ -1,0 +1,23 @@
+{
+    "name": "Roperdot flat",
+    "background": "#293C4B",
+    "foreground": "#07C5AC",
+    "selectionBackground": "#07C5AC",
+    "cursorColor": "#07C5AC",
+    "black": "#395063",
+    "blue": "#3193C6",
+    "cyan": "#05AD97",
+    "green": "#29B973",
+    "purple": "#A15EBB",
+    "red": "#CD4E38",
+    "white": "#C9CED1",
+    "yellow": "#F7AB13",
+    "brightBlack": "#435C71",
+    "brightBlue": "#3FAAE2",
+    "brightCyan": "#2FAFA9",
+    "brightGreen": "#30D284",
+    "brightPurple": "#AC72C3",
+    "brightRed": "#EE634C",
+    "brightWhite": "#FFFFFF",
+    "brightYellow": "#F5CD0C"
+}

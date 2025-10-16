@@ -1,0 +1,23 @@
+{
+    "name": "Roperdot solarized dark alternate",
+    "background": "#073542",
+    "foreground": "#94A09E",
+    "selectionBackground": "#94A09E",
+    "cursorColor": "#94A09E",
+    "black": "#576E74",
+    "blue": "#268BD3",
+    "cyan": "#28A198",
+    "green": "#859902",
+    "purple": "#6B72C3",
+    "red": "#D8332D",
+    "white": "#93A1A1",
+    "yellow": "#B48A02",
+    "brightBlack": "#022A34",
+    "brightBlue": "#0087FD",
+    "brightCyan": "#00B0B0",
+    "brightGreen": "#618602",
+    "brightPurple": "#605FAD",
+    "brightRed": "#D60002",
+    "brightWhite": "#8A8A8A",
+    "brightYellow": "#AF8701"
+}

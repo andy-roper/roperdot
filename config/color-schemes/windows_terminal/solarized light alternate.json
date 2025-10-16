@@ -1,0 +1,23 @@
+{
+    "name": "Roperdot solarized light alternate",
+    "background": "#FDF6E3",
+    "foreground": "#577074",
+    "selectionBackground": "#577074",
+    "cursorColor": "#577074",
+    "black": "#002A36",
+    "blue": "#268BD3",
+    "cyan": "#28A198",
+    "green": "#859902",
+    "purple": "#6B72C3",
+    "red": "#D8332D",
+    "white": "#93A1A1",
+    "yellow": "#B48A02",
+    "brightBlack": "#1D1B1C",
+    "brightBlue": "#0087FD",
+    "brightCyan": "#00B0B0",
+    "brightGreen": "#618602",
+    "brightPurple": "#605FAD",
+    "brightRed": "#D60002",
+    "brightWhite": "#8A8A88",
+    "brightYellow": "#AF8701"
+}

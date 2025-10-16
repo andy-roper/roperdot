@@ -1,0 +1,23 @@
+{
+    "name": "Roperdot peppermint",
+    "background": "#000000",
+    "foreground": "#D1D1D1",
+    "selectionBackground": "#D1D1D1",
+    "cursorColor": "#D1D1D1",
+    "black": "#454545",
+    "blue": "#51AED8",
+    "cyan": "#75B8BD",
+    "green": "#99D899",
+    "purple": "#E27DE3",
+    "red": "#ED5E7C",
+    "white": "#C0C0C0",
+    "yellow": "#E2C264",
+    "brightBlack": "#666666",
+    "brightBlue": "#80C7E8",
+    "brightCyan": "#A5E2E1",
+    "brightGreen": "#B0D4B0",
+    "brightPurple": "#EC9EEC",
+    "brightRed": "#EB9AAA",
+    "brightWhite": "#FFFFFF",
+    "brightYellow": "#E7E699"
+}

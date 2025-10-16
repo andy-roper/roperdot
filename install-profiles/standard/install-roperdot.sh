@@ -17,6 +17,7 @@ fi
 . "${ROPERDOT_DIR}/source-scripts/re-match"
 . "${ROPERDOT_DIR}/source-scripts/backup-file"
 . "${ROPERDOT_DIR}/source-scripts/update-config-files"
+. "${ROPERDOT_DIR}/source-scripts/windows-terminal-functions"
 
 # Have to use \x1B instead of \e for out-of-the-box Mac bash compatibility
 export warning_text=$(echo -e '\x1B[0;91m')
@@ -355,6 +356,10 @@ if [[ -z "$skip_to_installs" ]]; then
 		fi
 	fi
 
+	if [[ "$ROPERDOT_DESKTOP_ENV" == "windows" ]]; then
+		configure-windows-terminal
+	fi
+
 	case $ROPERDOT_OS_FAMILY in
 		darwin)
 			command -v brew > /dev/null 2>&1 && export PACKAGE_MANAGER=brew ;;
@@ -560,20 +565,18 @@ EOT
 		unset ROPERDOT_HISTORY_BY_SESSION
 	fi
 	
-	if command -v pygmentize >/dev/null 2>&1; then
-		declare -a schemes
-		schemes+=("default")
-		pushd "${ROPERDOT_DIR}/config/color-schemes/source" >&/dev/null || return 1
-		PS3="Default pygmentize color scheme? "
-		for scheme in *; do
-			[[ "$scheme" == "default" ]] || schemes+=("$scheme")
-		done
-		select scheme in "${schemes[@]}"; do
-			break
-		done
-		popd >&/dev/null || return 1
-		[[ -n "$scheme" ]] && ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME="$scheme"
-	fi
+	declare -a schemes
+	schemes+=("default")
+	pushd "${ROPERDOT_DIR}/config/color-schemes/source" >&/dev/null || return 1
+	PS3="Default color scheme? "
+	for scheme in *; do
+		[[ "$scheme" == "default" ]] || schemes+=("$scheme")
+	done
+	select scheme in "${schemes[@]}"; do
+		break
+	done
+	popd >&/dev/null || return 1
+	[[ -n "$scheme" ]] && ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME="$scheme"
 
 	save_resume_point 5
 	if [[ -z "$resume_step" || "$resume_step" -le 5 ]]; then
@@ -898,8 +901,8 @@ EOT
 fi
 if [[ "$ROPERDOT_OS_ENV" = "darwin" && -d /Applications/iTerm.app ]]; then
 	echo -e "You should import the profile JSON from roperdot/config/apps/iTerm2 into iTerm2.\n" >> ~/roperdot-info.txt
-else
-	echo -e "If you're using a supported terminal emulator, you should import one or more color schemes from roperdot/config/color-schemes/mintty.\n" >> ~/roperdot-info.txt
+elif [[ "$ROPERDOT_DESKTOP_ENV" == "windows" ]]; then
+	echo -e "If this is your first time running WSL, run the configure-windows-terminal script to update the Windows Terminal schemes." >> ~/roperdot-info.txt
 fi
 echo -e "If your color scheme of choice is light instead of dark, you should update ~/roperdot-loader and set the values of ROPERDOT_MC_SCHEME and ROPERDOT_VI_BACKGROUND to 'light'.\n" >> ~/roperdot-info.txt
 cat ~/roperdot-info.txt

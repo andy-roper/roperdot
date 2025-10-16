@@ -1,0 +1,23 @@
+{
+    "name": "Roperdot solarized dark higher contrast",
+    "background": "#002834",
+    "foreground": "#ABCDCE",
+    "selectionBackground": "#ABCDCE",
+    "cursorColor": "#ABCDCE",
+    "black": "#003540",
+    "blue": "#278BD2",
+    "cyan": "#29A198",
+    "green": "#7CC77F",
+    "purple": "#D33682",
+    "red": "#DC322F",
+    "white": "#EEE8D5",
+    "yellow": "#B58901",
+    "brightBlack": "#00789A",
+    "brightBlue": "#10A0D2",
+    "brightCyan": "#00BEAE",
+    "brightGreen": "#5CEE96",
+    "brightPurple": "#EA679F",
+    "brightRed": "#FA324B",
+    "brightWhite": "#FFFFFF",
+    "brightYellow": "#C09034"
+}

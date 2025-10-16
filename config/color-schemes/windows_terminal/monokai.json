@@ -1,0 +1,23 @@
+{
+    "name": "Roperdot monokai",
+    "background": "#272822",
+    "foreground": "#F1EBEB",
+    "selectionBackground": "#F1EBEB",
+    "cursorColor": "#F1EBEB",
+    "black": "#48483E",
+    "blue": "#55BCCE",
+    "cyan": "#56B7A5",
+    "green": "#8FC029",
+    "purple": "#9358FE",
+    "red": "#DC2566",
+    "white": "#ACADA1",
+    "yellow": "#D4C96E",
+    "brightBlack": "#76715E",
+    "brightBlue": "#66D9EE",
+    "brightCyan": "#66EFD5",
+    "brightGreen": "#A7E22E",
+    "brightPurple": "#AE82FF",
+    "brightRed": "#FA2772",
+    "brightWhite": "#CFD0C2",
+    "brightYellow": "#E7DB75"
+}
