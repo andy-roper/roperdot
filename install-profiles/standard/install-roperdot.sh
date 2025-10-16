@@ -356,10 +356,6 @@ if [[ -z "$skip_to_installs" ]]; then
 		fi
 	fi
 
-	if [[ "$ROPERDOT_DESKTOP_ENV" == "windows" ]]; then
-		configure-windows-terminal
-	fi
-
 	case $ROPERDOT_OS_FAMILY in
 		darwin)
 			command -v brew > /dev/null 2>&1 && export PACKAGE_MANAGER=brew ;;
@@ -712,18 +708,6 @@ else
 #		bash source-scripts/fix-bin-shebangs
 fi
 
-if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
-    is_admin=$(powershell.exe -Command "
-        \$currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
-        \$principal = New-Object Security.Principal.WindowsPrincipal(\$currentUser)
-        \$principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-    " 2>/dev/null | tr -d '\r\n')
-    
-    if [[ ! "$is_admin" == "True" ]]; then
-    	export choco_user_option="--user"
-    fi
-fi
-
 echo
 echo Processing shell and GUI apps to install...
 echo
@@ -735,6 +719,10 @@ done < <(find "${ROPERDOT_DIR}/install-profiles" -mindepth 1 -maxdepth 1 -type d
 [[ -n "$installs_to_pause" ]] && export installs_to_pause
 
 $install_shell install-apps
+
+if [[ "$ROPERDOT_DESKTOP_ENV" == "windows" ]]; then
+	configure-windows-terminal
+fi
 
 if [[ ! -d ~/.grc ]] && command -v grc >/dev/null 2>&1; then
 	ln -s "${ROPERDOT_DIR}/config/color-schemes/source/default/grc" ~/.grc

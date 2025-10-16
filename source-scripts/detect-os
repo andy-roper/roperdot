@@ -37,7 +37,12 @@ if [[ -f /etc/os-release ]]; then
 	if [[ -f /proc/version ]] && grep -iq Microsoft /proc/version; then
 		# Windows Subsystem for Linux (WSL)
 		ROPERDOT_DESKTOP_ENV=windows
-		/mnt/c/Windows/System32/net.exe session >/dev/null 2>&1 && HAS_ADMIN_RIGHTS=true
+	    is_admin=$(powershell.exe -Command "
+	        \$currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
+	        \$principal = New-Object Security.Principal.WindowsPrincipal(\$currentUser)
+	        \$principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+	    	" 2>/dev/null | tr -d '\r\n')
+	    [[ "$is_admin" == "True" ]] && export HAS_ADMIN_RIGHTS=true
 		wsl.exe --list --verbose | grep -Pa 'U\x00s\x00a\x00g\x00e' >/dev/null && ROPERDOT_WSL_V1=true
 	fi
 	case "$osname" in

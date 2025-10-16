@@ -655,19 +655,13 @@ EOT
 					# Windows Subsystem for Linux (WSL)
 					[[ -n $PROCESSING_BASH ]] && create_wsl_terminal_shortcut bash
 					[[ -n $PROCESSING_ZSH ]] && create_wsl_terminal_shortcut zsh
-					if [[ -n "$HAS_ADMIN_RIGHTS" ]]; then
-						if command -v choco.exe >/dev/null 2>&1; then
-							install_gui_apps "windows-gui-apps.json"
-						else
-							cat <<EOT
-${warning_text}Chocolatey (https://chocolatey.org/) must be installed before GUI applications
-Skipping installation of GUI applications.${normal_text}
-EOT
-						fi
+					if command -v choco.exe >/dev/null 2>&1; then
+						[[ -z "$HAS_ADMIN_RIGHTS" ]] && export choco_user_option="--user"
+						install_gui_apps "windows-gui-apps.json"
 					else
 						cat <<EOT
-${warning_text}You must start your shell as an administrator in order to install GUI
-applications. Skipping installation of GUI applications.${normal_text}
+${warning_text}Chocolatey (https://chocolatey.org/) must be installed before GUI applications
+Skipping installation of GUI applications.${normal_text}
 EOT
 					fi
 				else
