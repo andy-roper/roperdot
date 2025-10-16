@@ -480,8 +480,9 @@ main () {
 	    # Windows Terminal executable path
 	    local target="$LOCALAPPDATA\\Microsoft\\WindowsApps\\wt.exe"
 	    
+	    new-tab wsl.exe -d Ubuntu -e zsh
 	    # Arguments to launch specific WSL profile with shell
-	    local args="--profile Ubuntu -- $shell"
+    	local args="new-tab wsl.exe -d Ubuntu -e $shell"
 	    
 	    # Use Windows Terminal icon (or you could specify a custom one)
 	    local icon="$LOCALAPPDATA\\Microsoft\\WindowsApps\\wt.exe"

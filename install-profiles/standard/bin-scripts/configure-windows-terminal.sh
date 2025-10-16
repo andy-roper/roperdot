@@ -47,7 +47,10 @@ fi
 # Update both defaults AND the Ubuntu profile
 if /usr/bin/jq --arg scheme "$target_scheme" '
     .profiles.defaults.colorScheme = $scheme |
-    .profiles.list[] |= if .name == "Ubuntu" then .colorScheme = $scheme else . end
+    .profiles.list[] |= if .name == "Ubuntu" then 
+        .colorScheme = $scheme | 
+        .font = {"face": "Hack Nerd Font"} 
+    else . end
 ' "$terminal_settings_file" > tmp_terminal.json; then
     \mv tmp_terminal.json "$terminal_settings_file"
 else

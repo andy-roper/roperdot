@@ -309,10 +309,10 @@ export MANPAGER="less -X"
 
 # Prefer US English and use UTF-8
 # Set locale with fallback
-if locale -a 2>/dev/null | grep -q "en_US.UTF-8"; then
+if locale -a 2>/dev/null | grep -qi -E "en_US\.utf-?8"; then
     export LC_ALL="en_US.UTF-8"
     export LANG="en_US.UTF-8"
-elif locale -a 2>/dev/null | grep -q "C.UTF-8"; then
+elif locale -a 2>/dev/null | grep -qi -E "C\.utf-?8"; then
     export LC_ALL="C.UTF-8"
     export LANG="C.UTF-8"
 else

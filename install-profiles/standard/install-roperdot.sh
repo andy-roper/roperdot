@@ -674,8 +674,6 @@ EOT
 			"${ROPERDOT_DIR}/bin/install-font-from-web" 'Hack Nerd Font' 'Hack' 'https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.tar.xz' 'HackNerdFontMono-Regular.ttf'
 		fi
 	fi
-	echo "fnord Pausing after font install"
-	read </dev/tty
 
 	if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
 		cat <<EOT

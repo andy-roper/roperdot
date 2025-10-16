@@ -256,8 +256,6 @@ main() {
         fi
     fi
 
-	echo "fnord: LOCALAPPDATA: $LOCALAPPDATA"
-	echo "fnord: USERPROFILE: $USERPROFILE"
     # Get font installation directory
     FONT_DIR=$(get_font_dir)
     log_info "Font directory: $FONT_DIR"
@@ -308,11 +306,11 @@ main() {
     
     log_success "$FONT_NAME installation completed!"
     
-    if is_font_installed; then
-        log_success "Font installation verified successfully"
-    else
-        log_warning "Font installation verification failed, but files were copied"
-    fi
+    # if is_font_installed; then
+    #     log_success "Font installation verified successfully"
+    # else
+    #     log_warning "Font installation verification failed, but files were copied"
+    # fi
 }
 
 if [[ -z "$ROPERDOT_DESKTOP_ENV" ]]; then
