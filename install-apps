@@ -656,7 +656,11 @@ EOT
 					[[ -n $PROCESSING_BASH ]] && create_wsl_terminal_shortcut bash
 					[[ -n $PROCESSING_ZSH ]] && create_wsl_terminal_shortcut zsh
 					if command -v choco.exe >/dev/null 2>&1; then
-						[[ -z "$HAS_ADMIN_RIGHTS" ]] && export choco_user_option="--user"
+						if [[ -n "$HAS_ADMIN_RIGHTS" ]]; then
+							export choco_user_option="true"
+						else
+							export choco_user_option=""
+						fi
 						install_gui_apps "windows-gui-apps.json"
 					else
 						cat <<EOT
