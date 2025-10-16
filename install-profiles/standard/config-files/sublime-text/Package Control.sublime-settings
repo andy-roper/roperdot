@@ -13,6 +13,8 @@
 		"Solarized Color Scheme",
 		"SublimeCodeIntel",
 		"SublimeLinter",
-		"Terminal"
+		"SublimeLinter-shellcheck",
+		"Terminal",
+		"Visual Studio Code Plus Scheme"
 	]
 }
