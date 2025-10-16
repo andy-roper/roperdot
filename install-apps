@@ -110,7 +110,7 @@ main () {
 			fi
 			echo
 			if [[ "$package_manager" == "choco" && "$REPLY" =~ ^[rR]$ ]]; then
-				install_func() { choco.exe install -y --ignore-checksums --ignore-pending-reboot "$package"; }
+				install_func() { choco.exe install -y --ignore-checksums --ignore-pending-reboot $choco_user_option "$package"; }
 			fi
 			[[ "$REPLY" =~ ^[aA]$ ]] && return 0
 			[[ "$REPLY" =~ ^[cC]$ ]] && return 1
@@ -334,7 +334,7 @@ main () {
 					else
 						[[ -z "$package" ]] && package="$binary"
 						if [[ "$ROPERDOT_DESKTOP_ENV" = windows && "$list_prerequisite" = choco ]]; then
-							install_func() { if [[ -n "$has_sudo" ]]; then choco install -y --ignore-pending-reboot --force $package; else install_windows_binary; fi }
+							install_func() { if [[ -n "$has_sudo" ]]; then choco install -y --ignore-pending-reboot --force $choco_user_option $package; else install_windows_binary; fi }
 						elif [[ "$ROPERDOT_OS_FAMILY" = debian && "$install_prerequisite" = brew ]]; then
 							install_func() { brew install $package; }
 						elif [[ "$install_prerequisite" = pip3 ]]; then
@@ -447,7 +447,7 @@ main () {
 						ubuntu|mint|debian)
 							if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
 								# WSL
-								install_func() { choco.exe install -y --ignore-pending-reboot "$package"; }
+								install_func() { choco.exe install -y --ignore-pending-reboot $choco_user_option "$package"; }
 							else
 								if [[ "$package_manager" = apt || "$package_manager" = "apt-get" ]]; then
 									install_func() { sudo apt install "$package" -y; }

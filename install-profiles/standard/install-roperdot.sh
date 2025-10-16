@@ -712,6 +712,18 @@ else
 #		bash source-scripts/fix-bin-shebangs
 fi
 
+if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+    is_admin=$(powershell.exe -Command "
+        \$currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
+        \$principal = New-Object Security.Principal.WindowsPrincipal(\$currentUser)
+        \$principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    " 2>/dev/null | tr -d '\r\n')
+    
+    if [[ ! "$is_admin" == "True" ]]; then
+    	export choco_user_option="--user"
+    fi
+fi
+
 echo
 echo Processing shell and GUI apps to install...
 echo
