@@ -174,6 +174,8 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
 
 ## To Do/Future Plans
 
+- Add Claude to GUI installs
+
 - Test and retool Ubuntu/Mint installs if necessary after the recent MacOS-centric retooling
 
 - Update other OSes’ shell-apps JSON files similarly to how the MacOS one was updated
@@ -221,6 +223,10 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
   
 - Consider trying [scoop](https://github.com/ScoopInstaller/Scoop) to install GUI apps for non-admin Windows users
 
+- Revisit issue with being repeatedly asked for the sudo password when installing WSL/Ubuntu shell apps (apt-file, git-lfs, fd-find, jq, shellcheck, speedtest-cli)
+
+  - The sudo keepalive approach in install_shell_apps didn't work
+
 - Integrate eza, a modern ls alternative: https://github.com/eza-community/eza
 
 - Integrate bat, a modern cat alternative: https://github.com/sharkdp/bat
@@ -234,7 +240,7 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
   - [dust](https://github.com/bootandy/dust): more intuitive version of du
   - [httpie](https://github.com/httpie/cli): user-friendly HTTP client
   - [procs](https://github.com/dalance/procs): modern ps alternative
-  
+
 - Update VS Code configuration when switching scheme (colors only)
 
 - Update install for Oracle SQL Developer to support Linux
