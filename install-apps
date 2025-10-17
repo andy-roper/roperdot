@@ -294,6 +294,14 @@ main () {
 			echo
 		fi
 
+		# Keep sudo access alive in the background during the installs
+	    if [[ -n "$has_sudo" && "${#install_list[@]}" -gt 0 ]]; then
+	        echo "Authenticating for package installations..."
+	        sudo -v
+	        while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+	        local SUDO_KEEPALIVE_PID=$!
+	    fi
+
 		# Installation loop
 		for app_index in "${install_list[@]}"; do
 			if [[ -d ~/.nvm ]] && ! command -v node >/dev/null 2>&1; then
@@ -375,6 +383,8 @@ main () {
 				fi
 			fi
 		done
+
+		[[ -n "$SUDO_KEEPALIVE_PID" ]] && kill "$SUDO_KEEPALIVE_PID" 2>/dev/null
 	}
 
 	install_gui_apps () {

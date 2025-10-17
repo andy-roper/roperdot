@@ -566,18 +566,23 @@ EOT
 		unset ROPERDOT_HISTORY_BY_SESSION
 	fi
 	
-	declare -a schemes
-	schemes+=("default")
-	pushd "${ROPERDOT_DIR}/config/color-schemes/source" >&/dev/null || return 1
-	PS3="Default color scheme? "
-	for scheme in *; do
-		[[ "$scheme" == "default" ]] || schemes+=("$scheme")
-	done
-	select scheme in "${schemes[@]}"; do
-		break
-	done
-	popd >&/dev/null || return 1
-	[[ -n "$scheme" ]] && ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME="$scheme"
+	if [[ -n "$accept_recommended" ]]; then
+		echo "Accepting recommended defaults so setting default color scheme to hybrid"
+		ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME=hybrid
+	else
+		declare -a schemes
+		schemes+=("default")
+		pushd "${ROPERDOT_DIR}/config/color-schemes/source" >&/dev/null
+		PS3="Default color scheme? "
+		for scheme in *; do
+			[[ "$scheme" == "default" ]] || schemes+=("$scheme")
+		done
+		select scheme in "${schemes[@]}"; do
+			break
+		done
+		popd >&/dev/null
+		[[ -n "$scheme" ]] && ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME="$scheme"
+	fi
 
 	save_resume_point 5
 	if [[ -z "$resume_step" || "$resume_step" -le 5 ]]; then
