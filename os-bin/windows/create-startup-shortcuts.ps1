@@ -20,6 +20,7 @@ $apps = @{
     "VNC Viewer" = @(
         "${env:ProgramFiles}\RealVNC\VNC Viewer\vncviewer.exe",
         "${env:ProgramFiles(x86)}\RealVNC\VNC Viewer\vncviewer.exe"
+        "${env:ProgramFiles}\uvnc bvba\UltraVNC\vncviewer.exe"
     )
 }
 

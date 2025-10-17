@@ -748,7 +748,7 @@ This install can update various Windows configurations for you:
 - Show file extensions in Explorer
 - Show hidden files and folders in Explorer
 - Enable dark theme for apps and system
-- Enable Telnet Client Windows feature
+- Enable the Telnet Client feature in Windows
 - Disable startup delay for faster boot
 - Disable automatic Windows Update restarts
 - Set Chrome as default browser (if Chrome is installed)

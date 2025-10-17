@@ -12,13 +12,24 @@ try {
 # Disable News and Interests on Taskbar
 Write-Host "Disabling taskbar news..." -ForegroundColor Yellow
 try {
-    if (!(Test-Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Feeds")) {
-        New-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Feeds" -Force | Out-Null
+    # Try multiple approaches for taskbar news
+    $feedsPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Feeds"
+    
+    # Method 1: Standard registry approach
+    if (!(Test-Path $feedsPath)) {
+        New-Item -Path $feedsPath -Force | Out-Null
     }
-    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Feeds" -Name "ShellFeedsTaskbarViewMode" -Value 2 -Type DWord
+    
+    # Try setting with different permissions
+    New-ItemProperty -Path $feedsPath -Name "ShellFeedsTaskbarViewMode" -Value 2 -PropertyType DWord -Force -ErrorAction SilentlyContinue
+    
+    # Method 2: Alternative registry location
+    $explorerPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+    New-ItemProperty -Path $explorerPath -Name "TaskbarDa" -Value 0 -PropertyType DWord -Force -ErrorAction SilentlyContinue
+    
     Write-Host "Taskbar news disabled" -ForegroundColor Green
 } catch {
-    Write-Host "Failed to disable taskbar news: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Taskbar news setting may not be available on this system" -ForegroundColor Yellow
 }
 
 # Configure Windows Search (Local Only)

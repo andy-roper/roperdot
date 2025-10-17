@@ -20,7 +20,7 @@ fi
 
 echo "Importing Roperdot color schemes into Windows Terminal settings..."
 
-if ! terminal-settings_file="$(windows_terminal_settings_location)"; then
+if ! terminal_settings_file="$(windows_terminal_settings_location)"; then
     echo "Windows Terminal settings file not found"
 	exit 1
 fi
