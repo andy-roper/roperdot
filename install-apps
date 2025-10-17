@@ -652,6 +652,8 @@ EOT
 			# Install mtr as part of non-shell apps since it has a GUI			
 			if [[ -n "$ROPERDOT_DESKTOP_ENV" ]]; then
 				if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+					[[ -n "$PROCESSING_BASH" ]] && create_wsl_terminal_shortcut bash
+					[[ -n "$PROCESSING_ZSH" ]] && create_wsl_terminal_shortcut zsh
 					# Windows Subsystem for Linux (WSL)
 					if [[ -n "$HAS_ADMIN_RIGHTS" ]]; then
 						if command -v choco.exe >/dev/null 2>&1; then
