@@ -745,7 +745,6 @@ if [[ "$ROPERDOT_DESKTOP_ENV" == "windows" ]]; then
 	cat <<EOT
 This install can update various Windows configurations for you:
 
-- Disable Windows news and interests on the taskbar
 - Disable Cortana search box on the taskbar
 - Configure Windows Search to local searches only (no web results)
 - Revert Explorer to Windows 10 style command bar and context menus
@@ -757,10 +756,13 @@ This install can update various Windows configurations for you:
 - Disable startup delay for faster boot
 - Disable automatic Windows Update restarts
 - Set Chrome as default browser (if Chrome is installed)
+
+Note that applying these changes will entail an automatic restart of Explorer (but not of Windows).
 EOT
 	if ask_yn_n "Do you want to apply these configuration changes" y; then
 	    powershell.exe -ExecutionPolicy Bypass -File "${ROPERDOT_DIR}/os-bin/windows/update-windows-configuration.ps1"
-	    echo "Some of these changes require administrator privileges and may need a restart to take effect."
+	    echo "Enabling Telnet requires a reboot for it to complete taking effect."
+	    echo "Some of these changes other require administrator privileges and may need a restart to take effect."
 	fi
 	cat <<EOT
 This install can also create Startup shortcuts for apps (if they're present) so they'll run on startup including:

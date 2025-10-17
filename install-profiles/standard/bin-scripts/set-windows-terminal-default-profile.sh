@@ -1,15 +1,16 @@
 #
-# Description: (Windows) Sets default shell for Windows Terminal
+# Description: (Windows) Sets the default profile for Windows Terminal
 #
 # Author: Andy Roper <andyroper42@gmail.com>
 # URL: https://github.com/andy-roper/roperdot
 #
 if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
     cat <<EOT
-set-windows-terminal-default-shell
-Usage: set-windows-terminal-default-shell <shell>
+set-windows-terminal-default-profile
+Usage: set-windows-terminal-default-profile [profile_name]
 
-This script ensures the WSL distribution profile is set as the default in Windows Terminal.
+This script sets the default profile in Windows Terminal.
+If a profile name is not supplied, it will default to Ubuntu.
 EOT
     exit 0
 fi
@@ -30,8 +31,7 @@ get_wsl_guid() {
 # Function to set WSL profile as default
 set_wsl_as_default() {
     local settings_file="$1"
-    local shell="$2"
-    local distro_name=$(wsl.exe -l -v | grep -E "^\*" | awk '{print $2}' | tr -d '\0' || echo "Ubuntu")
+    local distro_name="$2"
     
     # Get the WSL GUID
     local wsl_guid=$(get_wsl_guid "$distro_name" "$settings_file")
@@ -57,14 +57,13 @@ set_wsl_as_default() {
 
 # Main execution
 main() {
-    local shell="$1"
+    local distro_name="${1:-Ubuntu}"
     echo "Setting $distro_name WSL profile as default Windows Terminal profile..."
-    echo "Note: Make sure you've run 'chsh -s \$(which $shell)' in WSL to change the default shell."
     
     local settings_file
     if settings_file="$(windows_terminal_settings_location)"; then
         echo "Found settings file: $settings_file"
-        set_wsl_as_default "$settings_file" "$shell"
+        set_wsl_as_default "$settings_file" "$distro_name"
         echo ""
         echo "Windows Terminal configuration updated!"
         echo "Please restart Windows Terminal to see the changes."

@@ -3,33 +3,10 @@ Write-Host "Applying Windows configuration changes..." -ForegroundColor Green
 # Enable Telnet Client
 Write-Host "Enabling Telnet Client..." -ForegroundColor Yellow
 try {
-    Enable-WindowsOptionalFeature -Online -FeatureName TelnetClient -All -NoRestart
+	Start-Process -FilePath "dism.exe" -ArgumentList "/online", "/enable-feature", "/featurename:TelnetClient", "/quiet", "/norestart" -Wait -WindowStyle Hidden
     Write-Host "Telnet Client enabled" -ForegroundColor Green
 } catch {
     Write-Host "Failed to enable Telnet Client: $($_.Exception.Message)" -ForegroundColor Red
-}
-
-# Disable News and Interests on Taskbar
-Write-Host "Disabling taskbar news..." -ForegroundColor Yellow
-try {
-    # Try multiple approaches for taskbar news
-    $feedsPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Feeds"
-    
-    # Method 1: Standard registry approach
-    if (!(Test-Path $feedsPath)) {
-        New-Item -Path $feedsPath -Force | Out-Null
-    }
-    
-    # Try setting with different permissions
-    New-ItemProperty -Path $feedsPath -Name "ShellFeedsTaskbarViewMode" -Value 2 -PropertyType DWord -Force -ErrorAction SilentlyContinue
-    
-    # Method 2: Alternative registry location
-    $explorerPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
-    New-ItemProperty -Path $explorerPath -Name "TaskbarDa" -Value 0 -PropertyType DWord -Force -ErrorAction SilentlyContinue
-    
-    Write-Host "Taskbar news disabled" -ForegroundColor Green
-} catch {
-    Write-Host "Taskbar news setting may not be available on this system" -ForegroundColor Yellow
 }
 
 # Configure Windows Search (Local Only)
@@ -175,4 +152,11 @@ try {
     Write-Host "Failed to set Chrome as default browser: $($_.Exception.Message)" -ForegroundColor Red
 }
 
-Write-Host "`nWindows configuration complete! Some changes may require a restart." -ForegroundColor Green
+Write-Host "Restarting Explorer to apply changes..." -ForegroundColor Yellow
+try {
+    Stop-Process -Name explorer -Force
+    Start-Sleep 2
+    Write-Host "Explorer restarted" -ForegroundColor Green
+} catch {
+    Write-Host "Note: You may need to restart Explorer manually for all changes to take effect" -ForegroundColor Yellow
+}

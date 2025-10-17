@@ -52,5 +52,9 @@ if command -v zsh >/dev/null 2>&1; then
 			fi
 			echo "You should close the terminal window and open a new one after the install to use the new zsh version."
 		fi
+	elif [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+		if ask_yn_n "Make the new zsh version the default shell" y; then
+			chsh -s $(which zsh)
+		fi
 	fi
 fi
