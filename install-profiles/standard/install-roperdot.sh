@@ -727,6 +727,14 @@ $install_shell install-apps
 
 if [[ "$ROPERDOT_DESKTOP_ENV" == "windows" ]]; then
 	configure-windows-terminal
+	if [[ -n "$PROCESSING_ZSH" ]]; then
+		shell=zsh
+	else
+		shell=bash
+	fi
+	if ask_yn_n "Set $shell as the default shell for Windows Terminal" y; then
+		set-windows-terminal-default-shell $shell
+	fi
 fi
 
 if [[ ! -d ~/.grc ]] && command -v grc >/dev/null 2>&1; then

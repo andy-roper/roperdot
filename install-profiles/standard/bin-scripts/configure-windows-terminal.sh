@@ -16,14 +16,9 @@ EOT
     exit 0
 fi
 
-# Get Windows LOCALAPPDATA path
-localappdata_windows=$(cmd.exe /c echo %LOCALAPPDATA% 2>/dev/null | tr -d '\r')
-if [[ -z "$localappdata_windows" ]]; then
-    echo "Error: could not get LOCALAPPDATA"
-    exit 1
-fi
+. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
 
-localappdata_wsl=$(wslpath "$localappdata_windows")
+localappdata_wsl="$(win_env_linux_path LOCALAPPDATA)"
 
 # Try the most common location first
 terminal_settings_file="${localappdata_wsl}/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json"

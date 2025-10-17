@@ -378,6 +378,12 @@
 		"desc": "Tool for changing to directories based on recent usage and frequency of use"
 	},
 	{
+		"app": "uuid-runtime",
+		"binary": "uuidgen",
+		"list_prerequisite": "apt-get",
+		"desc": "Library for generating and parsing UUIDs"
+	},
+	{
 		"app": "OpenVPN",
 		"binary": "openvpn",
 		"package": "openvpn",

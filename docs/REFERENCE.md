@@ -67,6 +67,7 @@ roperdot makes use of a number of excellent third party terminal applications.
 - **[`jq`](https://jqlang.org/)** - JSON processor and formatter
 - **[`Neovim`](https://neovim.io/)** - Modern Vim editor
 - **[`shellcheck`](https://www.shellcheck.net/)** - Shell script linter
+- [**`uuid-runtime`**](https://packages.debian.org/sid/uuid-runtime) - Library for generating and parsing UUIDs
 - **[`Vim/vimdiff`](https://www.vim.org/)** - Text editor and diff tool
 - **[`xmllint`](http://xmlsoft.org/xmllint.html)** - XML parsing and validation
 
