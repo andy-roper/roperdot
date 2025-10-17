@@ -173,7 +173,7 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
 
 ## To Do/Future Plans
 
-- Test and retool Ubuntu/Mint/WSL (Ubuntu) installs if necessary after the recent MacOS-centric retooling
+- Test and retool Ubuntu/Mint installs if necessary after the recent MacOS-centric retooling
 
 - Update other OSes’ shell-apps JSON files similarly to how the MacOS one was updated
   - Remove html5print and xml2json
@@ -186,14 +186,6 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
   - Add Brave browser; disable WebStorm
   
 - Add installation of Playwright Python library to other OSes' shell-apps JSON files
-
-- Add install of Windows fonts in WSL:
-
-  ```bash
-  sudo apt update
-  echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula boolean true" | sudo debconf-set-selections
-  sudo apt install -y ttf-mscorefonts-installer
-  ```
 
 - Consider adding VMware Fusion (Mac) or VMware Workstation Pro (others) to installs
 
@@ -226,6 +218,8 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
   - Need to support a different/second install profile
   - Need to support installing a second profile after installing standard
   
+- Consider trying [scoop](https://github.com/ScoopInstaller/Scoop) to install GUI apps for non-admin Windows users
+
 - Integrate eza, a modern ls alternative: https://github.com/eza-community/eza
 
 - Integrate bat, a modern cat alternative: https://github.com/sharkdp/bat
@@ -242,7 +236,7 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
   
 - Update VS Code configuration when switching scheme (colors only)
 
-- Update install for Oracle SQL Developer to support Windows and Linux
+- Update install for Oracle SQL Developer to support Linux
 
 - Institute use of print_important_message during after after install
 

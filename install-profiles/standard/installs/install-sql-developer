@@ -4,10 +4,11 @@
 # Author: Andy Roper <andyroper42@gmail.com>
 # URL: https://github.com/andy-roper/roperdot
 #
-# Last updated for current version of the application on 23 Sep 2025
+# Last updated for current version of the application on 16 Oct 2025
 
 APP_VERSION="24.3.1.347.1826"
-download_url="https://download.oracle.com/otn_software/java/sqldeveloper/sqldeveloper-${APP_VERSION}-macos-x64.app.zip"
+mac_download_url="https://download.oracle.com/otn_software/java/sqldeveloper/sqldeveloper-${APP_VERSION}-macos-x64.app.zip"
+windows_download_url="https://download.oracle.com/otn_software/java/sqldeveloper/sqldeveloper-${APP_VERSION}-x64.zip"
 
 cleanup() {
     if [[ -d "$temp_dir" ]]; then
@@ -16,7 +17,7 @@ cleanup() {
     fi
 }
 
-install_sql_developer() {
+install_sql_developer_for_macos() {
     temp_dir="$(mktemp -d)"
     local download_file="$temp_dir/sqldeveloper.zip"
     
@@ -30,8 +31,8 @@ install_sql_developer() {
     mkdir -p "$temp_dir"
     pushd "$temp_dir"
     
-    echo "Downloading $download_url"
-    if ! curl -L -o "$download_file" "$download_url" >/dev/null; then
+    echo "Downloading $mac_download_url"
+    if ! curl -L -o "$download_file" "$mac_download_url" >/dev/null; then
         echo "Download failed"
         return 1
     fi
@@ -55,8 +56,94 @@ install_sql_developer() {
     return 0
 }
 
+install_sql_developer_for_windows() {
+    temp_dir="$(mktemp -d)"
+    local download_file="$temp_dir/sqldeveloper.zip"
+    
+    trap cleanup EXIT
+    
+    local program_files="$(win_env_linux_path "PROGRAMFILES")"
+	local program_files_x86="$(win_env_linux_path "PROGRAMFILES(X86)")"
+	local appdata_local="$(win_env_linux_path LOCALAPPDATA)/Programs/sqldeveloper"
+    
+    if [[ -d "$program_files" ]] || [[ -d "$program_files_x86" ]] || [[ -d "$appdata_local" ]]; then
+        echo "SQL Developer already installed"
+        return 0
+    fi
+    
+    mkdir -p "$temp_dir"
+    pushd "$temp_dir"
+    
+    echo "Downloading $windows_download_url"
+    if ! curl -L -o "$download_file" "$windows_download_url" >/dev/null; then
+        echo "Download failed"
+        return 1
+    fi
+    
+    # Extract the zip file
+    unzip -q "$download_file"
+    
+    # SQL Developer for Windows typically extracts to a "sqldeveloper" folder
+    if [[ -d "sqldeveloper" ]]; then
+        # Install to user's local programs directory (no admin required)
+        local install_path="$appdata_local"
+        
+        # Create the target directory if it doesn't exist
+        mkdir -p "$(dirname "$install_path")"
+        
+        # Move the extracted folder
+        if mv "sqldeveloper" "$install_path"; then
+            echo "SQL Developer installed to $install_path"
+            
+            # Create a desktop shortcut
+            create_windows_desktop_shortcut "$install_path"
+            
+            # Add to PATH if sqldeveloper/bin exists
+            if [[ -d "$install_path/bin" ]]; then
+                echo "Consider adding $install_path/bin to your PATH"
+            fi
+        else
+            echo "Failed to move SQL Developer to installation directory"
+            return 1
+        fi
+    else
+        echo "Expected sqldeveloper folder not found in archive"
+        echo "Archive contents:"
+        ls -la
+        return 1
+    fi
+    
+    popd
+    return 0
+}
+
+create_windows_desktop_shortcut() {
+    local install_path="$1"
+	def_win_env_win_path USERPROFILE
+    
+    local windows_install_path="$(wslpath -w "$install_path")"
+    local windows_shortcut_path="${USERPROFILE}\\Desktop\\SQL Developer.lnk"
+    
+    if [[ -f "$install_path/sqldeveloper.exe" ]]; then
+        powershell.exe -Command "
+            \$WshShell = New-Object -comObject WScript.Shell;
+            \$Shortcut = \$WshShell.CreateShortcut('$windows_shortcut_path');
+            \$Shortcut.TargetPath = '$windows_install_path\\sqldeveloper.exe';
+            \$Shortcut.WorkingDirectory = '$windows_install_path';
+            \$Shortcut.Save()
+        " 2>/dev/null
+        
+        if [[ $? -eq 0 ]]; then
+            echo "Desktop shortcut created"
+        fi
+    fi
+}
+
 if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
-    install_sql_developer
+    install_sql_developer_for_macos
+elif [[ "$ROPERDOT_OS_ENV" = "windows" ]]; then
+	. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
+	install_sql_developer_for_windows
 else
-    echo "SQL Developer install is currently only available for MacOS"
+    echo "SQL Developer install is currently only available for MacOS and Windows"
 fi

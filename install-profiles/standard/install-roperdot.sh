@@ -668,6 +668,11 @@ EOT
 		if [[ -n "$ROPERDOT_DESKTOP_ENV" ]]; then
 			# Install Hack Nerd fonts
 			"${ROPERDOT_DIR}/bin/install-font-from-web" 'Hack Nerd Font' 'Hack' 'https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.tar.xz' 'HackNerdFontMono-Regular.ttf'
+
+			# Install Windows fonts in WSL
+			sudo apt update
+			echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula boolean true" | sudo debconf-set-selections
+			sudo apt install -y ttf-mscorefonts-installer
 		fi
 	fi
 
