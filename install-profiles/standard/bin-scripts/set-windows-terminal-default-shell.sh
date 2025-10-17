@@ -9,108 +9,62 @@ if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
 set-windows-terminal-default-shell
 Usage: set-windows-terminal-default-shell <shell>
 
-This script sets the default terminal shell for Windows Terminal.
-
-Example:
-set-windows-terminal-default-shell zsh
+This script ensures the WSL distribution profile is set as the default in Windows Terminal.
 EOT
     exit 0
 fi
 
-. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
-
-find_wt_settings() {
-	local localappdata_wsl="$(win_env_linux_path LOCALAPPDATA)"
-
-	local terminal_settings_file="${localappdata_wsl}/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json"
-
-	if [[ ! -f "$terminal_settings_file" ]]; then
-	    terminal_settings_file="${localappdata_wsl}/Microsoft/Windows Terminal/settings.json"
-	fi
-    
-    if [[ -f "$terminal_settings_file" ]]; then
-    	echo $terminal_settings_file
-    else
-        return 1
-    fi
-}
+. "${ROPERDOT_DIR}/source-scripts/windows-terminal-functions"
 
 # Function to get WSL distribution GUID
 get_wsl_guid() {
     local distro_name="$1"
-    local userprofile_wsl="$(win_env_linux_path USERPROFILE)"
-    local settings_file="$userprofile_wsl/AppData/Local/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json"
+    local settings_file="$2"
     
     if [[ -f "$settings_file" ]]; then
         # Extract GUID for the specified WSL distribution
-        jq -r ".profiles.list[] | select(.name == \"$distro_name\" or .source == \"Windows.Terminal.Wsl\") | .guid" "$settings_file" 2>/dev/null | head -1
+        jq -r ".profiles.list[] | select(.name == \"$distro_name\" and .source == \"Windows.Terminal.Wsl\") | .guid" "$settings_file" 2>/dev/null | head -1
     fi
 }
 
-# Function to create or update Windows Terminal profile for shell
-setup_shell_profile() {
+# Function to set WSL profile as default
+set_wsl_as_default() {
     local settings_file="$1"
     local shell="$2"
     local distro_name=$(wsl.exe -l -v | grep -E "^\*" | awk '{print $2}' | tr -d '\0' || echo "Ubuntu")
     
+    # Get the WSL GUID
+    local wsl_guid=$(get_wsl_guid "$distro_name" "$settings_file")
+    if [[ -z "$wsl_guid" ]]; then
+        echo "Error: Could not find WSL profile for $distro_name"
+        echo "Make sure Windows Terminal has detected your WSL distribution."
+        exit 1
+    fi
+    
+    echo "Setting $distro_name WSL profile as default..."
+    
+    # Backup and update
     cp "$settings_file" "$settings_file.backup.$(date +%Y%m%d_%H%M%S)"
     local temp_file=$(mktemp)
     
-    # Get current WSL GUID or create new one
-    local wsl_guid=$(get_wsl_guid "$distro_name")
-    if [[ -z "$wsl_guid" ]]; then
-        wsl_guid="{$(uuidgen)}"
-    fi
-    
-    # Update settings to include shell profile and set it as default
-    jq --arg guid "$wsl_guid" --arg distro "$distro_name" --arg shell "$shell" '
-    # Add or update the shell profile
-    .profiles.list |= map(
-        if .guid == $guid or (.name == $distro and .source == "Windows.Terminal.Wsl") then
-            . + {
-                "commandline": "wsl.exe ~ -e $shell",
-                "name": ($distro + " ($shell)"),
-                "startingDirectory": "//wsl$/\($distro)/home/\(env.USER)"
-            }
-        else
-            .
-        end
-    ) |
-    # If no existing profile was updated, add a new one
-    if (.profiles.list | map(select(.guid == $guid)) | length) == 0 then
-        .profiles.list += [{
-            "guid": $guid,
-            "name": ($distro + " ($shell)"),
-            "commandline": "wsl.exe ~ -e $shell",
-            "source": "Windows.Terminal.Wsl",
-            "startingDirectory": "//wsl$/\($distro)/home/\(env.USER)",
-            "icon": "ms-appx:///ProfileIcons/{9acb9455-ca41-5af7-950f-6bca1bc9722f}.png"
-        }]
-    else
-        .
-    end |
-    # Set this profile as the default
-    .defaultProfile = $guid
-    ' "$settings_file" > "$temp_file"
-    
-    # Replace original file with updated version
+    # Set WSL profile as default
+    jq --arg guid "$wsl_guid" '.defaultProfile = $guid' "$settings_file" > "$temp_file"
     mv "$temp_file" "$settings_file"
     
-    echo "Successfully updated Windows Terminal settings:"
-    echo "- Added/updated $shell profile for $distro_name"
-    echo "- Set $shell profile as default"
-    echo "- Backup saved to: ${settings_file}.backup.*"
+    echo "Successfully set $distro_name WSL profile as the default Windows Terminal profile."
+    echo "Backup saved to: ${settings_file}.backup.*"
 }
 
 # Main execution
 main() {
-	local shell="$1"
-    echo "Setting up $shell as default shell in Windows Terminal..."
+    local shell="$1"
+    echo "Setting $distro_name WSL profile as default Windows Terminal profile..."
+    echo "Note: Make sure you've run 'chsh -s \$(which $shell)' in WSL to change the default shell."
     
     local settings_file
-    if settings_file=$(find_wt_settings); then
+    if settings_file="$(windows_terminal_settings_location)"; then
         echo "Found settings file: $settings_file"
-        setup_shell_profile "$settings_file" "$shell"
+        set_wsl_as_default "$settings_file" "$shell"
         echo ""
         echo "Windows Terminal configuration updated!"
         echo "Please restart Windows Terminal to see the changes."

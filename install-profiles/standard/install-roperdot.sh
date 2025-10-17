@@ -28,10 +28,15 @@ export normal_text=$(echo -e '\x1B[0m')
 if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
 	. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
 	. "${ROPERDOT_DIR}/source-scripts/win-reg-functions"
+	. "${ROPERDOT_DIR}/source-scripts/windows-terminal-functions"
 	def_win_env_linux_path LOCALAPPDATA app_local_path
 	def_win_env_linux_path PROGRAMFILES program_files_path
 	def_win_env_linux_path "PROGRAMFILES(X86)" program_files_86_path
 	def_win_env_linux_path USERPROFILE user_profile
+
+	if ! windows_terminal_settings_location; then
+		read -p "It's recommended to run Windows Terminal at least once before continuing to initialize its settings.json so it can be updated during the install."
+	fi
 fi
 
 export ROPERDOT_PROFILES=standard profiles=standard
