@@ -28,7 +28,7 @@ Here's an explanation of the properties of the installation definitions in the J
 | `binary`            | (Used for shell apps) Binary to check for to determine if the package is already installed |
 | `presence_command`  | (Optional) Command to execute to check if the package is installed (mainly used for libraries) |
 | `install_script`    | (Optional) Script to use to install the application instead of direct installation with the package manager |
-| `appDir`            | (Optional) Directory to check for within the applications directory to determine if the application is installed; used with `install_script` for GUI applications |
+| `app_dir`           | (Optional) Directory to check for within the applications directory to determine if the application is installed; used with `install_script` for GUI applications |
 | `install_command`   | (Optional) Command to use to install the application         |
 | `groups`            | (Optional) Array of groups for which to install the application; if not present, the application will be installed regardless of the group(s) designated when installing |
 | `exclusionGroups`   | (Optional) Array of groups for which the application should **not** be installed |
