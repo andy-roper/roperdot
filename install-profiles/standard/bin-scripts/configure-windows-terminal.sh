@@ -109,7 +109,7 @@ if /usr/bin/jq --arg scheme "$target_scheme" '
     .profiles.defaults.colorScheme = $scheme |
     .profiles.list[] |= if .name == "Ubuntu" then 
         .colorScheme = $scheme | 
-        .font = {"face": "Hack Nerd Font"} 
+        .font = {"face": "Hack Nerd Font", "size": 11} 
     else . end
 ' "$terminal_settings_file" > tmp_terminal.json; then
     \mv tmp_terminal.json "$terminal_settings_file"

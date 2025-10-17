@@ -23,8 +23,8 @@ get_wsl_guid() {
     local settings_file="$2"
     
     if [[ -f "$settings_file" ]]; then
-        # Extract GUID for the specified WSL distribution
-        jq -r ".profiles.list[] | select(.name == \"$distro_name\" and .source == \"Windows.Terminal.Wsl\") | .guid" "$settings_file" 2>/dev/null | head -1
+        # Extract GUID for the specified WSL distribution, excluding hidden profiles
+        jq -r ".profiles.list[] | select(.name == \"$distro_name\" and .source == \"Windows.Terminal.Wsl\" and (.hidden != true)) | .guid" "$settings_file" 2>/dev/null | head -1
     fi
 }
 

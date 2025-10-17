@@ -3,8 +3,9 @@ Write-Host "Applying Windows configuration changes..." -ForegroundColor Green
 # Enable Telnet Client
 Write-Host "Enabling Telnet Client..." -ForegroundColor Yellow
 try {
-	Start-Process -FilePath "dism.exe" -ArgumentList "/online", "/enable-feature", "/featurename:TelnetClient", "/quiet", "/norestart" -Wait -WindowStyle Hidden
-    Write-Host "Telnet Client enabled" -ForegroundColor Green
+    # Use PowerShell cmdlet instead of dism for better reliability
+    Enable-WindowsOptionalFeature -Online -FeatureName TelnetClient -All -NoRestart | Out-Null
+    Write-Host "Telnet Client enabled - will be available after next reboot" -ForegroundColor Green
 } catch {
     Write-Host "Failed to enable Telnet Client: $($_.Exception.Message)" -ForegroundColor Red
 }
@@ -137,10 +138,43 @@ try {
     $chromeFound = $false
     foreach ($path in $chromePaths) {
         if (Test-Path $path) {
-            # Use the Windows 10+ way to set default apps
-            Start-Process -FilePath $path -ArgumentList "--make-default-browser" -WindowStyle Hidden
-            Write-Host "Chrome set as default browser" -ForegroundColor Green
             $chromeFound = $true
+            $success = $false
+            
+            Write-Host "Found Chrome at: $path" -ForegroundColor Cyan
+            
+            # Method 1: Registry approach for HTTP/HTTPS protocols
+            try {
+                $chromeKey = "ChromeHTML"
+                
+                # Set Chrome as handler for http and https
+                Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice" -Name "ProgId" -Value $chromeKey -ErrorAction SilentlyContinue
+                Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\https\UserChoice" -Name "ProgId" -Value $chromeKey -ErrorAction SilentlyContinue
+                
+                Write-Host "Chrome registry associations updated" -ForegroundColor Green
+                $success = $true
+            } catch {
+                Write-Host "Registry method failed, trying alternative..." -ForegroundColor Yellow
+            }
+            
+            # Method 2: Try the Chrome command line flag if registry failed
+            if (!$success) {
+                try {
+                    Start-Process -FilePath $path -ArgumentList "--make-default-browser" -WindowStyle Hidden -Wait
+                    Write-Host "Chrome --make-default-browser executed" -ForegroundColor Green
+                    $success = $true
+                } catch {
+                    Write-Host "Chrome command line method failed" -ForegroundColor Yellow
+                }
+            }
+            
+            # Method 3: Open Windows Settings only if other methods failed
+            if (!$success) {
+                Write-Host "Automated methods failed. Opening Windows Settings for manual configuration..." -ForegroundColor Cyan
+                Write-Host "  -> Please manually set Chrome as default browser in the settings that opened" -ForegroundColor Yellow
+                Start-Process "ms-settings:defaultapps"
+            }
+            
             break
         }
     }

@@ -739,7 +739,7 @@ if [[ "$ROPERDOT_DESKTOP_ENV" == "windows" ]]; then
 	# Import color schemes into Windows Terminal and set Hack Nerd Font as the font
 	configure-windows-terminal
 	if ask_yn_n "Set WSL as the default profile for Windows Terminal" y; then
-		set-windows-terminal-default-shell
+		set-windows-terminal-default-profile
 	fi
 
 	cat <<EOT
