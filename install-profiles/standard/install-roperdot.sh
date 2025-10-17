@@ -731,14 +731,43 @@ done < <(find "${ROPERDOT_DIR}/install-profiles" -mindepth 1 -maxdepth 1 -type d
 $install_shell install-apps
 
 if [[ "$ROPERDOT_DESKTOP_ENV" == "windows" ]]; then
+	# Import color schemes into Windows Terminal and set Hack Nerd Font as the font
 	configure-windows-terminal
-	if [[ -n "$PROCESSING_ZSH" ]]; then
-		shell=zsh
-	else
-		shell=bash
+	if ask_yn_n "Set WSL as the default profile for Windows Terminal" y; then
+		set-windows-terminal-default-shell
 	fi
-	if ask_yn_n "Set $shell as the default shell for Windows Terminal" y; then
-		set-windows-terminal-default-shell $shell
+
+	cat <<EOT
+This install can update various Windows configurations for you:
+
+- Disable Windows news and interests on the taskbar
+- Disable Cortana search box on the taskbar
+- Configure Windows Search to local searches only (no web results)
+- Revert Explorer to Windows 10 style command bar and context menus
+- Disable Windows telemetry and tracking
+- Show file extensions in Explorer
+- Show hidden files and folders in Explorer
+- Enable dark theme for apps and system
+- Enable Telnet Client Windows feature
+- Disable startup delay for faster boot
+- Disable automatic Windows Update restarts
+- Set Chrome as default browser (if Chrome is installed)
+EOT
+	if ask_yn_n "Do you want to apply these configuration changes" y; then
+	    powershell.exe -ExecutionPolicy Bypass -File "${ROPERDOT_DIR}/os-bin/windows/update-windows-configuration.ps1"
+	    echo "Some of these changes require administrator privileges and may need a restart to take effect."
+	fi
+	cat <<EOT
+This install can also create Startup shortcuts for apps (if they're present) so they'll run on startup including:
+- Chrome
+- Windows Terminal
+- Sublime Text 3
+- Notion
+- Claude
+- VNC Viewer
+EOT
+	if ask_yn_n "Do you want to create these startup shortcuts" y; then
+		powershell.exe -ExecutionPolicy Bypass -File "${ROPERDOT_DIR}/os-bin/windows/create-startup-shortcuts.ps1"
 	fi
 fi
 
