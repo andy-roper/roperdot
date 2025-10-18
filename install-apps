@@ -435,11 +435,11 @@ main () {
 			[[ -n "$app_name" ]] && name="$app_name" || name="$app"
 			# Use original app name for prompting
 			if [[ -n "$always_prompt" ]]; then
-				result=$(ask_to_install_always "$name" "$desc")
+				ask_to_install_always "$name" "$desc"
 			else
-				result=$(ask_to_install "$name" "$desc")
+				ask_to_install "$name" "$desc"
 			fi
-			if [[ $result = 0 ]]; then
+			if [[ $? = 0 ]]; then
 				# pause_specified_installations "$app"
 				if [[ -n "$install_script" ]]; then
 					if [[ -n "$install_options" ]]; then
@@ -673,7 +673,7 @@ EOT
 					# Windows Subsystem for Linux (WSL)
 					if [[ -n "$HAS_ADMIN_RIGHTS" ]]; then
 						if command -v choco.exe >/dev/null 2>&1; then
-							install_wsltty
+#							install_wsltty
 							install_gui_apps "windows-gui-apps.json"
 						else
 							cat <<EOT
