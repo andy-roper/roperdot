@@ -175,7 +175,7 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
 
 ## To Do/Future Plans
 
-- Add Claude to GUI installs
+- Update install-claude to add configuration
 
 - Test and retool Ubuntu/Mint installs if necessary after the recent MacOS-centric retooling
 
