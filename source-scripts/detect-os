@@ -37,7 +37,12 @@ if [[ -f /etc/os-release ]]; then
 	if [[ -f /proc/version ]] && grep -iq Microsoft /proc/version; then
 		# Windows Subsystem for Linux (WSL)
 		ROPERDOT_DESKTOP_ENV=windows
-		/mnt/c/Windows/System32/net.exe session >/dev/null 2>&1 && HAS_ADMIN_RIGHTS=true
+	    is_admin=$(powershell.exe -Command "
+	        \$currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
+	        \$principal = New-Object Security.Principal.WindowsPrincipal(\$currentUser)
+	        \$principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+	    	" 2>/dev/null | tr -d '\r\n')
+	    [[ "$is_admin" == "True" ]] && export HAS_ADMIN_RIGHTS=true
 		wsl.exe --list --verbose | grep -Pa 'U\x00s\x00a\x00g\x00e' >/dev/null && ROPERDOT_WSL_V1=true
 	fi
 	case "$osname" in
@@ -116,7 +121,8 @@ else
 fi
 
 if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
-	ROPERDOT_DESKTOP_VERSION="$(wmic.exe os get caption | tail -2 | head -1 | sed -E 's/^Microsoft Windows ([[:digit:]]+).*/\1/')"
+	# ROPERDOT_DESKTOP_VERSION="$(wmic.exe os get caption | tail -2 | head -1 | sed -E 's/^Microsoft Windows ([[:digit:]]+).*/\1/')"
+    ROPERDOT_DESKTOP_VERSION="$(powershell.exe -Command "Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty Caption" | sed -E 's/.*Windows ([0-9]+).*/\1/' | tr -d '\r')"
 fi
 
 export ROPERDOT_OS_TYPE ROPERDOT_OS_NAME ROPERDOT_OS_VERSION ROPERDOT_OS_ENV ROPERDOT_OS_CODENAME ROPERDOT_OS_FAMILY ROPERDOT_DESKTOP_ENV ROPERDOT_DESKTOP_VERSION ROPERDOT_KERNEL_ARCH ROPERDOT_WSL ROPERDOT_WSL_V1 HAS_ADMIN_RIGHTS

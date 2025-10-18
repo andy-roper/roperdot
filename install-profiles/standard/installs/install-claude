@@ -1,0 +1,18 @@
+#
+# Description: Install script for Claude
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
+	brew install claude
+
+	# configure Claude on MacOS
+elif [[ "$ROPERODT_DESKTOP_ENV" = "windows" ]]; then
+	choco install claude
+
+	# configure Claude on Windows
+else
+	echo "Error: OS not yet configured for Claude install"
+fi

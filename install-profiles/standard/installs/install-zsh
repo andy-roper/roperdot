@@ -26,13 +26,7 @@ if command -v zsh >/dev/null 2>&1; then
 			mv ~/.zshrc ~/.zshrc.pre-roperdot
 		fi
 	fi
-	echo "Creating ~/.zshrc"
-	cat << EOT > ~/.zshrc
-autoload -Uz compinit && compinit -i
-bindkey "\e[3~" delete-char
-bindkey "^[[H"  beginning-of-line
-bindkey "^[[F"  end-of-line
-EOT
+	touch ~/.zshrc
 	add_package_sourcing .zshrc
 	if ! command -v starship >/dev/null 2>&1; then
 		ROPERDOT_CURRENT_SHELL=zsh zsh "${ROPERDOT_DIR}/install-profiles/standard/installs/install-starship"
@@ -57,6 +51,10 @@ EOT
 				fi
 			fi
 			echo "You should close the terminal window and open a new one after the install to use the new zsh version."
+		fi
+	elif [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+		if ask_yn_n "Make the new zsh version the default shell" y; then
+			chsh -s $(which zsh)
 		fi
 	fi
 fi

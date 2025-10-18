@@ -12,7 +12,7 @@
 version=5.9.0
 
 if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
-	choco install -y soapui
+	choco install -y --ignore-pending-reboot soapui
 elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
 	cd "$(mktemp -d)" || return 1
 	dmg=SoapUI-$version.dmg

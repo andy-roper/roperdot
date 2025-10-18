@@ -103,8 +103,15 @@ main () {
 			[[ $? = 194 ]] && echo && return 0
 			# Ignore false failure from apt-cyg when installing jq
 			[[ $? = 1 && "$app" = "jq" ]] && echo && return 0
-			read_input "Install of $app failed with return code $?. (R)etry, (a)bort installing this app or (c)ancel installing the remaining apps?"
+			if [[ "$package_manager" == "choco" ]]; then
+				read_input "Install of $app failed with return code $?. (R)etry ignoring checksum error, (a)bort installing this app or (c)ancel installing the remaining apps?"
+			else
+				read_input "Install of $app failed with return code $?. (R)etry, (a)bort installing this app or (c)ancel installing the remaining apps?"
+			fi
 			echo
+			if [[ "$package_manager" == "choco" && "$REPLY" =~ ^[rR]$ ]]; then
+				install_func() { choco.exe install -y --ignore-checksums --ignore-pending-reboot "$package"; }
+			fi
 			[[ "$REPLY" =~ ^[aA]$ ]] && return 0
 			[[ "$REPLY" =~ ^[cC]$ ]] && return 1
 		done
@@ -287,6 +294,14 @@ main () {
 			echo
 		fi
 
+		# Keep sudo access alive in the background during the installs
+	    if [[ -n "$has_sudo" && "${#install_list[@]}" -gt 0 ]]; then
+	        echo "Authenticating for package installations..."
+	        sudo -v
+	        while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+	        local SUDO_KEEPALIVE_PID=$!
+	    fi
+
 		# Installation loop
 		for app_index in "${install_list[@]}"; do
 			if [[ -d ~/.nvm ]] && ! command -v node >/dev/null 2>&1; then
@@ -327,7 +342,7 @@ main () {
 					else
 						[[ -z "$package" ]] && package="$binary"
 						if [[ "$ROPERDOT_DESKTOP_ENV" = windows && "$list_prerequisite" = choco ]]; then
-							install_func() { if [[ -n "$has_sudo" ]]; then choco install -y --force $package; else install_windows_binary; fi }
+							install_func() { if [[ -n "$has_sudo" ]]; then choco install -y --ignore-pending-reboot --force $package; else install_windows_binary; fi }
 						elif [[ "$ROPERDOT_OS_FAMILY" = debian && "$install_prerequisite" = brew ]]; then
 							install_func() { brew install $package; }
 						elif [[ "$install_prerequisite" = pip3 ]]; then
@@ -338,11 +353,10 @@ main () {
 					fi
 					[[ -n "$show_start_times" ]] && echo "Start time: $(date +"%r")"
 
-					[[ -f ~/roperdot/bin-zsh/install-python-package ]] && echo "Script exists"
-
 					install_app || return
 					if [[ "$app" = "Linuxbrew" ]]; then
 						export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin"
+						hash -r
 					elif [[ "$app" = "Python" && -z "$python_bin" ]]; then
 						if command -v python >/dev/null 2>&1; then
 							export python_bin=python
@@ -369,6 +383,8 @@ main () {
 				fi
 			fi
 		done
+
+		[[ -n "$SUDO_KEEPALIVE_PID" ]] && kill "$SUDO_KEEPALIVE_PID" 2>/dev/null
 	}
 
 	install_gui_apps () {
@@ -391,10 +407,11 @@ main () {
 
 	        # Skip if no app name
 	        [[ -z "$app" ]] && continue
-	        
+
 	        should_install_app "$app" "$groups" "$exclusionGroups" "$disabledByDefault" "$install_groups" || continue
-	        
-	        if [[ -n "$app" ]] && ! gui_app_is_present "$app" "$app_dir" "$bundle_name" "$full_app_path" "$binary" "$package" "$package_manager"; then
+
+			[[ -n "$app" ]] || continue
+	        if [[ -n "$always_prompt" ]] || ! gui_app_is_present "$app" "$app_dir" "$bundle_name" "$full_app_path" "$binary" "$package" "$package_manager"; then
 	            install_list+=("$i")  # Store index
 	            [[ -n "$app_name" ]] && name="$app_name" || name="$app"
 	            [[ -z "$desc" ]] && install_desc_list+=("$name") || install_desc_list+=("$name: $desc")
@@ -417,7 +434,12 @@ main () {
 			eval "$(python3 "$ROPERDOT_DIR/bin/json-to-simple-vars" "$app_file" "$app_index" "$base_profile" --optional "${extra_profiles[@]}")"
 			[[ -n "$app_name" ]] && name="$app_name" || name="$app"
 			# Use original app name for prompting
-			if ask_to_install "$name" "$desc"; then
+			if [[ -n "$always_prompt" ]]; then
+				ask_to_install_always "$name" "$desc"
+			else
+				ask_to_install "$name" "$desc"
+			fi
+			if [[ $? = 0 ]]; then
 				# pause_specified_installations "$app"
 				if [[ -n "$install_script" ]]; then
 					if [[ -n "$install_options" ]]; then
@@ -441,7 +463,7 @@ main () {
 						ubuntu|mint|debian)
 							if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
 								# WSL
-								install_func() { choco.exe install -y "$package"; }
+								install_func() { choco.exe install -y --ignore-pending-reboot "$package"; }
 							else
 								if [[ "$package_manager" = apt || "$package_manager" = "apt-get" ]]; then
 									install_func() { sudo apt install "$package" -y; }
@@ -465,41 +487,23 @@ main () {
 		done
 	}
 
-	create_wsltty_shortcut () {
-		# $1 example: zsh
-		# $2 (optional) example: /bin/zsh
-		[[ "$(desktop_shortcut_exists "${script}")" = "true" ]] && return
-		def_win_env_win_path_multiple LOCALAPPDATA APPDATA USERPROFILE
-		local wslttyDir="$LOCALAPPDATA\wsltty"
-		local target="$wslttyDir\bin\mintty"
-		local icon="$wslttyDir\wsl.ico"
-		local args="--WSL= --configdir=\" & chr(34) & \"%APPDATA%\wsltty\" & chr(34) & \" ${2:-/bin/$1}"
-		create-windows-shortcut "WSL $1" "$target" --icon-source "$icon" --desc "Terminal" --args "$args" --working-dir "$USERPROFILE"
-	}
-
-	install_wsltty () {
-		local local_app_dir="$(win_env_linux_path LOCALAPPDATA)/wsltty"
-		local app_dir="$(win_env_linux_path APPDATA)/wsltty"
-		if [[ ! -d "$local_app_dir" ]] && ask_yn_y "Install and configure wsltty (mintty terminal for WSL)" y; then
-			local new_install=true
-			choco.exe install wsltty -y
-			if [[ $? -eq 0 ]]; then
-				# cmd.exe /c "cd C:\ProgramData\chocolatey\lib\wsltty\tools\wslttyinstall && install.bat"
-				cd /mnt/c/ProgramData/chocolatey/lib/wsltty/tools/wslttyinstall && cmd.exe /c "install.bat"
-				[[ -n $PROCESSING_BASH ]] && create_wsltty_shortcut bash
-				[[ -n $PROCESSING_ZSH ]] && create_wsltty_shortcut zsh
-			fi
-		fi
-		if [[ -d "$local_app_dir" ]]; then
-			if [[ -z $new_install ]]; then
-				ask_yn_y "Apply configuration to wsltty" y || return
-			fi
-			nice_copy "${ROPERDOT_DIR}/config/apps/wsltty/config" "${app_dir}"
-			if [[ ! -e "${app_dir}/themes/hybrid" ]]; then
-				[[ -d "${app_dir}/themes" ]] || mkdir "${app_dir}/themes"
-				cp "${ROPERDOT_DIR}/config/color-schemes/mintty/"* "${app_dir}/themes"
-			fi
-		fi
+	create_wsl_terminal_shortcut () {
+	    local shell="$1"
+	    [[ "$(desktop_shortcut_exists "WSL $shell")" = "true" ]] && return
+	    
+	    def_win_env_win_path_multiple LOCALAPPDATA USERPROFILE
+	    
+	    # Windows Terminal executable path
+	    local target="$LOCALAPPDATA\\Microsoft\\WindowsApps\\wt.exe"
+	    
+	    new-tab wsl.exe -d Ubuntu -e zsh
+	    # Arguments to launch specific WSL profile with shell
+    	local args="new-tab wsl.exe -d Ubuntu -e $shell"
+	    
+	    # Use Windows Terminal icon (or you could specify a custom one)
+	    local icon="$LOCALAPPDATA\\Microsoft\\WindowsApps\\wt.exe"
+	    
+	    create-windows-shortcut "WSL $shell" "$target" --icon-source "$icon" --desc "WSL Ubuntu with $shell" --args "$args" --working-dir "$USERPROFILE"
 	}
 
 	[[ -z "$ROPERDOT_OS_ENV" ]] && . "${ROPERDOT_DIR}/source-scripts/detect-os"
@@ -627,9 +631,10 @@ EOT
 				execute_command () { sudo apt-get -y update; }
 				execute_with_retry "Update of apt-get failed."
 				
-				echo "Installing libgconf-2-4"
-				execute_command () { sudo apt-get -y install gconf2-common libgconf-2-4; }
-				execute_with_retry "Install of libgconf-2-4 failed."
+				# Commented on 10/14/2025 after seeing install errors in WSL/Ubuntu
+				# echo "Installing libgconf-2-4"
+				# execute_command () { sudo apt-get -y install gconf2-common libgconf-2-4; }
+				# execute_with_retry "Install of libgconf-2-4 failed."
 				
 				echo
 				if ask_yn_n "build-essential is required for building the installs of several applications; install it" y; then
@@ -663,10 +668,12 @@ EOT
 			# Install mtr as part of non-shell apps since it has a GUI			
 			if [[ -n "$ROPERDOT_DESKTOP_ENV" ]]; then
 				if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+					[[ -n "$PROCESSING_BASH" ]] && create_wsl_terminal_shortcut bash
+					[[ -n "$PROCESSING_ZSH" ]] && create_wsl_terminal_shortcut zsh
 					# Windows Subsystem for Linux (WSL)
 					if [[ -n "$HAS_ADMIN_RIGHTS" ]]; then
 						if command -v choco.exe >/dev/null 2>&1; then
-							install_wsltty
+#							install_wsltty
 							install_gui_apps "windows-gui-apps.json"
 						else
 							cat <<EOT

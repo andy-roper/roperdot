@@ -1,0 +1,23 @@
+{
+    "name": "Roperdot chalkboard",
+    "background": "#36333E",
+    "foreground": "#E0EBF5",
+    "selectionBackground": "#E0EBF5",
+    "cursorColor": "#E0EBF5",
+    "black": "#000000",
+    "blue": "#8688CE",
+    "cyan": "#83CCCE",
+    "green": "#82CB86",
+    "purple": "#CF8ACD",
+    "red": "#CF8885",
+    "white": "#E0E0E0",
+    "yellow": "#CDCC85",
+    "brightBlack": "#414141",
+    "brightBlue": "#B9BAE2",
+    "brightCyan": "#B7E0E2",
+    "brightGreen": "#B7E0B8",
+    "brightPurple": "#E3BBE1",
+    "brightRed": "#E3B9B8",
+    "brightWhite": "#FFFFFF",
+    "brightYellow": "#E1E1B8"
+}

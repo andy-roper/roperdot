@@ -8,10 +8,12 @@
 . "${ROPERDOT_DIR}/source-scripts/install-script-functions"
 . "${ROPERDOT_DIR}/source-scripts/nice-copy"
 
+install_app_from_git () {
+	nice_copy diff-so-fancy "${ROPERDOT_DIR}/extra-bin"
+}
+
 if [[ -n "$has_sudo" ]] && command -v brew >/dev/null 2>&1; then
 	brew install diff-so-fancy
 else
 	get_from_git https://github.com/so-fancy/diff-so-fancy diff-so-fancy
 fi
-
-

@@ -6,7 +6,7 @@
 #
 
 if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
-	choco install -y firefox
+	choco.exe install -y --ignore-pending-reboot firefox
 
 	zip_file="${ROPERDOT_DIR}/install-profiles/personal/config-files/Firefox.zip"
 	if [[ -f "$zip_file" ]]; then

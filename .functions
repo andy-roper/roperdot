@@ -1637,8 +1637,10 @@ toggle_theme() {
     fi
     
     if [[ ! -f "$settings_file" && -f "/proc/version" ]] && grep -qi "microsoft\|wsl" /proc/version; then
-        local appdata_windows=$(cd /mnt/c && cmd.exe /c echo %APPDATA% 2>/dev/null | tr -d '\r')
-        local appdata_wsl=$(wslpath "$appdata_windows")
+	    if ! type win_env_linux_path >/dev/null 2>&1; then
+			. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
+		fi
+		local appdata_wsl="$(win_env_linux_path APPDATA)"
         settings_file="${appdata_wsl}/Code/User/settings.json"
     fi
     
@@ -1728,28 +1730,14 @@ toggle_theme() {
 
 switch_windows_terminal_theme() {
     local target_theme="$1"
-    
-    # Get Windows LOCALAPPDATA path
-    local localappdata_windows=$(cmd.exe /c echo %LOCALAPPDATA% 2>/dev/null | tr -d '\r')
-    if [[ -z "$localappdata_windows" ]]; then
-        echo "❌ Could not get LOCALAPPDATA"
-        return 1
-    fi
-    
-    local localappdata_wsl=$(wslpath "$localappdata_windows")
-    
-    # Try the most common location first
-    local terminal_settings_file="${localappdata_wsl}/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json"
-    
-    # If not found, try the other location
-    if [[ ! -f "$terminal_settings_file" ]]; then
-        terminal_settings_file="${localappdata_wsl}/Microsoft/Windows Terminal/settings.json"
-    fi
-    
-    # Final check
-    if [[ ! -f "$terminal_settings_file" ]]; then
-        echo "Windows Terminal settings file not found"
-        return 1
+
+	if ! type windows_terminal_settings_location >/dev/null 2>&1; then
+		. "${ROPERDOT_DIR}/source-scripts/windows-terminal-functions"
+	fi    
+    local terminal_settings_file=
+    if [[ ! terminal_settings_file="$(windows_terminal_settings_location)" ]]; then
+    	echo "Windows Terminal settings file not found"
+    	return 1
     fi
     
     # Update both defaults AND the Ubuntu profile
@@ -1765,10 +1753,11 @@ switch_windows_terminal_theme() {
 }
 
 switch_sublime_text_theme() {
-    local appdata_windows=$(cmd.exe /c echo %APPDATA% 2>/dev/null | tr -d '\r')
-    [[ -z "$appdata_windows" ]] && return 0
-    
-    local appdata_wsl=$(wslpath "$appdata_windows")
+	if ! type win_env_linux_path >/dev/null 2>&1; then
+		. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
+	fi    
+	local appdata_wsl="$(win_env_linux_path APPDATA)"
+
     local sublime_settings_file="${appdata_wsl}/Sublime Text 3/Packages/User/Preferences.sublime-settings"
     
     [[ ! -f "$sublime_settings_file" ]] && return 0

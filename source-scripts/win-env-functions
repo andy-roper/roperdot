@@ -19,8 +19,8 @@ win_env_linux_path () {
 
 def_win_env_win_path () {
 	local value="$(cd /mnt/c && cmd.exe /c echo %$1% 2>/dev/null | tr -d '\r')"
-	value="${value//\\/\\\\}"
-	export "${2:-$1}="$value""
+#	value="${value//\\/\\\\}"
+	export "${2:-$1}=$value"
 }
 
 def_win_env_linux_path () {
@@ -32,7 +32,7 @@ def_win_env_win_path_multiple () {
 	while [[ $# -gt 0 ]]; do
 		local value="$(cd /mnt/c && cmd.exe /c echo %$1% 2>/dev/null | tr -d '\r')"
 		value="${value//\\/\\\\}"
-		export "$1="$value""
+		export "$1=$value"
 		shift
 	done
 }

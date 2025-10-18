@@ -5,7 +5,8 @@
 # URL: https://github.com/andy-roper/roperdot
 #
 
-source "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+. "${ROPERDOT_DIR}/source-scripts/win-path-functions"
 
 if [[ "$ROPERDOT_OS_ENV" = darwin ]]; then
 	if [[ -n "$has_sudo" ]]; then
@@ -15,7 +16,7 @@ if [[ "$ROPERDOT_OS_ENV" = darwin ]]; then
 	fi
 	sublime_text_dir="$HOME/Library/Application Support/Sublime Text 3"
 elif [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
-	choco install -y sublimetext3 || exit $?
+	choco install -y --ignore-pending-reboot sublimetext3 || exit $?
 	source "${ROPERDOT_DIR}/source-scripts/win-env-functions"
 	sublime_text_dir="$(win_env_linux_path APPDATA)/Sublime Text 3"
 	[[ "$(desktop_shortcut_exists "Sublime Text 3")" ]] || create-windows-shortcut "Sublime Text 3" "%PROGRAMFILES%\Sublime Text 3\sublime_text.exe"
@@ -76,7 +77,7 @@ else
 	cp "$config_files/Package Control.sublime-settings" "$sublime_user_dir"
 fi
 
-[[ -n "$have_shellcheck" ]] && $python_bin "$ROPERDOT_DIR/bin/set-values-in-json" "$sublime_user_dir/Package Control.sublime-settings" --add-to-array installed_packages SublimeLinter-shellcheck || { echo "third set-values-in-json failed with exit code $?, continuing to debug..."; }
+# [[ -n "$have_shellcheck" ]] && $python_bin "$ROPERDOT_DIR/bin/set-values-in-json" "$sublime_user_dir/Package Control.sublime-settings" --add-to-array installed_packages SublimeLinter-shellcheck || { echo "third set-values-in-json failed with exit code $?, continuing to debug..."; }
 
 # Set terminal spawned by Terminal package to iTerm 2
 if [[ "$ROPERDOT_OS_ENV" = darwin && -d "/Applications/iTerm.app" ]]; then

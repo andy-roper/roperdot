@@ -28,12 +28,13 @@ Here's an explanation of the properties of the installation definitions in the J
 | `binary`            | (Used for shell apps) Binary to check for to determine if the package is already installed |
 | `presence_command`  | (Optional) Command to execute to check if the package is installed (mainly used for libraries) |
 | `install_script`    | (Optional) Script to use to install the application instead of direct installation with the package manager |
-| `appDir`            | (Optional) Directory to check for within the applications directory to determine if the application is installed; used with `install_script` for GUI applications |
+| `app_dir`           | (Optional) Directory to check for within the applications directory to determine if the application is installed; used with `install_script` for GUI applications |
 | `install_command`   | (Optional) Command to use to install the application         |
 | `groups`            | (Optional) Array of groups for which to install the application; if not present, the application will be installed regardless of the group(s) designated when installing |
 | `exclusionGroups`   | (Optional) Array of groups for which the application should **not** be installed |
 | `disabledByDefault` | (Optional) Exclude the application from the ones to install **unless** it's in a group and that group is referenced when installing |
 | `sudo_not_required` | (Optional) Don't require sudo to install the application     |
+| `always_prompt`     | (Optional) If true, always prompt the user to install the application instead of checking if it's installed. This is needed for applications which are unpacked from zips, such as Oracle SQL Developer for Windows. |
 
 If neither install_script nor install_command are defined, the package_manager will be used to install the application.
 
@@ -67,6 +68,7 @@ roperdot makes use of a number of excellent third party terminal applications.
 - **[`jq`](https://jqlang.org/)** - JSON processor and formatter
 - **[`Neovim`](https://neovim.io/)** - Modern Vim editor
 - **[`shellcheck`](https://www.shellcheck.net/)** - Shell script linter
+- [**`uuid-runtime`**](https://packages.debian.org/sid/uuid-runtime) - Library for generating and parsing UUIDs
 - **[`Vim/vimdiff`](https://www.vim.org/)** - Text editor and diff tool
 - **[`xmllint`](http://xmlsoft.org/xmllint.html)** - XML parsing and validation
 
@@ -173,7 +175,9 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
 
 ## To Do/Future Plans
 
-- Test and retool Ubuntu/Mint/WSL (Ubuntu) installs if necessary after the recent MacOS-centric retooling
+- Add Claude to GUI installs
+
+- Test and retool Ubuntu/Mint installs if necessary after the recent MacOS-centric retooling
 
 - Update other OSes’ shell-apps JSON files similarly to how the MacOS one was updated
   - Remove html5print and xml2json
@@ -186,14 +190,6 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
   - Add Brave browser; disable WebStorm
   
 - Add installation of Playwright Python library to other OSes' shell-apps JSON files
-
-- Add install of Windows fonts in WSL:
-
-  ```bash
-  sudo apt update
-  echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula boolean true" | sudo debconf-set-selections
-  sudo apt install -y ttf-mscorefonts-installer
-  ```
 
 - Consider adding VMware Fusion (Mac) or VMware Workstation Pro (others) to installs
 
@@ -226,6 +222,12 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
   - Need to support a different/second install profile
   - Need to support installing a second profile after installing standard
   
+- Consider trying [scoop](https://github.com/ScoopInstaller/Scoop) to install GUI apps for non-admin Windows users
+
+- Revisit issue with being repeatedly asked for the sudo password when installing WSL/Ubuntu shell apps (apt-file, git-lfs, fd-find, jq, shellcheck, speedtest-cli)
+
+  - The sudo keepalive approach in install_shell_apps didn't work
+
 - Integrate eza, a modern ls alternative: https://github.com/eza-community/eza
 
 - Integrate bat, a modern cat alternative: https://github.com/sharkdp/bat
@@ -239,10 +241,10 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
   - [dust](https://github.com/bootandy/dust): more intuitive version of du
   - [httpie](https://github.com/httpie/cli): user-friendly HTTP client
   - [procs](https://github.com/dalance/procs): modern ps alternative
-  
+
 - Update VS Code configuration when switching scheme (colors only)
 
-- Update install for Oracle SQL Developer to support Windows and Linux
+- Update install for Oracle SQL Developer to support Linux
 
 - Institute use of print_important_message during after after install
 

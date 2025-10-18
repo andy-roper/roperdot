@@ -1,0 +1,23 @@
+{
+    "name": "Roperdot srcery",
+    "background": "#353535",
+    "foreground": "#EFE1BF",
+    "selectionBackground": "#EFE1BF",
+    "cursorColor": "#EFE1BF",
+    "black": "#252421",
+    "blue": "#6787B2",
+    "cyan": "#00BAC0",
+    "green": "#61AC63",
+    "purple": "#E94780",
+    "red": "#FF4A34",
+    "white": "#A29388",
+    "yellow": "#FDC334",
+    "brightBlack": "#3B3935",
+    "brightBlue": "#9FC1F9",
+    "brightCyan": "#5EFBEE",
+    "brightGreen": "#A7C546",
+    "brightPurple": "#EB6F94",
+    "brightRed": "#FB6B52",
+    "brightWhite": "#FFFFFF",
+    "brightYellow": "#FFD881"
+}

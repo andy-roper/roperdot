@@ -11,11 +11,10 @@
 # exec ruby -e "$(print-web-file https://raw.githubusercontent.com/Linuxbrew/install/master/install)"
 echo -e "${warning_text}NOTE: you may need to press Enter twice when prompted by the Linuxbrew installation${normal_text}\n"
 
-print-web-file https://raw.githubusercontent.com/Homebrew/install/master/install.sh > ~/linuxbrew-install.sh
-
 if [[ -n "$accept_recommended" ]]; then
-#	/bin/bash -c "$(print-web-file https://raw.githubusercontent.com/Homebrew/install/master/install.sh)" </dev/null
-	print-web-file https://raw.githubusercontent.com/Homebrew/install/master/install.sh | /bin/bash </dev/null
+	sudo mkdir -p /home/linuxbrew/.linuxbrew
+	sudo chown -R $USER:$(id -gn) /home/linuxbrew/.linuxbrew
+	NONINTERACTIVE=1 print-web-file https://raw.githubusercontent.com/Homebrew/install/master/install.sh | bash
 else
-	print-web-file https://raw.githubusercontent.com/Homebrew/install/master/install.sh | /bin/bash
+	print-web-file https://raw.githubusercontent.com/Homebrew/install/master/install.sh | bash
 fi

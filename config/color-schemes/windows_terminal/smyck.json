@@ -1,0 +1,23 @@
+{
+    "name": "Roperdot smyck",
+    "background": "#303030",
+    "foreground": "#F9F9F9",
+    "selectionBackground": "#F9F9F9",
+    "cursorColor": "#F9F9F9",
+    "black": "#000000",
+    "blue": "#83C0D6",
+    "cyan": "#2497A4",
+    "green": "#9EBD4B",
+    "purple": "#D3B2DA",
+    "red": "#D36C58",
+    "white": "#BEBEBE",
+    "yellow": "#D9BC4C",
+    "brightBlack": "#707070",
+    "brightBlue": "#ABE0F3",
+    "brightCyan": "#86E4E0",
+    "brightGreen": "#D6EE7C",
+    "brightPurple": "#FDC2FA",
+    "brightRed": "#E7A8A1",
+    "brightWhite": "#FFFFFF",
+    "brightYellow": "#FFE789"
+}

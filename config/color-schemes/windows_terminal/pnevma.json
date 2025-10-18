@@ -1,0 +1,23 @@
+{
+    "name": "Roperdot pnevma",
+    "background": "#252525",
+    "foreground": "#D9D9D9",
+    "selectionBackground": "#D9D9D9",
+    "cursorColor": "#D9D9D9",
+    "black": "#3E3C3B",
+    "blue": "#90B4C9",
+    "cyan": "#99E0C1",
+    "green": "#A1B38F",
+    "purple": "#D2B0CF",
+    "red": "#B37B79",
+    "white": "#D9D9D9",
+    "yellow": "#DFBD99",
+    "brightBlack": "#5C5A57",
+    "brightBlue": "#B0C9D7",
+    "brightCyan": "#BDEBE4",
+    "brightGreen": "#BCC9B1",
+    "brightPurple": "#DFCBE1",
+    "brightRed": "#E09B99",
+    "brightWhite": "#FFFFFF",
+    "brightYellow": "#EAD3BD"
+}

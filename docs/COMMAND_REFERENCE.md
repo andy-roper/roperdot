@@ -253,6 +253,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`choose-scheme`** - Interactive color scheme selection for all applications
 - **`compare-colors`** - Compare color schemes side by side
 - **`compare-color-scheme`** - Print colors defined for a color scheme
+- **`configure-windows-terminal` (Windows)** - Imports schemes into Windows Terminal settings and sets the current scheme
 - **`gen-all-color-schemes`** - Call gen-color-files for each available color scheme
 - **`gen-color-files`** - Generate color files for a color scheme
 - **`generate-dircolors`** - Generate .dircolors from a source file

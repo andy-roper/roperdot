@@ -6,7 +6,7 @@
 #
 
 if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
-	choco.exe install -y foobar2000
+	choco.exe install -y --ignore-pending-reboot foobar2000
 
 	zip_file="${ROPERDOT_DIR}/install-profiles/personal/config-files/foobar2000.zip"
 	if [[ -f "$zip_file" ]]; then

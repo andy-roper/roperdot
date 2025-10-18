@@ -18,10 +18,5 @@ else
 		pipx install "$package"
 		exit $?
 	fi
-	. "${ROPERDOT_DIR}/source-scripts/find-pip"
-	if [[ -n "$pip_bin" ]]; then
-		$pip_bin install --user "$package"
-	else
-		echo "Could not find a suitable installer; aborting installation of "$package""
-	fi
+	install-python-package "$package"
 fi

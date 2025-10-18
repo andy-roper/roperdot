@@ -67,7 +67,6 @@
 		"app": "Docker",
 		"package": "docker",
 		"package_manager": "brew",
-		"exclusionGroups": ["work"],
 		"desc": "Virtualization platform"
 	},
 	{
@@ -114,7 +113,7 @@
 	},
 	{
 		"app": "Oracle SQL Developer",
-		"appDir": "SQLDeveloper.app",
+		"app_dir": "SQLDeveloper.app",
 		"install_script": "install-sql-developer",
 		"groups": ["work"],
 		"desc": "Oracle SQL Developer"
@@ -155,7 +154,7 @@
 	},
 	{
 		"app": "SoapUI",
-		"appDir": "SoapUI-*",
+		"app_dir": "SoapUI-*",
 		"install_script": "install-soapui",
 		"install_prerequisite": "java",
 		"groups": ["development"],
@@ -173,6 +172,13 @@
 		"package": "betterzip",
 		"package_manager": "brew",
 		"desc": "File archiver utility"
+	},
+	{
+		"app": "Claude",
+		"package": "claude",
+		"package_manager": "brew",
+		"install_script": "install-claude",
+		"desc": "Claude AI"
 	},
 	{
 		"app": "VirtualBox",

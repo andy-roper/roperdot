@@ -9,7 +9,7 @@
 . "${ROPERDOT_DIR}/source-scripts/install-script-functions"
 
 if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
-	choco install -y vscode
+	choco install -y --ignore-pending-reboot vscode
 	. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
 	def_win_env_linux_path ProgramFiles
 	[[ -d "${ProgramFiles}/Microsoft VS Code" ]] || exit 0
@@ -51,10 +51,31 @@ fi
 install_ext () {
 	if [[ -n "$regular_install" ]]; then
 		if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
-			# [[ -d ~/.vscode-server/"$1" ]] || code --install-extension "$1"
 			if [[ ! -d ~/.vscode-server/"$1" ]]; then
-				echo "Doing: code --install-extension \"$1\""
-				code --verbose --install-extension "$1"
+				if ! code --install-extension "$1"; then
+					echo "DNS issue encountered while installing VSCode extension"
+					if [[ ! -f /etc/wsl.conf.bak ]]; then
+						echo "Backing up /etc/wsl.conf"
+						sudo cp /etc/wsl.conf /etc/wsl.conf.bak
+					fi
+					if [[ ! -f /etc/resolv.conf.bak ]]; then
+						echo "Backing up /etc/resolv.conf"
+						sudo cp /etc/resolv.conf /etc/resolv.conf.bak
+					fi
+					echo "Updating /etc/wsl.conf and /etc/resolv.conf"
+					sudo cat << EOT | sudo tee /etc/wsl.conf > /dev/null
+[network]
+generateResolvConf = false
+EOT
+					sudo cat << EOT | sudo tee /etc/resolv.conf > /dev/null
+nameserver 8.8.8.8
+nameserver 1.1.1.1
+nameserver 10.255.255.254
+search mshome.net
+EOT
+					echo "DNS fix applied, retrying extension install..."
+					code --install-extension "$1"
+				fi
 			fi
 		else
 			[[ -d ~/.vscode/"$1" ]] || code --install-extension "$1"

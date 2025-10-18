@@ -5,8 +5,10 @@
 # URL: https://github.com/andy-roper/roperdot
 #
 
+. "${ROPERDOT_DIR}/source-scripts/win-path-functions"
+
 if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
-	choco install -y directoryopus
+	choco install -y --ignore-pending-reboot directoryopus
 	[[ "$(desktop_shortcut_exists "Directory Opus")" ]] || create-windows-shortcut "Directory Opus" "%PROGRAMFILES%\GPSoftware\Directory Opus\dopus.exe"
 
 	zip_file="${ROPERDOT_DIR}/install-profiles/personal/config-files/Directory Opus.zip"

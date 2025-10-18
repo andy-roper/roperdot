@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+"""
+Description: Converts a terminal scheme to Windows Terminal color scheme format
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+"""
+import json
+import sys
+import argparse
+
+def show_help():
+    help_text = """
+convert-terminal-scheme: convert terminal color schemes to Windows Terminal format
+Usage: convert-terminal-scheme <scheme_json_file> [scheme_name]
+
+convert-terminal-scheme will convert a terminal scheme JSON file such as the
+JSON Scheme export from https://terminal.sexy to the format of color schemes
+used in Windows Terminal's settings.json.
+
+If scheme_name is provided, it will be used as the name in the output.
+Otherwise the name from the JSON file will be used, or "Custom Scheme" as fallback.
+"""
+    print(help_text.strip())
+    return 1
+
+def convert_to_windows_terminal(scheme_data, custom_name=None):
+    """Convert terminal.sexy JSON export to Windows Terminal color scheme."""
+    
+    # Map the 16-color array to Windows Terminal color names
+    color_mapping = [
+        'black',           # 0
+        'red',             # 1
+        'green',           # 2
+        'yellow',          # 3
+        'blue',            # 4
+        'purple',          # 5
+        'cyan',            # 6
+        'white',           # 7
+        'brightBlack',     # 8
+        'brightRed',       # 9
+        'brightGreen',     # 10
+        'brightYellow',    # 11
+        'brightBlue',      # 12
+        'brightPurple',    # 13
+        'brightCyan',      # 14
+        'brightWhite'      # 15
+    ]
+    
+    # Determine scheme name priority: custom_name > JSON name > "Custom Scheme"
+    if custom_name:
+        scheme_name = custom_name
+    elif scheme_data.get("name"):
+        scheme_name = scheme_data["name"]
+    else:
+        scheme_name = "Custom Scheme"
+    
+    # Start with base scheme
+    windows_terminal_scheme = {
+        "name": scheme_name,
+        "foreground": scheme_data["foreground"],
+        "background": scheme_data["background"],
+        "cursorColor": scheme_data["foreground"],  # Use foreground as cursor color
+        "selectionBackground": scheme_data["color"][8]  # Use bright black for selection
+    }
+    
+    # Map each color from the array
+    for index, color in enumerate(scheme_data["color"]):
+        windows_terminal_scheme[color_mapping[index]] = color
+    
+    return windows_terminal_scheme
+
+def main():
+    # Check for no arguments or help flags
+    if len(sys.argv) == 1:
+        return show_help()
+    if len(sys.argv) > 1 and sys.argv[1] in ['-?', '-h', '--help']:
+        return show_help()
+    
+    parser = argparse.ArgumentParser(
+        description="Convert terminal scheme JSON to Windows Terminal color scheme"
+    )
+    
+    parser.add_argument('input_file', 
+                        help='Input terminal scheme JSON file')
+    parser.add_argument('scheme_name', nargs='?',
+                        help='Optional name for the color scheme')
+    
+    args = parser.parse_args()
+    
+    try:
+        # Read input file
+        with open(args.input_file, 'r') as f:
+            input_data = json.load(f)
+        
+        # Convert with optional custom name
+        converted = convert_to_windows_terminal(input_data, args.scheme_name)
+        
+        # Always output to stdout
+        print(json.dumps(converted, indent=2))
+            
+    except FileNotFoundError:
+        print(f"Error: File not found - {args.input_file}", file=sys.stderr)
+        sys.exit(1)
+    except json.JSONDecodeError as e:
+        print(f"Error: Invalid JSON - {e}", file=sys.stderr)
+        sys.exit(1)
+    except KeyError as e:
+        print(f"Error: Missing required field in input JSON - {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

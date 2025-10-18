@@ -1,0 +1,23 @@
+{
+    "name": "Roperdot hybrid",
+    "background": "#161719",
+    "foreground": "#B8BCBA",
+    "selectionBackground": "#B8BCBA",
+    "cursorColor": "#B8BCBA",
+    "black": "#1E1F22",
+    "blue": "#4D6D8B",
+    "cyan": "#4D7B74",
+    "green": "#7A8431",
+    "purple": "#71527C",
+    "red": "#922F33",
+    "white": "#5D656D",
+    "yellow": "#D4804D",
+    "brightBlack": "#2A2D32",
+    "brightBlue": "#6F90B0",
+    "brightCyan": "#79B2A8",
+    "brightGreen": "#A6B255",
+    "brightPurple": "#A27FAD",
+    "brightRed": "#BF5053",
+    "brightWhite": "#B9BCBA",
+    "brightYellow": "#EBBB61"
+}

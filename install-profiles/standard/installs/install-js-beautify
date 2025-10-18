@@ -24,8 +24,7 @@ else
 	else
 		. "${ROPERDOT_DIR}/source-scripts/find-pip"
 		if [[ -n "$pip_bin" ]]; then
-			$pip_bin install --user jsbeautifier # && copy_script
-			js_beautify_installed=true
+			install-python-package jsbeautifier && js_beautify_installed=true
 		else
 			echo "Could not find a suitable installer; aborting installation of js-beautify"
 		fi
@@ -38,4 +37,5 @@ if [[ -n "$js_beautify_installed" && ! -f ~/.jsbeautifyrc ]]; then
     "indent_size": 4
 }
 EOT
+
 fi

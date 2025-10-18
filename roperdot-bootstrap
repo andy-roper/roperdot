@@ -260,6 +260,27 @@ fi
 # Fix brew "parent directory is world writable but not sticky" error in WSL
 [[ "$ROPERDOT_OS_ENV" = "ubuntu" && "$ROPERDOT_DESKTOP_ENV" = "windows" ]] && umask 022
 
+# autoload must execute before .functions is sourced so it runs before compdef executions
+if [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
+	# Auto-fix insecure directory permissions before compinit
+	if ! compaudit >/dev/null 2>&1; then
+		# compaudit found issues, try to fix them automatically
+		compaudit 2>/dev/null | xargs chmod g-w,o-w 2>/dev/null || true
+	fi
+
+	# Initialize the completion system
+	autoload -Uz compinit && compinit
+	error_code=$?
+	if [[ $error_code -ne 0 && "$ROPERDOT_OS_ENV" = "darwin" ]]; then
+		read "?Error detected starting compinit. Fix by changing permissions on /usr/local/share [y/n]? "
+		if [[ "$REPLY" = y ]]; then
+			chmod -R go-w /usr/local/share
+			autoload -Uz compinit && compinit
+		fi
+	fi
+	[[ -e "$ROPERDOT_DIR/.zsh-suffix-aliases" ]] && . "$ROPERDOT_DIR/.zsh-suffix-aliases"
+fi
+
 do_timing "phase 4"
 [[ -f "${ROPERDOT_DIR}/.aliases" ]] && source "${ROPERDOT_DIR}/.aliases"
 do_timing "phase 5"
@@ -308,8 +329,17 @@ fi
 export MANPAGER="less -X"
 
 # Prefer US English and use UTF-8
-export LC_ALL="en_US.UTF-8"
-export LANG="en_US"
+# Set locale with fallback
+if locale -a 2>/dev/null | grep -qi -E "en_US\.utf-?8"; then
+    export LC_ALL="en_US.UTF-8"
+    export LANG="en_US.UTF-8"
+elif locale -a 2>/dev/null | grep -qi -E "C\.utf-?8"; then
+    export LC_ALL="C.UTF-8"
+    export LANG="C.UTF-8"
+else
+    # Don't set LC_ALL, just use basic LANG
+    export LANG="C"
+fi
 
 if [[ -d /home/linuxbrew/.linuxbrew/bin ]]; then
 	export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin"
@@ -346,9 +376,13 @@ fi
 do_timing "phase 8"
 
 if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
-	[[ -e ~/.fzf.bash ]] && . ~/.fzf.bash
+    if [[ -z "$_fzf_completion_loader" ]]; then
+        [[ -e ~/.fzf.bash ]] && . ~/.fzf.bash
+    fi
 elif [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
-	[[ -e ~/.fzf.zsh ]] && . ~/.fzf.zsh
+    if [[ -z "$fzf_default_completion" ]]; then
+        [[ -e ~/.fzf.zsh ]] && . ~/.fzf.zsh
+    fi
 fi
 
 if [[ -n "$ROPERDOT_HISTORY_BY_SESSION" ]]; then
@@ -503,26 +537,6 @@ fi
 # Completion
 
 do_timing "phase 10"
-
-if [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
-	# Auto-fix insecure directory permissions before compinit
-	if ! compaudit >/dev/null 2>&1; then
-		# compaudit found issues, try to fix them automatically
-		compaudit 2>/dev/null | xargs chmod g-w,o-w 2>/dev/null || true
-	fi
-
-	# Initialize the completion system
-	autoload -Uz compinit && compinit
-	error_code=$?
-	if [[ $error_code -ne 0 && "$ROPERDOT_OS_ENV" = "darwin" ]]; then
-		read "?Error detected starting compinit. Fix by changing permissions on /usr/local/share [y/n]? "
-		if [[ "$REPLY" = y ]]; then
-			chmod -R go-w /usr/local/share
-			autoload -Uz compinit && compinit
-		fi
-	fi
-	[[ -e "$ROPERDOT_DIR/.zsh-suffix-aliases" ]] && . "$ROPERDOT_DIR/.zsh-suffix-aliases"
-fi
 
 # Enable extended pattern matching
 [[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && shopt -s extglob || setopt ksh_glob

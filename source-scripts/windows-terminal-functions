@@ -1,0 +1,23 @@
+if ! type win_env_linux_path >/dev/null 2>&1; then
+	. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
+fi
+
+windows_terminal_settings_location() {
+	localappdata_wsl="$(win_env_linux_path LOCALAPPDATA)"
+
+	# Try the most common location first
+	terminal_settings_file="${localappdata_wsl}/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json"
+
+	# If not found, try the other location
+	if [[ ! -f "$terminal_settings_file" ]]; then
+	    terminal_settings_file="${localappdata_wsl}/Microsoft/Windows Terminal/settings.json"
+	fi
+    
+    # Final check
+    if [[ -f "$terminal_settings_file" ]]; then
+    	echo "$terminal_settings_file"
+   	else
+        return 1
+    fi
+}
+

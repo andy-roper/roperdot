@@ -1,0 +1,23 @@
+{
+    "name": "Roperdot spacegray eighties",
+    "background": "#2D2D2D",
+    "foreground": "#C9C6BC",
+    "selectionBackground": "#C9C6BC",
+    "cursorColor": "#C9C6BC",
+    "black": "#1B1E25",
+    "blue": "#6599CC",
+    "cyan": "#66CCCC",
+    "green": "#92B477",
+    "purple": "#CC99CC",
+    "red": "#F2777A",
+    "white": "#F2F0EC",
+    "yellow": "#FFCC66",
+    "brightBlack": "#686868",
+    "brightBlue": "#5E98DA",
+    "brightCyan": "#92ECE9",
+    "brightGreen": "#A2DAA4",
+    "brightPurple": "#FF77FF",
+    "brightRed": "#FF8186",
+    "brightWhite": "#FFFFFF",
+    "brightYellow": "#FFD968"
+}

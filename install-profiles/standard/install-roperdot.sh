@@ -17,6 +17,7 @@ fi
 . "${ROPERDOT_DIR}/source-scripts/re-match"
 . "${ROPERDOT_DIR}/source-scripts/backup-file"
 . "${ROPERDOT_DIR}/source-scripts/update-config-files"
+. "${ROPERDOT_DIR}/source-scripts/windows-terminal-functions"
 
 # Have to use \x1B instead of \e for out-of-the-box Mac bash compatibility
 export warning_text=$(echo -e '\x1B[0;91m')
@@ -27,9 +28,15 @@ export normal_text=$(echo -e '\x1B[0m')
 if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
 	. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
 	. "${ROPERDOT_DIR}/source-scripts/win-reg-functions"
+	. "${ROPERDOT_DIR}/source-scripts/windows-terminal-functions"
 	def_win_env_linux_path LOCALAPPDATA app_local_path
 	def_win_env_linux_path PROGRAMFILES program_files_path
 	def_win_env_linux_path "PROGRAMFILES(X86)" program_files_86_path
+	def_win_env_linux_path USERPROFILE user_profile
+
+	if ! windows_terminal_settings_location; then
+		read -p "It's recommended to run Windows Terminal at least once before continuing to initialize its settings.json so it can be updated during the install."
+	fi
 fi
 
 export ROPERDOT_PROFILES=standard profiles=standard
@@ -277,8 +284,9 @@ elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
 	groups $USER | grep -q admin && export has_sudo=true
 else
 	echo Checking for sudo access...
-#		sudo -l | tee /dev/tty | grep "ALL) ALL" >/dev/null && export has_sudo=true
-	sudo -l | grep "ALL) ALL" >/dev/null && export has_sudo=true
+#	sudo -l | tee /dev/tty | grep "ALL) ALL" >/dev/null && export has_sudo=true
+#	sudo -l | grep "ALL) ALL" >/dev/null && export has_sudo=true
+	groups $USER | grep -qE '\b(sudo|adm|admin|wheel)\b' && export has_sudo=true
 fi
 
 if [[ -n "$resume_step" && "$resume_step" -gt 6 ]]; then
@@ -325,6 +333,31 @@ if [[ -z "$skip_to_installs" ]]; then
 			        sleep 5
 			    done
 			fi
+		fi
+	fi
+
+	locale_needs_setup=
+	if [[ "$ROPERDOT_OS_FAMILY" == "debian" ]]; then
+		if ! dpkg -l locales &>/dev/null; then
+		    locale_needs_setup=true
+		elif ! locale -a 2>/dev/null | grep -q "en_US.UTF-8"; then
+		    # Package exists but locale not generated
+		    locale_needs_setup=true
+		fi
+	fi
+
+	if [[ -n "$locale_needs_setup" ]]; then
+		if [[ -n "$has_sudo" ]]; then
+		    if ask_yn_y "Set up en_US.UTF-8 as the default locale?" y; then
+		    	echo "Installing and configuring locale..."
+		        sudo apt install locales
+		        sudo locale-gen en_US.UTF-8
+		        sudo update-locale LANG=en_US.UTF-8
+		        echo "Locale setup complete. You may need to restart your shell."
+		    fi
+		else
+	        echo "Skipping locale setup due to lack of sudo access."
+    	    echo "To set it up manually: sudo apt install locales && sudo locale-gen en_US.UTF-8"
 		fi
 	fi
 
@@ -533,18 +566,21 @@ EOT
 		unset ROPERDOT_HISTORY_BY_SESSION
 	fi
 	
-	if command -v pygmentize >/dev/null 2>&1; then
+	if [[ -n "$accept_recommended" ]]; then
+		echo "Accepting recommended defaults so setting default color scheme to hybrid"
+		ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME=hybrid
+	else
 		declare -a schemes
 		schemes+=("default")
-		pushd "${ROPERDOT_DIR}/config/color-schemes/source" >&/dev/null || return 1
-		PS3="Default pygmentize color scheme? "
+		pushd "${ROPERDOT_DIR}/config/color-schemes/source" >&/dev/null
+		PS3="Default color scheme? "
 		for scheme in *; do
 			[[ "$scheme" == "default" ]] || schemes+=("$scheme")
 		done
 		select scheme in "${schemes[@]}"; do
 			break
 		done
-		popd >&/dev/null || return 1
+		popd >&/dev/null
 		[[ -n "$scheme" ]] && ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME="$scheme"
 	fi
 
@@ -636,12 +672,17 @@ EOT
 		echo
 	fi
 
-	debug "Font check: ROPERDOT_OS_TYPE: $ROPERDOT_OS_TYPE"
+	debug "Font check: ROPERDOT_DESKTOP_ENV: $ROPERDOT_DESKTOP_ENV"
 	save_resume_point 6
 	if [[ -z "$resume_step" || "$resume_step" -le 6 ]]; then
-		if [[ -n "$ROPERDOT_OS_TYPE" ]]; then
+		if [[ -n "$ROPERDOT_DESKTOP_ENV" ]]; then
 			# Install Hack Nerd fonts
 			"${ROPERDOT_DIR}/bin/install-font-from-web" 'Hack Nerd Font' 'Hack' 'https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.tar.xz' 'HackNerdFontMono-Regular.ttf'
+
+			# Install Windows fonts in WSL
+			sudo apt update
+			echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula boolean true" | sudo debconf-set-selections
+			sudo apt install -y ttf-mscorefonts-installer
 		fi
 	fi
 
@@ -693,6 +734,47 @@ done < <(find "${ROPERDOT_DIR}/install-profiles" -mindepth 1 -maxdepth 1 -type d
 [[ -n "$installs_to_pause" ]] && export installs_to_pause
 
 $install_shell install-apps
+
+if [[ "$ROPERDOT_DESKTOP_ENV" == "windows" ]]; then
+	# Import color schemes into Windows Terminal and set Hack Nerd Font as the font
+	configure-windows-terminal
+	if ask_yn_n "Set WSL as the default profile for Windows Terminal" y; then
+		set-windows-terminal-default-profile
+	fi
+
+	cat <<EOT
+This install can update various Windows configurations for you:
+
+- Disable Cortana search box on the taskbar
+- Configure Windows Search to local searches only (no web results)
+- Revert Explorer to Windows 10 style command bar and context menus
+- Disable Windows telemetry and tracking
+- Show file extensions in Explorer
+- Show hidden files and folders in Explorer
+- Enable dark theme for apps and system
+- Disable startup delay for faster boot
+- Disable automatic Windows Update restarts
+
+Note that applying these changes will entail an automatic restart of Explorer (but not of Windows).
+EOT
+	if ask_yn_n "Do you want to apply these configuration changes" y; then
+	    powershell.exe -ExecutionPolicy Bypass -File "${ROPERDOT_DIR}/os-bin/windows/update-windows-configuration.ps1"
+	    echo "Enabling Telnet requires a reboot for it to complete taking effect."
+	    echo "Some of these changes other require administrator privileges and may need a restart to take effect."
+	fi
+	cat <<EOT
+This install can also create Startup shortcuts for apps (if they're present) so they'll run on startup including:
+- Chrome
+- Windows Terminal
+- Sublime Text 3
+- Notion
+- Claude
+- VNC Viewer
+EOT
+	if ask_yn_n "Do you want to create these startup shortcuts" y; then
+		powershell.exe -ExecutionPolicy Bypass -File "${ROPERDOT_DIR}/os-bin/windows/create-startup-shortcuts.ps1"
+	fi
+fi
 
 if [[ ! -d ~/.grc ]] && command -v grc >/dev/null 2>&1; then
 	ln -s "${ROPERDOT_DIR}/config/color-schemes/source/default/grc" ~/.grc
@@ -869,8 +951,18 @@ EOT
 fi
 if [[ "$ROPERDOT_OS_ENV" = "darwin" && -d /Applications/iTerm.app ]]; then
 	echo -e "You should import the profile JSON from roperdot/config/apps/iTerm2 into iTerm2.\n" >> ~/roperdot-info.txt
-else
-	echo -e "If you're using a supported terminal emulator, you should import one or more color schemes from roperdot/config/color-schemes/mintty.\n" >> ~/roperdot-info.txt
+elif [[ "$ROPERDOT_DESKTOP_ENV" == "windows" ]]; then
+	echo -e "If this is your first time running Windows Terminal, you should run the configure-windows-terminal script to update the Windows Terminal schemes." >> ~/roperdot-info.txt
 fi
 echo -e "If your color scheme of choice is light instead of dark, you should update ~/roperdot-loader and set the values of ROPERDOT_MC_SCHEME and ROPERDOT_VI_BACKGROUND to 'light'.\n" >> ~/roperdot-info.txt
+if [[ "$ROPERDOT_DESKTOP_ENV" == "windows" ]]; then
+	cat <<EOT
+Some things you should consider doing for Windows:
+* Disable News and Interests on the taskbar: right-click the icon on the taskbar, expand News and Interests, and click Turn off
+* Enable the Telnet client and Hyper-V features via Control Panel/Programs/Turn Windows features on or off
+* Set your default browser to something other than Edge
+* Configure your Start Menu by removing unwanted pinned apps and pinning commonly used apps
+* Pin frequently used apps to the Taskbar
+EOT
+fi
 cat ~/roperdot-info.txt

@@ -187,7 +187,7 @@
 	{
 		"app": "jsoncomment",
 		"presence_command": "$python_bin -c 'import jsoncomment' >/dev/null 2>&1",
-		"install_script": "install-jsoncomment",
+		"install_command": "install-python-package jsoncomment",
 		"sudo_not_required": true,
 		"desc": "Python script for wrapping JSON parsing"
 	},
@@ -227,16 +227,9 @@
 		"desc": "Tool for parsing and beautifying XML"
 	},
 	{
-		"app": "xml2json-command",
-		"binary": "xml2json",
-		"install_prerequisite": "npm",
-		"install_script": "install-xml2json",
-		"desc": "Utility for converting XML to JSON"
-	},
-	{
 		"app": "colored",
 		"presence_command": "$python_bin -c 'import colored' >/dev/null 2>&1",
-		"install_script": "install-colored",
+		"install_command": "install-python-package colored",
 		"sudo_not_required": true,
 		"desc": "Python module for color and formatting in terminals"
 	},
@@ -248,11 +241,12 @@
 		"desc": "Node/Python script for beautifying JavaScript"
 	},
 	{
-		"app": "html5-print",
-		"presence_command": "$python_bin -c 'import html5print' >/dev/null 2>&1",
-		"install_script": "install-html5-print",
+		"app": "xmltodict",
+		"presence_command": "$python_bin -c 'import xmltodict' >/dev/null 2>&1",
+		"install_prerequisite": "pip3",
+		"install_command": "install-python-package xmltodict",
 		"sudo_not_required": true,
-		"desc": "Python script for beautifying HTML, CSS and JavaScript"
+		"desc": "Python module for converting XML to dictionary"
 	},
 	{
 		"app": "sqlparse",
@@ -260,6 +254,22 @@
 		"install_command": "install-python-package sqlparse",
 		"sudo_not_required": true,
 		"desc": "Python module for parsing and formatting SQL"
+	},
+	{
+		"app": "cssbeautifier",
+		"presence_command": "command -v css-beautify >/dev/null 2>&1 || $python_bin -c 'import cssbeautifier' >/dev/null 2>&1",
+		"install_prerequisite": "pip3",
+		"sudo_not_required": true,
+		"install_command": "install-python-package cssbeautifier",
+		"desc": "Python script for beautifying CSS"
+	},
+	{
+		"app": "BeautifulSoup4",
+		"presence_command": "$python_bin -c 'import bs4' >/dev/null 2>&1",
+		"install_prerequisite": "pip3",
+		"sudo_not_required": true,
+		"install_command": "install-python-package beautifulsoup4",
+		"desc": "Python script for beautifying HTML"
 	},
 	{
 		"app": "tabulate",
@@ -281,6 +291,20 @@
 		"install_command": "install-python-package py-rolldice",
 		"sudo_not_required": true,
 		"desc": "Python module for evaluating dice notation"
+	},
+	{
+		"app": "playwright",
+		"presence_command": "$python_bin -c 'import playwright' >/dev/null 2>&1",
+		"install_script": "install-playwright",
+		"sudo_not_required": true,
+		"desc": "Python library for browser automation"
+	},
+	{
+		"app": "pypdf",
+		"presence_command": "$python_bin -c 'import pypdf' >/dev/null 2>&1",
+		"install_command": "install-python-package pypdf",
+		"sudo_not_required": true,
+		"desc": "Python library for PDF manipulation"
 	},
 	{
 		"app": "generic colouriser",
@@ -352,6 +376,12 @@
 		"presence_command": "[[ -e ~/.z ]]",
 		"sudo_not_required": true,
 		"desc": "Tool for changing to directories based on recent usage and frequency of use"
+	},
+	{
+		"app": "uuid-runtime",
+		"binary": "uuidgen",
+		"list_prerequisite": "apt-get",
+		"desc": "Library for generating and parsing UUIDs"
 	},
 	{
 		"app": "OpenVPN",

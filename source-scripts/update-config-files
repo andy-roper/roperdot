@@ -71,6 +71,6 @@ update_config_files () {
 	fi
 	if [[ -n $PROCESSING_ZSH && -f ~/.zshrc ]]; then
 		add_package_sourcing .zshrc
-		echo -e "\nexport PROMPT=\"%~ %# \"" >> ~/.zshrc
+#		echo -e "\nexport PROMPT=\"%~ %# \"" >> ~/.zshrc
 	fi
 }

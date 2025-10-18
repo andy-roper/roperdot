@@ -6,6 +6,6 @@
 #
 
 if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
-	command -v wt.exe >/dev/null 2>&1 || choco install -y microsoft-windows-terminal
+	command -v wt.exe >/dev/null 2>&1 || choco install -y --ignore-pending-reboot microsoft-windows-terminal
 	
 fi
