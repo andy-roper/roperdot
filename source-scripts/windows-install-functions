@@ -1,0 +1,32 @@
+directory_selection_dialog() {
+    local title="$1"
+    local dirname="$2"
+    local selected_dir wsl_path
+    
+	selected_dir=$(powershell.exe -Command "
+	    Add-Type -AssemblyName System.Windows.Forms
+	    \$folderBrowser = New-Object System.Windows.Forms.OpenFileDialog
+	    \$folderBrowser.Title = '$title'
+	    \$folderBrowser.CheckFileExists = \$false
+	    \$folderBrowser.CheckPathExists = \$true
+	    \$folderBrowser.FileName = '$dirname'
+	    \$folderBrowser.ValidateNames = \$false
+	    if (\$folderBrowser.ShowDialog() -eq 'OK') {
+	        Write-Output (Split-Path \$folderBrowser.FileName -Parent)
+	    }
+	" 2>/dev/null | tr -d '\r')
+    
+    if [[ -n "$selected_dir" ]]; then
+        wsl_path=$(wslpath "$selected_dir" 2>/dev/null)
+        if [[ $? -eq 0 && -n "$wsl_path" ]]; then
+            echo "$wsl_path"
+            return 0
+        else
+            echo "Error: Invalid path selected" >&2
+            return 1
+        fi
+    else
+        echo "No directory selected" >&2
+        return 1
+    fi
+}

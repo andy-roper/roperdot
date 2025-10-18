@@ -407,10 +407,11 @@ main () {
 
 	        # Skip if no app name
 	        [[ -z "$app" ]] && continue
-	        
+
 	        should_install_app "$app" "$groups" "$exclusionGroups" "$disabledByDefault" "$install_groups" || continue
-	        
-	        if [[ -n "$app" ]] && ! gui_app_is_present "$app" "$app_dir" "$bundle_name" "$full_app_path" "$binary" "$package" "$package_manager"; then
+
+			[[ -n "$app" ]] || continue
+	        if [[ -n "$always_prompt" ]] || ! gui_app_is_present "$app" "$app_dir" "$bundle_name" "$full_app_path" "$binary" "$package" "$package_manager"; then
 	            install_list+=("$i")  # Store index
 	            [[ -n "$app_name" ]] && name="$app_name" || name="$app"
 	            [[ -z "$desc" ]] && install_desc_list+=("$name") || install_desc_list+=("$name: $desc")
@@ -433,7 +434,12 @@ main () {
 			eval "$(python3 "$ROPERDOT_DIR/bin/json-to-simple-vars" "$app_file" "$app_index" "$base_profile" --optional "${extra_profiles[@]}")"
 			[[ -n "$app_name" ]] && name="$app_name" || name="$app"
 			# Use original app name for prompting
-			if ask_to_install "$name" "$desc"; then
+			if [[ -n "$always_prompt" ]]; then
+				result=$(ask_to_install_always "$name" "$desc")
+			else
+				result=$(ask_to_install "$name" "$desc")
+			fi
+			if [[ $result = 0 ]]; then
 				# pause_specified_installations "$app"
 				if [[ -n "$install_script" ]]; then
 					if [[ -n "$install_options" ]]; then

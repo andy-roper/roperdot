@@ -34,6 +34,7 @@ Here's an explanation of the properties of the installation definitions in the J
 | `exclusionGroups`   | (Optional) Array of groups for which the application should **not** be installed |
 | `disabledByDefault` | (Optional) Exclude the application from the ones to install **unless** it's in a group and that group is referenced when installing |
 | `sudo_not_required` | (Optional) Don't require sudo to install the application     |
+| `always_prompt`     | (Optional) If true, always prompt the user to install the application instead of checking if it's installed. This is needed for applications which are unpacked from zips, such as Oracle SQL Developer for Windows. |
 
 If neither install_script nor install_command are defined, the package_manager will be used to install the application.
 

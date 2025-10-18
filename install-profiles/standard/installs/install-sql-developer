@@ -11,10 +11,7 @@ mac_download_url="https://download.oracle.com/otn_software/java/sqldeveloper/sql
 windows_download_url="https://download.oracle.com/otn_software/java/sqldeveloper/sqldeveloper-${APP_VERSION}-x64.zip"
 
 cleanup() {
-    if [[ -d "$temp_dir" ]]; then
-        popd 2>/dev/null || true
-        rm -rf "$temp_dir"
-    fi
+    [[ -d "$temp_dir" ]] && rm -rf "$temp_dir"
 }
 
 install_sql_developer_for_macos() {
@@ -23,16 +20,16 @@ install_sql_developer_for_macos() {
     
     trap cleanup EXIT
     
-    if [[ -d "/Applications/SQLDeveloper.app" ]] || [[ -d "$HOME/Applications/SQLDeveloper.app" ]]; then
+    if [[ -d "/Applications/SQLDeveloper.app" || -d "$HOME/Applications/SQLDeveloper.app" ]]; then
         echo "SQL Developer already installed"
         return 0
     fi
     
     mkdir -p "$temp_dir"
-    pushd "$temp_dir"
+    cd "$temp_dir" >/dev/null
     
     echo "Downloading $mac_download_url"
-    if ! curl -L -o "$download_file" "$mac_download_url" >/dev/null; then
+    if ! get-web-file "$mac_download_url" "$download_file" >/dev/null; then
         echo "Download failed"
         return 1
     fi
@@ -62,20 +59,11 @@ install_sql_developer_for_windows() {
     
     trap cleanup EXIT
     
-    local program_files="$(win_env_linux_path "PROGRAMFILES")"
-	local program_files_x86="$(win_env_linux_path "PROGRAMFILES(X86)")"
-	local appdata_local="$(win_env_linux_path LOCALAPPDATA)/Programs/sqldeveloper"
-    
-    if [[ -d "$program_files" ]] || [[ -d "$program_files_x86" ]] || [[ -d "$appdata_local" ]]; then
-        echo "SQL Developer already installed"
-        return 0
-    fi
-    
     mkdir -p "$temp_dir"
-    pushd "$temp_dir"
+    cd "$temp_dir" >/dev/null
     
     echo "Downloading $windows_download_url"
-    if ! curl -L -o "$download_file" "$windows_download_url" >/dev/null; then
+    if ! get-web-file "$windows_download_url" "$download_file" >/dev/null; then
         echo "Download failed"
         return 1
     fi
@@ -85,23 +73,18 @@ install_sql_developer_for_windows() {
     
     # SQL Developer for Windows typically extracts to a "sqldeveloper" folder
     if [[ -d "sqldeveloper" ]]; then
-        # Install to user's local programs directory (no admin required)
-        local install_path="$appdata_local"
-        
-        # Create the target directory if it doesn't exist
-        mkdir -p "$(dirname "$install_path")"
-        
-        # Move the extracted folder
-        if mv "sqldeveloper" "$install_path"; then
+    	if ! parent_dir="$(directory_selection_dialog 'Select Parent Folder for Installation' sqldeveloper)"; then
+    		return 1
+    	fi
+
+    	echo "Moving sqldeveloper to $(wslpath -w "$parent_dir")..."
+        if mv "sqldeveloper" "$parent_dir"; then
+        	local install_path="$parent_dir/sqldeveloper"
             echo "SQL Developer installed to $install_path"
             
-            # Create a desktop shortcut
             create_windows_desktop_shortcut "$install_path"
             
-            # Add to PATH if sqldeveloper/bin exists
-            if [[ -d "$install_path/bin" ]]; then
-                echo "Consider adding $install_path/bin to your PATH"
-            fi
+            echo "For command-line access, consider adding $install_path to your PATH"
         else
             echo "Failed to move SQL Developer to installation directory"
             return 1
@@ -113,7 +96,6 @@ install_sql_developer_for_windows() {
         return 1
     fi
     
-    popd
     return 0
 }
 
@@ -123,7 +105,7 @@ create_windows_desktop_shortcut() {
     
     local windows_install_path="$(wslpath -w "$install_path")"
     local windows_shortcut_path="${USERPROFILE}\\Desktop\\SQL Developer.lnk"
-    
+
     if [[ -f "$install_path/sqldeveloper.exe" ]]; then
         powershell.exe -Command "
             \$WshShell = New-Object -comObject WScript.Shell;
@@ -143,6 +125,7 @@ if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
     install_sql_developer_for_macos
 elif [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
 	. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
+	. "${ROPERDOT_DIR}/source-scripts/windows-install-functions"
 	install_sql_developer_for_windows
 else
     echo "SQL Developer install is currently only available for MacOS and Windows"

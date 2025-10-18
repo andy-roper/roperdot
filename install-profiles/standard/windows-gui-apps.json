@@ -47,6 +47,7 @@
 		"app": "Oracle SQL Developer",
 		"app_dir": "sqldeveloper",
 		"install_script": "install-sql-developer",
+		"always_prompt": true,
 		"groups": ["work"],
 		"desc": "Oracle SQL Developer"
 	},
