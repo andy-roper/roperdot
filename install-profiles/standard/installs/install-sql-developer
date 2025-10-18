@@ -141,7 +141,7 @@ create_windows_desktop_shortcut() {
 
 if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
     install_sql_developer_for_macos
-elif [[ "$ROPERDOT_OS_ENV" = "windows" ]]; then
+elif [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
 	. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
 	install_sql_developer_for_windows
 else
