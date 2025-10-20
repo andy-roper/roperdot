@@ -432,5 +432,12 @@
 		"package": "ncdu",
 		"list_prerequisite": "apt-get",
 		"desc": "Disk usage analyzer with an ncurses interface"
+	},
+	{
+		"app": "Claude Desktop Commander MCP",
+		"presence_command": "npm view @wonderwhy-er/desktop-commander version 1>/dev/null 2>&1",
+		"install_command": "npx @wonderwhy-er/desktop-commander@latest setup",
+		"install_prerequisite": "npx",
+		"desc": "MCP server for Claude"
 	}
 ]
