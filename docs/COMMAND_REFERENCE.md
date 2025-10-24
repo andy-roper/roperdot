@@ -234,6 +234,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`keyhelp`** - Show keyboard shortcut information
 - **`now`** - Print current time
 - **`nullify`** - Direct all output for a command to /dev/null
+- **`send-messages` (Windows)** - Send messages from a text file to a Windows application
 - **`stage-roperdot`** - Stage roperdot to Github
 
 ### Clipboard Integration
