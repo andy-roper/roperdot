@@ -356,6 +356,15 @@ if [[ -f "${LOCALUSR}/bin/mc" ]]; then
 	export MC_DATADIR="${LOCALUSR}/share/mc"
 fi
 
+# Add cuDNN library path to LD_LIBRARY_PATH if it's present
+# This is needed by whisperx
+if command -v pip >/dev/null; then
+	PIP_PYTHON_VERSION=$(pip --version | grep -oP 'python \K\d+\.\d+')
+	if [[ -n "$PIP_PYTHON_VERSION" && -d "$HOME/.local/lib/python${PIP_PYTHON_VERSION}/site-packages/nvidia/cudnn/lib" ]]; then
+	    export LD_LIBRARY_PATH=$HOME/.local/lib/python${PIP_PYTHON_VERSION}/site-packages/nvidia/cudnn/lib:$LD_LIBRARY_PATH
+	fi
+fi
+
 if command -v fzf >/dev/null 2>&1; then
 	if [[ "$ROPERDOT_OS_NAME" = ubuntu ]] && command -v fdfind >/dev/null 2>&1; then
 		have_fd=true

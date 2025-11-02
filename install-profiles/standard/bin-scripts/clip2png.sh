@@ -17,6 +17,7 @@ Options:
 --next [base_name]       Create the next available numbered file (e.g., "Saved 03.png")
                          Supports 2-digit indexes (01-99)
                          base_name is required if --base-name-file is not used
+--three-digit            Use three-digit numbering with next instead of two digits
 
 If the clip2png_dir environment variable is defined, that will be used as the
 destination directory for creating images unless the output file contains a path.
@@ -39,6 +40,8 @@ while [[ $# -ne 0 ]]; do
 			processing_next=true
 		elif [[ "$1" == "--base-name-file" ]]; then
 			using_base_name_file=true
+		elif [[ "$1" == "--three-digits" ]]; then
+			three_digit_numbering=true
 		else
 			help
 		fi
@@ -70,18 +73,33 @@ fi
 
 if [[ -n "$processing_next" ]]; then
 	base_name="${path_prefix}$value"
-	
-	for i in {01..99}; do
-		candidate="${base_name} ${i}.png"
-		if [[ ! -f "$candidate" ]]; then
-			png_path="$candidate"
-			break
+
+	if [[ -n "$three_digit_numbering" ]]; then
+		for i in {001..999}; do
+			candidate="${base_name} ${i}.png"
+			if [[ ! -f "$candidate" ]]; then
+				png_path="$candidate"
+				break
+			fi
+		done
+		
+		if [[ -z "$png_path" ]]; then
+			echo "Error: All numbered files from ${base_name} 001.png to ${base_name} 999.png already exist" >&2
+			exit 1
 		fi
-	done
-	
-	if [[ -z "$png_path" ]]; then
-		echo "Error: All numbered files from ${base_name} 01.png to ${base_name} 99.png already exist" >&2
-		exit 1
+	else		
+		for i in {01..99}; do
+			candidate="${base_name} ${i}.png"
+			if [[ ! -f "$candidate" ]]; then
+				png_path="$candidate"
+				break
+			fi
+		done
+		
+		if [[ -z "$png_path" ]]; then
+			echo "Error: All numbered files from ${base_name} 01.png to ${base_name} 99.png already exist" >&2
+			exit 1
+		fi
 	fi
 else
 	png_path="${path_prefix}$value"

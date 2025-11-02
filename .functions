@@ -1464,6 +1464,8 @@ man () {
 }
 
 if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
+	appdata_wsl="$(win_env_linux_path APPDATA)"
+
 	mount-drive () {
 		if [[ $# -eq 0 || "$1" == "-?" || "$1" == "-h" || "$1" == "--help" ]]; then
 			cat <<EOT
@@ -1537,6 +1539,23 @@ EOT
 	    fi
 	    printf '%s\n' "$winpath"
 	}
+
+	claude_cache="${appdata_wsl}/Claude/Cache/Cache_Data"
+	if [[ -d "$claude_cache" ]]; then
+		clear-claude() {
+			if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
+				cat <<EOT
+clear-claude: Clear the cache directory for Claude
+Usage: clear-claude
+EOT
+				return
+			fi
+			local appdata_wsl="$(win_env_linux_path APPDATA)"
+			local claude_cache="${appdata_wsl}/Claude/Cache/Cache_Data"
+			setopt LOCAL_OPTIONS RM_STAR_SILENT
+			\rm -rf "$claude_cache"/*
+		}
+	fi
 fi
 
 up () {

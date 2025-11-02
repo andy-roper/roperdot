@@ -5,6 +5,7 @@ cdd: Changes to subdirectory of the current directory or a target directory; use
 cdf: (Mac) cd into the folder being viewed in the forefront Finder window
 cds: Changes to a deep subdirectory under the current directory or a target directory; uses fzf to enable choosing the directory
 choose-scheme: Chooses a color scheme
+clear-claude: (Windows) Clears the cache directory for Claude
 clone: Clones a git repository, changes to the directory, and runs yarn
 cpp: Copies files and show progress using rsync
 cr: Compresses files recursively
