@@ -7,9 +7,9 @@
 help () {
 	cat <<EOT
 clip2png: save an image in the clipboard as a PNG file
-Usage: clip2png [--markdown] <output_file>
-       clip2png [--markdown] --next <base_name>
-       clip2png [--markdown] --next --base-name-file <file> 
+Usage: clip2png [--markdown] [--three-digits] <output_file>
+       clip2png [--markdown] [--three-digits] --next <base_name>
+       clip2png [--markdown] [--three-digits] --next --base-name-file <file> 
 
 Options:
 --base-name-file <file>  File which contains the base name to use
@@ -17,7 +17,7 @@ Options:
 --next [base_name]       Create the next available numbered file (e.g., "Saved 03.png")
                          Supports 2-digit indexes (01-99)
                          base_name is required if --base-name-file is not used
---three-digit            Use three-digit numbering with next instead of two digits
+--three-digits           Use three-digit numbering with next instead of two digits
 
 If the clip2png_dir environment variable is defined, that will be used as the
 destination directory for creating images unless the output file contains a path.
@@ -51,6 +51,7 @@ while [[ $# -ne 0 ]]; do
 				echo "Error: file specified with --base-name-file not found"
 				exit 1
 			fi
+			using_base_name_file=
 			value="$(cat "$1")"
 		else
 			value="$1"

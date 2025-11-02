@@ -1,0 +1,12 @@
+#
+# Description: Install script for torch library
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+if [[ "$ROPERDOT_ENV_DESKTOP" = "windows" ]]; then
+	install-python-package torch==2.8.0 torchaudio==2.8.0 torchvision==0.23.0
+else
+	echo "Skipping torch install; only usable in a WSL environment"
+fi

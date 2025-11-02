@@ -194,19 +194,12 @@
 	{
 		"app": "cryptography",
 		"presence_command": "$python_bin -c 'import cryptography' >/dev/null 2>&1",
-		"install_script": "install-python-package cryptography",
+		"install_command": "install-python-package cryptography",
 		"sudo_not_required": true,
 		"desc": "Python cryptography module"
 	},
 	{
-		"app": "WhisperAI",
-		"binary": "whisper",
-		"install_script": "install-python-package openai-whisper",
-		"sudo_not_required": true,
-		"desc": "Automatic speech recognition system"
-	},
-	{
-		"app": "whisperX",
+		"app": "WhisperX",
 		"binary": "whisperx",
 		"install_script": "install-python-package whisperx",
 		"sudo_not_required": true,
@@ -215,7 +208,7 @@
 	{
 		"app": "torch",
 		"presence_command": "$python_bin -c 'import torch' >/dev/null 2>&1",
-		"install_script": "install-python-package torch==2.8.0 torchaudio==2.8.0 torchvision==0.23.0",
+		"install_script": "install-torch",
 		"sudo_not_required": true,
 		"desc": "Deep learning framework with GPU acceleration"
 	},

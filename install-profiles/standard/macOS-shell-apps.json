@@ -275,25 +275,11 @@
 		"desc": "Generic syntax highlighter for prettifying source code; extensively used by roperdot"
 	},
 	{
-		"app": "WhisperAI",
-		"binary": "whisper",
-		"install_script": "install-python-package openai-whisper",
-		"sudo_not_required": true,
-		"desc": "Automatic speech recognition system"
-	},
-	{
-		"app": "whisperX",
+		"app": "WhisperX",
 		"binary": "whisperx",
 		"install_script": "install-python-package whisperx",
 		"sudo_not_required": true,
 		"desc": "Speech transcription with speaker identification"
-	},
-	{
-		"app": "torch",
-		"presence_command": "$python_bin -c 'import torch' >/dev/null 2>&1",
-		"install_script": "install-python-package torch==2.8.0 torchaudio==2.8.0 torchvision==0.23.0",
-		"sudo_not_required": true,
-		"desc": "Deep learning framework with GPU acceleration"
 	},
 	{
 		"app": "ydiff",

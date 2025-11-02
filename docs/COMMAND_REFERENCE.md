@@ -225,6 +225,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`random`** - Echo a random value between a lower and upper bound
 - **`roll`** - Evaluate a dice notation expression
 - **`rolln`** - Evaluate a dice notation expression an arbitrary number of times
+- **`transcribe`** - Transcribe a video file using WhisperX
 - **`webmify` (Mac)** - Convert a video into the webm format
 
 ### Utilities

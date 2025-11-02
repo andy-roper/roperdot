@@ -10,7 +10,7 @@ mount_iso_readonly () {
 mount_iso_readonly: mount an ISO image for reading
 Usage: mount_iso_readonly <iso_file>
 EOT
-		exit 0
+		return
 	fi
 	gnome-disk-image-mounter "$1" || exit $?
 	mount_path=$(mount | grep "$1" | awk '{print $3}')
@@ -24,7 +24,7 @@ mount_iso_writable () {
 mount_iso_writable: mount an ISO image for writing
 Usage: mount_iso_writable <iso_file>
 EOT
-		exit 0
+		return
 	fi
 	gnome-disk-image-mounter --writable "$1" || exit $?
 	mount_path=$(mount | grep "$1" | awk '{print $3}')
@@ -33,14 +33,21 @@ EOT
 
 if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
 	win_env () {
-		if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
+		if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
 			cat <<EOT
 win_env: get the value of a Windows env var
-Usage: win_env <var-name>
+Usage: win_env [var-name]
+
+If win_env is called with no arguments, it will show all of the environment
+variables defined for Windows.
 EOT
-			exit 0
+			return
 		fi
-		cmd.exe /c echo %$1% 2>/dev/null | tr -d '\r'
+		if [[ "$#" -eq 0 ]]; then
+			cmd.exe /c set 2>/dev/null
+		else
+			cmd.exe /c echo %$1% 2>/dev/null | tr -d '\r'
+		fi
 	}
 
 	win_env_linux_path () {
@@ -52,7 +59,7 @@ Usage: win_env_linux_path <var-name>
 The value of the Windows environment variable named var-name will be echoed
 after being converted to a WSL path using wslpath.
 EOT
-			exit 0
+			return
 		fi
 		local winpath="$(cd /mnt/c && cmd.exe /c echo %$1% 2>/dev/null | tr -d '\r')"
 		echo $(wslpath "$winpath")
@@ -69,7 +76,7 @@ to an environment variable with the same name after being converted to a WSL
 path using wslpath. If var-name-to-set is passed, that variable will be
 exported instead of using the same name as var-name.
 EOT
-			exit 0
+			return
 		fi
 		local winpath="$(cd /mnt/c && cmd.exe /c echo %$1% 2>/dev/null | tr -d '\r')"
 		export "${2:-$1}=$(wslpath "$winpath")"

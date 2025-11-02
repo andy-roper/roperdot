@@ -114,6 +114,7 @@ roperdot makes use of a number of excellent third party terminal applications.
 
 - **[`cssbeautifier`](https://pypi.org/project/cssbeautifier/)** - Python script for beautifying CSS
 - **[`jsbeautifier`](https://pypi.org/project/jsbeautifier/)** - Python script for formatting JavaScript/CSS/HTML
+- **[`WhisperX`](https://github.com/m-bain/whisperX)** - Speech transcription package with word-level timestamps and speaker diarization
 
 ### Shell Customization
 
@@ -176,6 +177,9 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
 ## To Do/Future Plans
 
 - Update install-claude to add configuration
+
+- Revisit issue where the prompt hangs if there's no internet connection
+  This is due to `git rev-parse --git-dir` causing a hang likely because either Git is trying to contact credential helpers (the `/home/linuxbrew/.linuxbrew/bin/gh` helper) or there's a WSL-specific filesystem/network interaction issue
 
 - Test and retool Ubuntu/Mint installs if necessary after the recent MacOS-centric retooling
 

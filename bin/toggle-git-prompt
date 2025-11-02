@@ -1,0 +1,13 @@
+#!/bin/bash
+# Toggle git prompt features on/off
+
+if [[ -n "$ROPERDOT_NO_GIT" ]]; then
+    unset ROPERDOT_NO_GIT
+    echo "Git prompt ENABLED"
+    echo "Run 'source ~/roperdot/roperdot-bootstrap' or open a new terminal to apply"
+else
+    export ROPERDOT_NO_GIT=1
+    echo "Git prompt DISABLED (for offline use)"
+    echo "Add 'export ROPERDOT_NO_GIT=1' to ~/.extra to make permanent"
+    echo "Run 'source ~/roperdot/roperdot-bootstrap' or open a new terminal to apply"
+fi
