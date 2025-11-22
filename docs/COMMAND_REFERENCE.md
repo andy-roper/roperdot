@@ -215,13 +215,14 @@ help <text>        # Find commands whose name/description matches the text
 ## Additional Utilities
 
 ### Calculation/Conversion
-- **`clip2png`** - Saves an image in the clipboard as a PNG file
+- **`clip2png`** - Save an image in the clipboard as a PNG file
 - **`gifify` (Mac)** - Convert a video to an animated GIF
 - **`h2d`** - Convert hexadecimal number to decimal
-- **`html2pdf`** - Converts HTML files to PDF
+- **`html2pdf`** - Convert HTML files to PDF
 - **`m`** - Evaluate a mathematical expression
-- **`pdfcount`** - Counts the number of pages in a set of PDFs
-- **`png2text`** - Converts a PNG image to text
+- **`md2html`** - Convert a markdown file to HTML
+- **`pdfcount`** - Count the number of pages in a set of PDFs
+- **`png2text`** - Convert a PNG image to text
 - **`random`** - Echo a random value between a lower and upper bound
 - **`roll`** - Evaluate a dice notation expression
 - **`rolln`** - Evaluate a dice notation expression an arbitrary number of times

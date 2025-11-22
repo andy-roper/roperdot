@@ -1,0 +1,542 @@
+#!/usr/bin/env python3
+"""
+Description: Converts a markdown file to HTML
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+"""
+
+import sys
+import re
+from pathlib import Path
+
+def help():
+	print('''
+md2html: Convert a markdown file to HTML
+Usage: md2html <input file> [output file]
+'''[1:-1])
+	quit()
+
+def convert_markdown_to_html(markdown_text):
+    """Convert markdown text to HTML"""
+    lines = markdown_text.split('\n')
+    html_lines = []
+    in_code_block = False
+    list_stack = []  # Track nested lists: [(type, indent_level), ...]
+    code_language = ''
+    headers = []  # Track headers for TOC: [(level, text, id), ...]
+    toc_placeholder_index = None
+    code_block_just_opened = False
+    
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        
+        # Code blocks
+        if line.startswith('```'):
+            if not in_code_block:
+                in_code_block = True
+                code_language = line[3:].strip()
+                html_lines.append(f'<pre><code class="{code_language}">')
+                code_block_just_opened = True
+            else:
+                in_code_block = False
+                html_lines.append('</code></pre>')
+            i += 1
+            continue
+        
+        if in_code_block:
+            # Escape HTML entities in code
+            escaped_line = line.replace('<', '&lt;').replace('>', '&gt;')
+            if code_block_just_opened:
+                # Append first line to opening tag without newline
+                html_lines[-1] += escaped_line
+                code_block_just_opened = False
+            else:
+                html_lines.append(escaped_line)
+            i += 1
+            continue
+        
+        # Tables - detect markdown table rows
+        if '|' in line and line.strip().startswith('|'):
+            table_lines = []
+            # Collect all table lines
+            while i < len(lines) and '|' in lines[i]:
+                table_lines.append(lines[i])
+                i += 1
+            
+            if len(table_lines) >= 2:  # At least header + separator
+                html_lines.append(parse_markdown_table(table_lines))
+            continue
+        
+        # Table of Contents placeholder
+        if line.strip() == '[TOC]':
+            toc_placeholder_index = len(html_lines)
+            html_lines.append('<!-- TOC_PLACEHOLDER -->')
+            i += 1
+            continue
+        
+        # Headers
+        if line.startswith('#'):
+            match = re.match(r'^(#{1,6})\s+(.+)$', line)
+            if match:
+                level = len(match.group(1))
+                content = match.group(2)
+                content_plain = content  # Keep plain text for TOC
+                content = apply_inline_formatting(content)
+                # Generate ID for header
+                header_id = re.sub(r'[^\w\s-]', '', content_plain).strip().replace(' ', '-').lower()
+                headers.append((level, content_plain, header_id))
+                html_lines.append(f'<h{level} id="{header_id}">{content}</h{level}>')
+                i += 1
+                continue
+        
+        # Horizontal rule
+        if re.match(r'^[-*_]{3,}$', line.strip()):
+            html_lines.append('<hr>')
+            i += 1
+            continue
+        
+        # Unordered lists
+        ul_match = re.match(r'^(\s*)[\*\-\+]\s+(.+)$', line)
+        if ul_match:
+            indent = len(ul_match.group(1))
+            content = ul_match.group(2)
+            
+            # Close deeper lists
+            while list_stack and list_stack[-1][1] > indent:
+                list_type, _ = list_stack.pop()
+                html_lines.append(f'</{list_type}>')
+            
+            # If we have a list but it's the wrong type at this indent, close it
+            if list_stack and list_stack[-1][1] == indent and list_stack[-1][0] != 'ul':
+                list_type, _ = list_stack.pop()
+                html_lines.append(f'</{list_type}>')
+            
+            # Open new list if needed or indent level changed
+            if not list_stack or list_stack[-1][1] < indent:
+                html_lines.append('<ul>')
+                list_stack.append(('ul', indent))
+            
+            content = apply_inline_formatting(content)
+            html_lines.append(f'<li>{content}</li>')
+            i += 1
+            continue
+        
+        # Ordered lists
+        ol_match = re.match(r'^(\s*)\d+\.\s+(.+)$', line)
+        if ol_match:
+            indent = len(ol_match.group(1))
+            content = ol_match.group(2)
+            
+            # Close deeper lists
+            while list_stack and list_stack[-1][1] > indent:
+                list_type, _ = list_stack.pop()
+                html_lines.append(f'</{list_type}>')
+            
+            # If we have a list but it's the wrong type at this indent, close it
+            if list_stack and list_stack[-1][1] == indent and list_stack[-1][0] != 'ol':
+                list_type, _ = list_stack.pop()
+                html_lines.append(f'</{list_type}>')
+            
+            # Open new list if needed or indent level changed
+            if not list_stack or list_stack[-1][1] < indent:
+                html_lines.append('<ol>')
+                list_stack.append(('ol', indent))
+            
+            content = apply_inline_formatting(content)
+            html_lines.append(f'<li>{content}</li>')
+            i += 1
+            continue
+        
+        # Close list if we're in one and hit a non-list line (but not blank lines)
+        if list_stack and not ul_match and not ol_match and line.strip() != '':
+            while list_stack:
+                list_type, _ = list_stack.pop()
+                html_lines.append(f'</{list_type}>')
+        
+        # Blockquotes
+        if line.startswith('>'):
+            content = line[1:].strip()
+            content = apply_inline_formatting(content)
+            html_lines.append(f'<blockquote>{content}</blockquote>')
+            i += 1
+            continue
+        
+        # Empty lines - check if we should close list
+        if line.strip() == '':
+            # If we're in a list, look ahead to see if list continues
+            if list_stack:
+                # Look for next non-blank line
+                next_i = i + 1
+                while next_i < len(lines) and lines[next_i].strip() == '':
+                    next_i += 1
+                
+                # If we found a non-blank line, check if it's a list item
+                if next_i < len(lines):
+                    next_line = lines[next_i]
+                    is_next_ul = bool(re.match(r'^(\s*)[\*\-\+]\s+(.+)$', next_line))
+                    is_next_ol = bool(re.match(r'^(\s*)\d+\.\s+(.+)$', next_line))
+                    
+                    # If next line is not a list item, close the list
+                    if not is_next_ul and not is_next_ol:
+                        while list_stack:
+                            list_type, _ = list_stack.pop()
+                            html_lines.append(f'</{list_type}>')
+            
+            i += 1
+            continue
+        
+        # Regular paragraphs - accumulate consecutive lines
+        # If this line isn't empty and didn't match any special format, it's part of a paragraph
+        paragraph_lines = []
+        while i < len(lines):
+            current = lines[i]
+            
+            # Stop if we hit a blank line
+            if current.strip() == '':
+                break
+            
+            # Stop if we hit a special format line
+            if (current.startswith('#') or 
+                current.startswith('```') or
+                current.startswith('>') or
+                '|' in current and current.strip().startswith('|') or
+                re.match(r'^(\s*)[\*\-\+]\s+(.+)$', current) or
+                re.match(r'^(\s*)\d+\.\s+(.+)$', current) or
+                re.match(r'^[-*_]{3,}$', current.strip())):
+                break
+            
+            paragraph_lines.append(current)
+            i += 1
+        
+        # If we accumulated paragraph lines, format and add them
+        if paragraph_lines:
+            formatted_lines = [apply_inline_formatting(line) for line in paragraph_lines]
+            paragraph_content = '<br>\n'.join(formatted_lines)
+            html_lines.append(f'<p>{paragraph_content}</p>')
+            continue
+        
+        # If we didn't process anything as a paragraph, move to next line
+        i += 1
+    
+    # Close any open lists
+    while list_stack:
+        list_type, _ = list_stack.pop()
+        html_lines.append(f'</{list_type}>')
+    
+    # Generate and insert TOC if placeholder exists
+    if toc_placeholder_index is not None and headers:
+        toc_html = generate_toc(headers)
+        # Replace the placeholder
+        html_lines[toc_placeholder_index] = toc_html
+    
+    return '\n'.join(html_lines)
+
+
+def generate_toc(headers):
+    """Generate table of contents HTML from headers list"""
+    if not headers:
+        return ''
+    
+    toc_lines = ['<div class="toc">', '<h2>Table of Contents</h2>', '<ol>']
+    current_level = headers[0][0]
+    
+    for i, (level, text, header_id) in enumerate(headers):
+        # If level increases, open nested ol
+        if level > current_level:
+            toc_lines.append('<ol>')
+        # If level decreases, close nested ols
+        elif level < current_level:
+            diff = current_level - level
+            for _ in range(diff):
+                toc_lines.append('</li>')
+                toc_lines.append('</ol>')
+            toc_lines.append('</li>')
+        # Same level, close previous li
+        elif i > 0:
+            toc_lines.append('</li>')
+        
+        # Add the TOC entry
+        text = re.sub(r'^<span.*?>', "", text);
+        text = text.replace('</span>', "");
+        toc_lines.append(f'<li><a href="#{header_id}">{text}</a>')
+        current_level = level
+    
+    # Close remaining open tags
+    toc_lines.append('</li>')
+    # Close back to root level
+    while current_level > headers[0][0]:
+        toc_lines.append('</ol>')
+        toc_lines.append('</li>')
+        current_level -= 1
+    
+    toc_lines.append('</ol>')
+    toc_lines.append('</div>')
+    return '\n'.join(toc_lines)
+
+
+def parse_markdown_table(table_lines):
+    """Parse markdown table lines into HTML table"""
+    if len(table_lines) < 2:
+        return ''
+    
+    # Parse header row
+    header_row = table_lines[0]
+    headers = [cell.strip() for cell in header_row.split('|')[1:-1]]  # Skip first/last empty from split
+    
+    # Skip separator row (table_lines[1])
+    
+    # Parse data rows
+    data_rows = []
+    for line in table_lines[2:]:
+        cells = [cell.strip() for cell in line.split('|')[1:-1]]
+        data_rows.append(cells)
+    
+    # Build HTML table
+    html = ['<table>']
+    
+    # Header
+    html.append('<thead>')
+    html.append('<tr>')
+    for header in headers:
+        header = apply_inline_formatting(header)
+        html.append(f'<th>{header}</th>')
+    html.append('</tr>')
+    html.append('</thead>')
+    
+    # Body
+    html.append('<tbody>')
+    for row in data_rows:
+        html.append('<tr>')
+        for cell in row:
+            cell = apply_inline_formatting(cell)
+            html.append(f'<td>{cell}</td>')
+        html.append('</tr>')
+    html.append('</tbody>')
+    
+    html.append('</table>')
+    return '\n'.join(html)
+
+
+def apply_inline_formatting(text):
+    """Apply inline markdown formatting (bold, italic, code, links, images)"""
+    # First, handle raw HTML img tags - wrap them and remove only align attribute
+    def wrap_html_img(match):
+        img_tag = match.group(0)
+        # Remove align attribute to prevent text wrapping, but keep style
+        img_tag = re.sub(r'\s+align="[^"]*"', '', img_tag)
+        return f'<div class="image-block">{img_tag}</div>'
+    
+    text = re.sub(r'<img[^>]+>', wrap_html_img, text)
+    
+    # Images: ![alt](url)
+    text = re.sub(r'!\[([^\]]*)\]\(([^\)]+)\)', r'<img src="\2" alt="\1" style="vertical-align:middle">', text)
+    
+    # Links: [text](url)
+    text = re.sub(r'\[([^\]]+)\]\(([^\)]+)\)', r'<a href="\2">\1</a>', text)
+    
+    # Bare URLs (not already in anchor tags) - open in new tab
+    # Match URLs but not if they're already in href=""
+    def replace_bare_url(match):
+        url = match.group(0)
+        return f'<a href="{url}" target="_blank">{url}</a>'
+    
+    # This regex matches URLs that aren't already in href attributes
+    url_pattern = r'(?<!href=")(https?://[^\s<>"]+)'
+    text = re.sub(url_pattern, replace_bare_url, text)
+    
+    # Inline code: `code`
+    text = re.sub(r'`([^`]+)`', r'<code>\1</code>', text)
+    
+    # Bold: **text** or __text__
+    text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
+    text = re.sub(r'__(.+?)__', r'<strong>\1</strong>', text)
+    
+    # Italic: *text* or _text_ (but not underscores in identifiers)
+    text = re.sub(r'\*(.+?)\*', r'<em>\1</em>', text)
+    # Only match _ for italics when not surrounded by word characters
+    text = re.sub(r'(?<!\w)_([^_]+?)_(?!\w)', r'<em>\1</em>', text)
+    
+    return text
+
+
+def create_html_document(body_html, title="Markdown Document"):
+    """Wrap the body HTML in a complete HTML document"""
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <style>
+        body {{
+            font-family: -apple-system, 'Segoe UI', Roboto, Arial, Helvetica, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+            font-size: 12pt;
+        }}
+        p {{
+        	padding-bottom: 9px;
+        }}
+        code {{
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }}
+        pre {{
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            line-height: 1.15;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }}
+        pre code {{
+            background-color: transparent;
+            padding: 0;
+        }}
+        blockquote {{
+            border-left: 4px solid #ddd;
+            margin-left: 0;
+            padding-left: 20px;
+            color: #666;
+        }}
+        a, a:visited {{
+        	color: #4183c4;
+        }}
+        img {{
+            max-width: 100%;
+            height: auto;
+        }}
+        h1, h2, h3, h4, h5, h6 {{
+            margin-top: 0px;
+            margin-bottom: 0px;
+            padding-top: 0px;
+            padding-bottom: 0px;
+        }}
+        h1 {{
+        	font-size: 26pt;
+        	padding-bottom: 10px;
+        }}
+        h2 {{
+        	font-size: 22pt;
+        	padding-bottom: 7px;
+        }}
+        h3 {{
+        	font-size: 18pt;
+        	padding-top: 5px;
+        	padding-bottom: 7px;
+        }}
+        p {{
+        	margin-top: 0px;
+        	margin-bottom: 0px;
+        }}
+        ul, ol {{
+        	margin-top: 0px;
+        	margin-bottom: 0px;
+        	line-height: 1.5;
+        }}
+        li {{
+        	margin-bottom: 7px;
+        }}
+        .image-block {{
+            display: block;
+            clear: both;
+            margin: 20px 0;
+        }}
+        .image-block img {{
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }}
+        .toc {{
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }}
+        .toc h2 {{
+            margin-top: 0;
+            font-size: 20pt;
+        }}
+        .toc ol {{
+            margin-left: 0;
+            padding-left: 20px;
+            list-style: none;
+        }}
+        .toc a {{
+            text-decoration: none;
+            color: #0066cc;
+        }}
+        .toc a:hover {{
+            text-decoration: underline;
+        }}
+        .toc li {{
+        	line-height: 1.5;
+        	margin-bottom: 0px;
+        }}
+        table {{
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }}
+        th, td {{
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }}
+        th {{
+            background-color: #f8f8f8;
+            font-weight: bold;
+        }}
+        tbody tr:nth-child(even) {{
+            background-color: #f8f8f8;
+        }}
+    </style>
+</head>
+<body>
+{body_html}
+</body>
+</html>"""
+
+
+if len(sys.argv) < 2 or sys.argv[1] in ['--help', '-?', '-h']:
+	help()
+
+input_file = Path(sys.argv[1])
+
+if not input_file.exists():
+    print(f"Error: File '{input_file}' not found")
+    sys.exit(1)
+
+# Determine output file
+if len(sys.argv) >= 3:
+    output_file = Path(sys.argv[2])
+else:
+    output_file = input_file.with_suffix('.html')
+
+# Read markdown file
+try:
+    with open(input_file, 'r', encoding='utf-8') as f:
+        markdown_text = f.read()
+except Exception as e:
+    print(f"Error reading file: {e}")
+    sys.exit(1)
+
+# Convert to HTML
+body_html = convert_markdown_to_html(markdown_text)
+full_html = create_html_document(body_html, title=input_file.stem)
+
+# Write output file
+try:
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(full_html)
+except Exception as e:
+    print(f"Error writing file: {e}")
+    sys.exit(1)
