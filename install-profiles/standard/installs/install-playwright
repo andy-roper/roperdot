@@ -7,5 +7,17 @@
 
 install-python-package playwright
 
+# Install system dependencies if needed
+if [[ "$ROPERDOT_OS_TYPE" != "mac" ]]; then
+    echo "Installing Playwright system dependencies for Linux..."
+    sudo python3 -m playwright install-deps chromium
+fi
+
+if [ -f /etc/ssl/certs/ca-certificates.crt ]; then
+    export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+    export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+fi
+
 # Install the Chromium browser for Playwright
 python3 -m playwright install chromium
+

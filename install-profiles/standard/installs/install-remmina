@@ -1,0 +1,8 @@
+#
+# Description: Install script for Remmina
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+sudo apt install remmina remmina-plugin-rdp -y

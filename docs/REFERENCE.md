@@ -58,6 +58,7 @@ roperdot makes use of a number of excellent third party terminal applications.
 - **[`nvm`](https://github.com/nvm-sh/nvm)** - Node version manager
 - **[`pipx`](https://pipx.pypa.io/stable/)** - Python application isolation
 - **[`Python setuptools`](https://setuptools.pypa.io/)** - Python package tools
+- **`sdk`** - [SDKMAN](https://sdkman.io): SDK manager for installing and managing parallel versions of JVM tools
 - **[`wheel`](https://wheel.readthedocs.io/)** - Python package distribution
 
 ### Development Tools
@@ -65,9 +66,14 @@ roperdot makes use of a number of excellent third party terminal applications.
 - **[`gh`](https://cli.github.com/)** - GitHub CLI
 - **[`git`](https://git-scm.com/)** - Version control system
 - **[`git-lfs`](https://git-lfs.github.com/)** - Git large file storage
+- **[`gradle`](https://gradle.org)** - Build automation tool for Java and other JVM languages
 - **[`jq`](https://jqlang.org/)** - JSON processor and formatter
+- **`mvn`** - [Maven](https://maven.apache.org): build automation and dependency management tool for Java projects
 - **[`Neovim`](https://neovim.io/)** - Modern Vim editor
+- **[`oc`](https://openshift.com)** - CLI for Red Hat OpenShift container platform and Kubernetes
 - **[`shellcheck`](https://www.shellcheck.net/)** - Shell script linter
+- **[`sqlplus`](https://www.oracle.com/database/technologies/instant-client.html)** - Oracle SQL*Plus CLI for Oracle databases
+- **`tkn`** - [Tekton](https://tekton.dev) CLI for managing CI/CD pipelines on Kubernetes
 - [**`uuid-runtime`**](https://packages.debian.org/sid/uuid-runtime) - Library for generating and parsing UUIDs
 - **[`Vim/vimdiff`](https://www.vim.org/)** - Text editor and diff tool
 - **[`xmllint`](http://xmlsoft.org/xmllint.html)** - XML parsing and validation
@@ -94,6 +100,7 @@ roperdot makes use of a number of excellent third party terminal applications.
 
 ### Package Managers and Tools
 
+- **[`alien`](https://joeyh.name/code/alien/)** - Convert or install RPM packages on Debian-based systems
 - **[`apt-file`](https://packages.debian.org/stable/apt-file)** - Debian package content search
 - **[`Linuxbrew`](https://docs.brew.sh/Homebrew-on-Linux)** - Homebrew for Linux
 
@@ -172,28 +179,22 @@ Then I found out about the concept of dotfiles. I set up Cygwin on my Windows ma
 
 When WSL became viable for me on Windows with the advent of WSL 2, I switched to using Ubuntu on that platform instead of Cygwin. I also built a couple of Linux machines at home and set up my dotfiles on them as well.
 
-In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to support installation on macOS without admin access for compatibility with an upcoming client project.
+In 2025, I updated my dotfiles to incorporate the concept of app "groups" to provide for installing apps only for specified groups or to exclude an app for a specified group.
 
 ## To Do/Future Plans
 
 - Update install-claude to add configuration
 
+- Update install-apps to support installation of a single app or list of apps outside of installing roperdot
+
+  - Sample invocation: install-apps gui "Some App"
+
+  - The app name will be looked up in the appropriate JSON based on the app property
+
+  - Provide for selection of apps to install using fzf if gui/shell is passed as the first argument but no second argument is passed
+
 - Revisit issue where the prompt hangs if there's no internet connection
   This is due to `git rev-parse --git-dir` causing a hang likely because either Git is trying to contact credential helpers (the `/home/linuxbrew/.linuxbrew/bin/gh` helper) or there's a WSL-specific filesystem/network interaction issue
-
-- Test and retool Ubuntu/Mint installs if necessary after the recent MacOS-centric retooling
-
-- Update other OSes’ shell-apps JSON files similarly to how the MacOS one was updated
-  - Remove html5print and xml2json
-  - Add cssbeautifier, beautifulsoup4, pypdf and xmltodict Python libraries
-  
-- Update other OSes' installed shell apps
-  - Add awscli, ffmpeg, gifsicle (if available)
-  
-- Update other OSes’ installed GUI apps
-  - Add Brave browser; disable WebStorm
-  
-- Add installation of Playwright Python library to other OSes' shell-apps JSON files
 
 - Consider adding VMware Fusion (Mac) or VMware Workstation Pro (others) to installs
 
@@ -212,6 +213,8 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
 
   - Create a script named “list-hardcoded-installs” to do a recursive grep to list them
 
+- Implement conditioning of VS Code extensions based on group in install-vscode
+
 - Finish implementing change scheme
 
 - Test upgrading to a later Python version (e.g. 3.13)
@@ -220,12 +223,12 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
   - Will need to reinstall Python packages for scripts in bin to use it properly
   - Will need to update installs to add install/upgrade to latest python version
   - `brew install python` or `brew upgrade python`
-  
+
 - Revisit installing non-standard installation
 
   - Need to support a different/second install profile
   - Need to support installing a second profile after installing standard
-  
+
 - Consider trying [scoop](https://github.com/ScoopInstaller/Scoop) to install GUI apps for non-admin Windows users
 
 - Revisit issue with being repeatedly asked for the sudo password when installing WSL/Ubuntu shell apps (apt-file, git-lfs, fd-find, jq, shellcheck, speedtest-cli)
@@ -247,8 +250,6 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" and to
   - [procs](https://github.com/dalance/procs): modern ps alternative
 
 - Update VS Code configuration when switching scheme (colors only)
-
-- Update install for Oracle SQL Developer to support Linux
 
 - Institute use of print_important_message during after after install
 

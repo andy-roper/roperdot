@@ -3,7 +3,8 @@
 		"app": "Notepadqq",
 		"package": "notepadqq",
 		"install_script": "install-notepadqq",
-		"desc": "Developers' text editor"
+		"desc": "Developers' text editor",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Sublime Text",
@@ -13,6 +14,14 @@
 		"desc": "Developers' text editor"
 	},
 	{
+		"app": "LibreOffice",
+		"package": "libreoffice",
+		"binary": "libreoffice",
+		"package_manager": "apt",
+		"desc": "Office productivity suite",
+		"exclusionGroups": ["work"]
+	},
+	{
 		"app": "Google Chrome",
 		"package": "google-chrome-stable",
 		"package_manager": "apt",
@@ -20,10 +29,21 @@
 		"desc": "Web browser"
 	},
 	{
-		"app": "Remmina",
-		"package": "remmina remmina-plugin-rdp",
+		"app": "Brave Browser",
+		"package": "brave-browser",
 		"package_manager": "apt",
-		"desc": "Remote desktop client"
+		"install_script": "install-brave-browser",
+		"desc": "Web browser",
+		"groups": ["personal"],
+		"disabledByDefault": true
+	},
+	{
+		"app": "Remmina",
+		"package": "remmina",
+		"package_manager": "apt",
+		"install_script": "install-remmina",
+		"desc": "Remote desktop client",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Ghostwriter",
@@ -35,29 +55,34 @@
 		"app": "NixNote 2",
 		"package": "nixnote2",
 		"package_manager": "apt",
-		"desc": "Clone of Evernote for Linux"
+		"desc": "Clone of Evernote for Linux",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Slack",
 		"package": "slack",
 		"install_script": "install-slack",
-		"desc": "Team messaging app"
+		"desc": "Team messaging app",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Docker",
 		"package": "docker.io",
 		"package_manager": "apt",
-		"desc": "Virtualization platform"
+		"desc": "Virtualization platform",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Dropbox",
 		"package": "dropbox",
 		"package_manager": "apt",
-		"desc": "Secure file sharing and storage solution"
+		"desc": "Secure file sharing and storage solution",
+		"skip": true,
+		"comment": "As of 4 Nov 2018 Dropbox isn't available via apt"
 	},
 	{
-		"app": "Bless",
-		"package": "bless",
+		"app": "GHex",
+		"package": "ghex",
 		"package_manager": "apt",
 		"desc": "Hex editor"
 	},
@@ -82,10 +107,11 @@
 		"desc": "Java IDE with built-in CVS client, Git client, XML editor, etc."
 	},
 	{
-		"app": "SmartGit",
-		"binary": "smartgit",
-		"install_script": "install-smartgit",
-		"desc": "Git client with support for GitHub Pull Requests+Comments and SVN"
+		"app": "Oracle SQL Developer",
+		"binary": "sqldeveloper",
+		"install_script": "install-sql-developer",
+		"desc": "Oracle SQL Developer",
+		"groups": ["oracle"]
 	},
 	{
 		"app": "P4Merge",
@@ -97,7 +123,8 @@
 		"app": "pgAdmin 4",
 		"binary": "pgadmin4",
 		"install_script": "install-pgadmin4",
-		"desc": "Administration and development platform for PostgreSQL"
+		"desc": "Administration and development platform for PostgreSQL",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Postman",
@@ -121,60 +148,83 @@
 		"app": "SpaceFM",
 		"package": "spacefm",
 		"package_manager": "apt",
-		"desc": "Multi-panel tabbed file and desktop manager"
+		"desc": "Multi-panel tabbed file and desktop manager",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "VirtualBox",
 		"package": "virtualbox",
 		"package_manager": "apt",
-		"desc": "Hypervisor for virtualization"
+		"desc": "Hypervisor for virtualization",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "My Traceroute (MTR)",
 		"package": "mtr",
 		"binary": "mtr",
 		"package_manager": "apt",
-		"desc": "Diagnostic tool combining the functions of ping and traceroute"
+		"desc": "Diagnostic tool combining the functions of ping and traceroute",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "FileZilla",
 		"package": "filezilla",
 		"package_manager": "apt",
 		"install_script": "install-filezilla",
-		"desc": "FTP client"
+		"desc": "FTP client",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "Totem",
+		"package": "totem",
+		"package_manager": "apt",
+		"desc": "Movie player",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "VLC",
 		"package": "vlc",
 		"package_manager": "apt",
-		"desc": "Multimedia player"
+		"desc": "Multimedia player",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "Rhythmbox",
+		"package": "rhythmbox",
+		"package_manager": "apt",
+		"desc": "Music player and organizer",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Clementine",
 		"package": "clementine",
 		"package_manager": "apt",
 		"install_script": "install-clementine",
-		"desc": "Audio player"
+		"desc": "Audio player",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "GIMP",
+		"package": "gimp",
+		"package_manager": "apt",
+		"install_script": "install-gimp",
+		"desc": "Graphics editor",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Calibre",
 		"package": "calibre",
 		"package_manager": "apt",
-		"desc": "e-book reader/manager"
+		"desc": "e-book reader/manager",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "YACReader",
 		"package": "yacreader",
 		"package_manager": "apt",
 		"install_script": "install-yacreader",
-		"desc": "Comic reader and manager"
-	},
-	{
-		"app": "Shutter",
-		"package": "shutter",
-		"package_manager": "apt",
-		"install_script": "install-shutter",
-		"desc": "Screen capture application"
+		"desc": "Comic reader and manager",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Cairo Dock",
@@ -182,5 +232,26 @@
 		"package_manager": "apt",
 		"install_script": "install-cairo-dock",
 		"desc": "Customizable app launcher"
+	},
+	{
+		"app": "Flameshot",
+		"binary": "flameshot",
+		"package": "flameshot",
+		"package_manager": "apt",
+		"desc": "Screen capture utility"
+	},
+	{
+		"app": "Gyazo",
+		"binary": "gyazo",
+		"install_command": "get-web-file https://packagecloud.io/install/repositories/gyazo/gyazo-for-linux/script.deb.sh | sudo bash;",
+		"desc": "Screen capture utility",
+		"exclusionGroups": ["work"]
+	},
+	{
+	    "app": "xsdecaf",
+	    "binary": "xsdecaf",
+	    "install_script": "install-xsdecaf",
+	    "desc": "XSD schema comparison tool",
+	    "groups": ["development"]
 	}
 ]

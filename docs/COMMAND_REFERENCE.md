@@ -71,7 +71,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`cpp`** - Copy files and show progress using `rsync`
 - **`cpr`** - Recursive copy
 - **`flatten`** - Move files from subdirectories up to current directory
-- **`md` (enhanced)**  - Create a directory and create parent directories as needed (`mkdir -p`)
+- **`md` (enhanced)** - Create a directory and create parent directories as needed (`mkdir -p`)
 - **`mdd`** - Create a directory and cd into it
 - **`mv` (enhanced)** - Move with confirmation prompts for destructive operations
 - **`rd`** - Remove a directory (same as `rmdir`)
@@ -82,6 +82,7 @@ help <text>        # Find commands whose name/description matches the text
 
 ### File Utilities
 - **`abs-path`** - Echo the absolute path for a path including resolving "..." as "../.." in the path
+- **`app-path` (Mac)** - Get path of an app in Applications
 - **`chmox`** - `chmod u+x`
 - **`fs`** - Display file status for a file using stat
 - **`mergepdfs`** - Merge multiple PDFs into a single PDF
@@ -140,6 +141,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`git-blame-colored`** - Enhanced git blame with syntax highlighting
 - **`git-lfs`** - Used to work with large files in Git repositories (https://git-lfs.github.com)
 - **`git-overwritten`** - Show files that have been overwritten in commits
+- **`gli`** - Interactive git commit browser using fzf
 - **`gr`** - Navigate to git repository root directory
 - **`master`** - git checkout master
 - **`push`** - git push
@@ -181,27 +183,30 @@ help <text>        # Find commands whose name/description matches the text
 - **`bounce-wifi` (Windows)** - Restart wireless network interface
 - **`burn` (Mac)** - Burn a disc image to a CD/DVD/Blu-Ray without verification
 - **`eject` (Mac)** - Eject a disc
-- **`empty_trash` (Mac)** - Empty the Trash on all mounted volumes and the main drive and clears sleepimage
-- **`hide_desktop` (Mac)** - Hide all desktop icons
-- **`hide_files` (Mac)** - Cause Finder to hide hidden files (normal behavior, can also do with
-  Cmd + Shift + .)
+- **`empty-trash` (Mac)** - Empty the Trash on all mounted volumes and the main drive and clears sleepimage
+- **`hide-desktop` (Mac)** - Hide all desktop icons
+- **`hide-files` (Mac)** - Cause Finder to hide hidden files (normal behavior, can also do with Cmd + Shift + .)
 - **`mount-drive` (Windows)** - Mount a drive
-- **`shell_switch` (Mac)** - Switch to the designated shell
-- **`show_desktop` (Mac)** - Restore normal desktop icon display
-- **`show_files` (Mac)** - Cause Finder to display hidden files (can also do with Cmd + Shift + .)
+- **`mount-iso-readonly` (Ubuntu and Mint)** - Mount an ISO image for reading
+- **`mount-iso-writable` (Ubuntu and Mint)** - Mount an ISO image for writing
+- **`shell-switch` (Mac)** - Switch to the designated shell
+- **`show-desktop` (Mac)** - Restore normal desktop icon display
+- **`show-files` (Mac)** - Cause Finder to display hidden files (can also do with Cmd + Shift + .)
 - **`update-brew` (Mac)** - Update Homebrew and formula definitions, upgrade installed packages, remove old downloads/cache files/unneeded dependencies, and check for potential issues
 - **`update-cron`** - Update cron with jobs defined in ~/roperdot-cron-jobs.txt
 - **`vburn` (Mac)** - Burn a disc image to a CD/DVD/Blu-Ray with verification
 
 ### System Information
-- **`camera_used_by` (Mac)** - Check to see which apps are using the camera
+- **`camera-used-by` (Mac)** - Check to see which apps are using the camera
+- **`def-win-env-linux-path` (Windows)** - Define an env var from a Windows env var and convert to a WSL path
 - **`disks`** - Display mounted filesystem information
 - **`distro`** - Detect and display Linux distribution information
+- **`get-brew-path` (Mac)** - Get full brew path for a directory
 - **`lsusb` (Mac)** - List USB devices
 - **`path`** - Show paths in PATH with each directory on a single line
 - **`setnf`** - Show values of environment variables and function definitions (with the function contents suppressed)
-- **`win_env` (Windows)** - Get the value of a Windows environment variable
-- **`win_path_env` (Windows)** - Get the value of a Windows environment variable and convert it to a Linux path
+- **`win-env` (Windows)** - Get the value of a Windows environment variable
+- **`win-env-linux-path` (Windows)** - Get the value of a Windows environment variable and convert it to a WSL path
 
 ### Security/Hashing
 - **`sha1`** - Generate a SHA1 checksum for text data
@@ -231,14 +236,22 @@ help <text>        # Find commands whose name/description matches the text
 - **`webmify` (Mac)** - Convert a video into the webm format
 
 ### Utilities
+- **`afk`** - Lock the screen
+- **`apply-mapped-drive`** - Convert UNC paths to Windows paths if drive a mapping exists
+- **`clear-claude`** - Clear the cache directory for Claude
 - **`clear-recent` (Windows)** - Clear frequent places and recent items
 - **`cls`** - Clear the screen
+- **`def-win-env-linux-path` (Windows)** - Define an env var from a Windows env var and convert to a WSL path
+- **`escape-arg`** - Escape metacharacters in an argument
 - **`h`** - History
+- **`is-archive`** - Test if a filename is an archive file
 - **`keyhelp`** - Show keyboard shortcut information
 - **`now`** - Print current time
 - **`nullify`** - Direct all output for a command to /dev/null
+- **`prepend-to-path-var`** - Prepend a directory to the PATH env var
 - **`send-messages` (Windows)** - Send messages from a text file to a Windows application
 - **`stage-roperdot`** - Stage roperdot to Github
+- **`unset-dot-glob`** - Disable globbing matching hidden files
 
 ### Clipboard Integration
 - **`clipcopy`** - Copy text to system clipboard

@@ -1,0 +1,77 @@
+#
+# Description: Install script for Oracle Instant Client (Basic + SQL*Plus)
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+ORACLE_VERSION=21.1.0.0.0
+ORACLE_MAJOR_MINOR=21_1
+
+COMPRESSED_VERSION=${ORACLE_VERSION//.}
+
+source "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
+# Check if already installed
+if [[ -d /opt/oracle/instantclient_${ORACLE_MAJOR_MINOR} ]]; then
+    echo "Oracle Instant Client is already installed"
+    exit 0
+fi
+
+echo "Installing Oracle Instant Client and SQL*Plus..."
+
+# Create temporary directory for downloads
+temp_dir=$(mktemp -d)
+cd "$temp_dir" || exit 1
+
+if [[ "$ROPERDOT_OS_ENV" = darwin ]]; then
+    os_path="mac"
+    os_filename="macos"
+else
+    os_path="linux"
+    os_filename="linux"
+fi
+
+# Download Oracle Instant Client Basic package
+echo "Downloading Oracle Instant Client Basic..."
+get-web-file "https://download.oracle.com/otn_software/${os_path}/instantclient/${COMPRESSED_VERSION}/instantclient-basic-${os_filename}.x64-${ORACLE_VERSION}.zip" \
+ "instantclient-basic.zip"
+
+# Download Oracle Instant Client SQL*Plus package
+echo "Downloading Oracle Instant Client SQL*Plus..."
+get-web-file "https://download.oracle.com/otn_software/${os_path}/instantclient/${COMPRESSED_VERSION}/instantclient-sqlplus-${os_filename}.x64-${ORACLE_VERSION}.zip" \
+ "instantclient-sqlplus.zip"
+
+# Create the directory for Oracle files
+sudo mkdir -p /opt/oracle
+cd /opt/oracle || exit 1
+
+# Unzip the downloaded files
+echo "Unzipping Oracle Instant Client files..."
+sudo unzip -q "$temp_dir/instantclient-basic.zip"
+sudo unzip -q "$temp_dir/instantclient-sqlplus.zip"
+
+if [[ "$ROPERDOT_OS_FAMILY" = debian ]]; then
+	# Install libaio dependencies
+	echo "Installing Oracle dependencies..."
+	sudo apt-get update
+
+	# Check Ubuntu version to decide which package to install
+	if lsb_release -r | grep -q "24.04"; then
+	    echo "Detected Ubuntu 24.04, installing libaio1t64..."
+	    sudo apt-get install -y libaio1t64 libaio-dev
+	    # Create a symbolic link for Oracle client to find the library
+	    if [[ ! -e /usr/lib/x86_64-linux-gnu/libaio.so.1 ]]; then
+	        sudo ln -s /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1
+	    fi
+	else
+	    echo "Detected non-Ubuntu 24.04 system, installing libaio1..."
+	    sudo apt-get install -y libaio1 libaio-dev
+	fi
+fi
+
+# Clean up temporary directory
+rm -rf "$temp_dir"
+
+echo "Oracle Instant Client installed successfully"
+echo "Note: Environment variables (ORACLE_HOME, LD_LIBRARY_PATH) will be set by roperdot-bootstrap"

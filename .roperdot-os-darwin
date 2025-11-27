@@ -4,19 +4,17 @@ if [[ -n "$ZSH_VERSION" ]] && ! (zmodload -e zsh/pcre 2>/dev/null || zmodload zs
     export ROPERDOT_MISSING_PCRE=1
 fi
 
-prepend_to_path_var () {
+prepend-to-path-var() {
     local new_dir=${1%/}
     local IFS=':'
-    for dir in $PATH ; do
+    for dir in $PATH; do
         dir=${dir%/}
-        if [[ "$dir" = "$new_dir" ]]; then
-            return 0
-        fi
+        [[ "$dir" = "$new_dir" ]] && return 0
     done
     export PATH="$new_dir${PATH:+:$PATH}"
 }
 
-app_path () {
+app-path() {
     local app_name="$1"
     
     if [[ -d "$HOME/Applications/$app_name" ]]; then
@@ -28,17 +26,17 @@ app_path () {
 
 export BREW_PREFIX=$(brew --prefix)
 
-get_brew_path () {
+get-brew-path() {
 	local path="$BREW_PREFIX/opt/$1"
 	[[ -d $path ]] && echo $path
 }
 
-core_utils_path="$(get_brew_path coreutils)"
-[[ -n "$core_utils_path" ]] && prepend_to_path_var "$core_utils_path/libexec/gnubin"
-find_utils_path="$(get_brew_path findutils)"
-[[ -n "$find_utils_path" ]] && prepend_to_path_var "$find_utils_path/libexec/gnubin"
-more_utils_path="$(get_brew_path moreutils)"
-[[ -n "$more_utils_path" ]] && prepend_to_path_var "$more_utils_path/libexec/gnubin"
+core_utils_path="$(get-brew-path coreutils)"
+[[ -n "$core_utils_path" ]] && prepend-to-path-var "$core_utils_path/libexec/gnubin"
+find_utils_path="$(get-brew-path findutils)"
+[[ -n "$find_utils_path" ]] && prepend-to-path-var "$find_utils_path/libexec/gnubin"
+more_utils_path="$(get-brew-path moreutils)"
+[[ -n "$more_utils_path" ]] && prepend-to-path-var "$more_utils_path/libexec/gnubin"
 [[ -d /usr/local/sbin ]] && add_dir_to_path_var /usr/local/sbin
 
 alias lsusb='system_profiler SPUSBDataType'
@@ -89,11 +87,11 @@ fi
 alias rmdsstore="find . -name '*.DS_Store' -type f -ls -delete"
 
 # Empty the Trash on all mounted volumes and the main HDD and clear the useless sleepimage
-empty_trash () {
+empty-trash() {
 	if [[ -n "$1" ]]; then
 		cat <<EOT
-empty_trash: Empties the Trash on all mounted volumes and the main drive and clears sleepimage
-Usage: empty_trash
+empty-trash: Empties the Trash on all mounted volumes and the main drive and clears sleepimage
+Usage: empty-trash
 EOT
 		exit 0
 	fi
@@ -109,7 +107,7 @@ EOT
 }
 
 # cd into whatever is the forefront Finder window.
-cdf () {  # short for cdfinder
+cdf() {  # short for cdfinder
 	if [[ -n "$1" ]]; then
 		cat <<EOT
 cdf: cd into the folder being viewed in the forefront Finder window
@@ -121,11 +119,11 @@ EOT
 }
 
 # who is using the laptop's iSight camera?
-camera_used_by () {
+camera-used-by() {
 	if [[ -n "$1" ]]; then
 		cat <<EOT
-camera_used_by: Checks to see which apps are using the camera
-Usage: camera_used_by
+camera-used-by: Checks to see which apps are using the camera
+Usage: camera-used-by
 EOT
 		exit 0
 	fi
@@ -134,11 +132,11 @@ EOT
 	echo -e "Recent camera uses:\n$usedby"
 }
 
-alias show_files='defaults write com.apple.finder AppleShowAllFiles YES; killall Finder'
-alias hide_files='defaults write com.apple.finder AppleShowAllFiles NO; killall Finder'
+alias show-files='defaults write com.apple.finder AppleShowAllFiles YES; killall Finder'
+alias hide-files='defaults write com.apple.finder AppleShowAllFiles NO; killall Finder'
 
-alias hide_desktop="defaults write com.apple.finder CreateDesktop -bool false && killall Finder"
-alias show_desktop="defaults write com.apple.finder CreateDesktop -bool true && killall Finder"
+alias hide-desktop="defaults write com.apple.finder CreateDesktop -bool false && killall Finder"
+alias show-desktop="defaults write com.apple.finder CreateDesktop -bool true && killall Finder"
 
 # Add tab completion for "defaults read|write NSGlobalDomain"
 # You could just use "-g" instead, but I like being explicit
@@ -153,13 +151,12 @@ if [[ -x /usr/libexec/java_home ]]; then
 	fi
 fi
 
-# Usage: shell_switch [bash|zsh]
 # The shell must be in /etc/shells
-shell_switch () {
+shell-switch() {
 	if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
 		cat <<EOT
-shell_switch: Switches to the designated shell
-Usage: shell_switch [bash|zsh]
+shell-switch: Switches to the designated shell
+Usage: shell-switch [bash|zsh]
 EOT
 		exit 0
 	fi
@@ -169,7 +166,7 @@ EOT
 # Create animated gifs from any video
 # from Alex Sexton   gist.github.com/SlexAxton/4989674
 # Requires ffmpeg, gifsicle and imagemagick
-gifify () {
+gifify() {
 	if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
 		cat <<EOT
 gifify: Converts a video to an animated GIF
@@ -190,7 +187,7 @@ EOT
 
 # Transform video into webm
 # Requires ffmpeg
-webmify () {
+webmify() {
 	if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
 		cat <<EOT
 webmify: Converts a video into the webm format
@@ -207,7 +204,7 @@ alias afk="/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resource
 
 #alias rm=__rm
 #
-#__rm () {
+#__rm() {
 #	switches=
 #	i=0
 #	args=()

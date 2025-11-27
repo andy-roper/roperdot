@@ -23,10 +23,10 @@ if [[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" = gnome ]]; then
 	    sudo mv /opt/$file_name /opt/PeaZip
 	    rm ${file_name}.tar.gz
 	    [[ -d "$HOME/.local/share/applications" ]] || mkdir "$HOME/.local/share/applications"
-	    cp /opt/PeaZip/FreeDesktop_integration/peazip.desktop "$HOME/.local/share/applications"
+	    cp /opt/PeaZip/res/share/batch/freedesktop_integration/peazip.desktop "$HOME/.local/share/applications"
 	    sed -i '/Exec=/c\Exec=/opt/PeaZip/peazip %F' "$HOME/.local/share/applications/peazip.desktop"
 	    [[ -d "$HOME/.local/share/icons" ]] || mkdir -p "$HOME/.local/share/icons"
-	    cp /opt/PeaZip/FreeDesktop_integration/peazip.png "$HOME/.local/share/icons"
+	    cp /opt/PeaZip/res/share/icons/peazip.png "$HOME/.local/share/icons"
 	    ln -s /opt/PeaZip/peazip "${ROPERDOT_DIR}/extra-bin/peazip"
 	else
 		echo "PeaZip portable DEB couldn't be found for 32-bit systems; aborting install"

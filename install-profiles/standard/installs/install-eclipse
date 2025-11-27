@@ -9,25 +9,29 @@
 # https://www.eclipse.org/downloads/packages/
 # Current version: Eclipse IDE 2025-06 R
 if [[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" = gnome ]]; then
-	cd "$(mktemp -d)" || return 1
-	
-	file_name=eclipse-jee-2025-06-R-linux-gtk-x86_64.tar.gz
-	
-	# Primary download method using Eclipse's redirect system
-	get-web-file "https://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/2025-06/R/${file_name}" "$file_name"
-	
-	# Alternative direct download (backup method):
-	# get-web-file "https://download.eclipse.org/technology/epp/downloads/release/2025-06/R/${file_name}" "$file_name"
-	
-	sudo tar xfz $file_name -C /opt/
-	rm $file_name
-	ln -s /opt/eclipse/eclipse "${ROPERDOT_DIR}/extra-bin/eclipse"
-	
-	[[ -d "$HOME/.local/share/icons" ]] || mkdir -p "$HOME/.local/share/icons"
-	cp /opt/eclipse/icon.xpm "$HOME/.local/share/icons/eclipse.xpm"
-	
-	[[ -d "$HOME/.local/share/applications" ]] || mkdir -p "$HOME/.local/share/applications"
-	cat << EOT > "$HOME/.local/share/applications/eclipse.desktop"
+	if command -v snap >/dev/null 2>&1; then
+		sudo systemctl restart snapd  # restart snapd in case certificates have changed
+		sudo snap install eclipse --classic
+	else
+		cd "$(mktemp -d)" || return 1
+		
+		file_name=eclipse-jee-2025-06-R-linux-gtk-x86_64.tar.gz
+		
+		# Primary download method using Eclipse's redirect system
+		get-web-file "https://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/2025-06/R/${file_name}" "$file_name"
+		
+		# Alternative direct download (backup method):
+		# get-web-file "https://download.eclipse.org/technology/epp/downloads/release/2025-06/R/${file_name}" "$file_name"
+		
+		sudo tar xfz $file_name -C /opt/
+		rm $file_name
+		ln -s /opt/eclipse/eclipse "${ROPERDOT_DIR}/extra-bin/eclipse"
+		
+		[[ -d "$HOME/.local/share/icons" ]] || mkdir -p "$HOME/.local/share/icons"
+		cp /opt/eclipse/icon.xpm "$HOME/.local/share/icons/eclipse.xpm"
+		
+		[[ -d "$HOME/.local/share/applications" ]] || mkdir -p "$HOME/.local/share/applications"
+		cat << EOT > "$HOME/.local/share/applications/eclipse.desktop"
 [Desktop Entry]
 Encoding=UTF-8
 Version=2025-06 R
@@ -39,4 +43,5 @@ Icon=eclipse.xpm
 Terminal=false
 Categories=Application;Development;Programming;IDE;
 EOT
+	fi
 fi

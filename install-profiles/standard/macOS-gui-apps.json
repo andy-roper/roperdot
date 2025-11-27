@@ -67,7 +67,9 @@
 		"app": "Docker",
 		"package": "docker",
 		"package_manager": "brew",
-		"desc": "Virtualization platform"
+		"install_command": "brew install --cask docker",
+		"desc": "Virtualization platform",
+		"comment": "--cask is needed to install both the CLI and the GUI"
 	},
 	{
 		"app": "Dropbox",
@@ -115,8 +117,8 @@
 		"app": "Oracle SQL Developer",
 		"app_dir": "SQLDeveloper.app",
 		"install_script": "install-sql-developer",
-		"groups": ["work"],
-		"desc": "Oracle SQL Developer"
+		"desc": "Oracle SQL Developer",
+		"groups": ["oracle"]
 	},
 	{
 		"app": "Sourcetree",

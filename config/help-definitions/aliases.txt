@@ -18,6 +18,7 @@ DELETE: Calls call-api with the DELETE method
 dfh: df -h
 disks: Lists file mounts with human-readable size/used/available
 distro: Prints information about your Linux distribution
+eject: (Mac) Ejects a disc
 encode-base64-clip: Encodes a string into Base64 and writes the output to the clipboard; accepts file input, piped input or clipboard input
 fd: Calls fd-find, a faster alternative to find (https://github.com/sharkdp/fd)
 ff: Recursively finds files by name
@@ -35,8 +36,8 @@ GET: Calls call-api with the GET method
 gr: Changes directory to the root of a git repository
 h: History
 HEAD: Calls call-api with the HEAD method
-hide_desktop: (Mac) Hides all desktop icons
-hide_files: (Mac) Causes Finder to hide hidden files (normal behavior, can also do with Cmd + Shift + .)
+hide-desktop: (Mac) Hides all desktop icons
+hide-files: (Mac) Causes Finder to hide hidden files (normal behavior, can also do with Cmd + Shift + .)
 hosts: Edits /etc/hosts
 ip: Shows current IP address
 json-to-string-clip: Converts JSON to a quotes string and write the output to the clipboard; accepts file input, piped input or clipboard input
@@ -67,8 +68,8 @@ rd: Removes a directory (same as rmdir)
 rmdsstore: (Mac) Removes *.DS_Store under the current directory
 rolln: Evaluates a dice notation expression an arbitrary number of times
 rtr: Recursively replaces text in files
-show_desktop: (Mac) Restores normal desktop icon display
-show_files: (Mac) Causes Finder to display hidden files (can also do with Cmd + Shift + .)
+show-desktop: (Mac) Restores normal desktop icon display
+show-files: (Mac) Causes Finder to display hidden files (can also do with Cmd + Shift + .)
 TRACE: Calls call-api with the TRACE method
 undopush: Undoes a git push
 update-brew: (Mac) Updates Homebrew and formula definitions, upgrades installed packages, removes old downloads/cache files/unneeded dependencies, and checks for potential issues

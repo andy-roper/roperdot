@@ -1,5 +1,7 @@
+app-path: (Mac) Gets path of an app in Applications
+apply-mapped-drive: Converts UNC paths to Windows paths if drive a mapping exists
 bindiff: Compares files in binary/hex mode
-camera_used_by: (Mac) Checks to see which apps are using the camera
+camera-used-by: (Mac) Checks to see which apps are using the camera
 cdclip: Changes to the directory contained in the clipboard
 cdd: Changes to subdirectory of the current directory or a target directory; uses fzf to enable choosing the directory
 cdf: (Mac) cd into the folder being viewed in the forefront Finder window
@@ -9,10 +11,15 @@ clear-claude: (Windows) Clears the cache directory for Claude
 clone: Clones a git repository, changes to the directory, and runs yarn
 cpp: Copies files and show progress using rsync
 cr: Compresses files recursively
-empty_trash: (Mac) Empties the Trash on all mounted volumes and the main drive and clears sleepimage
+def-win-env-linux-path: Defines an env var from a Windows env var and converts to a WSL path
+empty-trash: (Mac) Empties the Trash on all mounted volumes and the main drive and clears sleepimage
+escape-arg: Escapes metacharacters in an argument
 fm: Opens a file manager for the current directory or the specified directory
+get-brew-path: (Mac) Gets full brew path for a directory
 gifify: (Mac) Converts a video to an animated GIF
+gli: Interactive git commit browser using fzf
 hexdiff: Compares files in binary/hex mode
+is-archive: Tests if a filename is an archive file
 jsondiff: Compares JSON files
 la: ls showing permissions in octal
 lh: ls -alh showing 5 digits of precision for sizes
@@ -20,12 +27,17 @@ lsd: ls that only shows directories
 mdd: Creates a directory and changes directory into it
 modtime: Prints the modified time for a file in a format that's compatible with touch
 mount-drive: (Windows) Mounts a drive in /mnt
+mount-iso-readonly: (Ubuntu and Mint) Mounts an ISO image for reading
+mount-iso-writable: (Ubuntu and Mint) Mounts an ISO image for writing
 nullify: Directs all output for a command to /dev/null
+prepend-to-path-var: Prepends a directory to the PATH env var
 pwdwin: (Windows) Shows the present working directory as a Windows path
 setnf: Shows values of environment variables and function definitions (with the function contents suppressed)
-shell_switch: (Mac) Switches to the designated shell
+shell-switch: (Mac) Switches to the designated shell
 t: Creates a temporary directory within the current directory and changes directorye to it
 up: Changes to a selected parent directory, to the first parent directory that matches a string argument or up n directories where n is the count argument
+unset-dot-glob: Disables globbing matching hidden files
 webmify: (Mac) Converts a video into the webm format
-win_env: (Windows) Gets the value of a Windows environment variable
+win-env: (Windows) Gets the value of a Windows environment variable
+win-env-linux-path: (Windows) Gets the value of a Windows environment variable and converts it to a WSL path
 winpath: (Windows) Shows the Windows path for a file

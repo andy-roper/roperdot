@@ -214,14 +214,14 @@ if ! command -v python >/dev/null 2>&1 && [[ -f /usr/bin/python3 ]]; then
 fi
 
 do_timing "phase 2b"
-if command -v npm >/dev/null 2>&1 && [[ ! "$PATH" =~ npm ]]; then
-	npmdir="$(npm bin -g 2>/dev/null)"
-	if [[ "$ROPERDOT_DESKTOP_ENV" = windows && "$ROPERDOT_OS_ENV" = ubuntu ]]; then
-		d="$(wslpath "$npmdir" 2>&1)"
-		[[ -n "$d" ]] && npmdir="$d"
-	fi
-	PATH="$PATH:$npmdir"
-fi
+# if command -v npm >/dev/null 2>&1 && [[ ! "$PATH" =~ npm ]]; then
+# 	npmdir="$(npm bin -g 2>/dev/null)"
+# 	if [[ "$ROPERDOT_DESKTOP_ENV" = windows && "$ROPERDOT_OS_ENV" = ubuntu ]]; then
+# 		d="$(wslpath "$npmdir" 2>&1)"
+# 		[[ -n "$d" ]] && npmdir="$d"
+# 	fi
+# 	PATH="$PATH:$npmdir"
+# fi
 
 do_timing "phase 2c"
 if [[ -d ~/.npm-packages ]]; then
@@ -742,6 +742,33 @@ if [[ -d ~/.nvm ]]; then
 #	[[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh" --no-use
 	[[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
 	[[ "$ROPERDOT_CURRENT_SHELL" = bash && -s "$NVM_DIR/bash_completion" ]] && source "$NVM_DIR/bash_completion"
+fi
+
+# SDKMAN initialization
+if [[ -d ~/.sdkman ]]; then
+    export SDKMAN_DIR="$HOME/.sdkman"
+    [[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"
+fi
+
+# Oracle Instant Client environment (find any installed version)
+for oracle_dir in /opt/oracle/instantclient_*; do
+    if [[ -d "$oracle_dir" ]]; then
+        export ORACLE_HOME="$oracle_dir"
+        export LD_LIBRARY_PATH="$ORACLE_HOME:$LD_LIBRARY_PATH"
+        export PATH="$ORACLE_HOME:$PATH"
+        break
+    fi
+done
+
+# .NET environment
+if command -v dotnet >/dev/null 2>&1; then
+    export PATH="$HOME/.dotnet/tools:$PATH"
+fi
+
+if [[ -f /etc/ssl/certs/ca-certificates.crt ]]; then
+    export NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+    export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+    export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 fi
 
 do_timing

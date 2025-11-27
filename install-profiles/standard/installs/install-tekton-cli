@@ -1,0 +1,70 @@
+#
+# Description: Install script for Tekton CLI (tkn)
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+TKN_VERSION=0.32.0
+
+source "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
+cleanup() {
+	if [[ -n "$temp_dir" ]]; then
+		cd - > /dev/null
+		rm -rf "$temp_dir"
+	fi
+}
+
+trap cleanup EXIT
+
+# Check if already installed with correct version
+if command -v tkn >/dev/null 2>&1; then
+    installed_version=$(tkn version 2>/dev/null | grep 'Client version' | awk '{print $NF}')
+    if [[ "$installed_version" = "$TKN_VERSION" ]]; then
+        echo "Tekton CLI (tkn) version $TKN_VERSION is already installed"
+        exit 0
+    fi
+fi
+
+echo "Installing Tekton CLI (tkn) version ${TKN_VERSION}..."
+
+temp_dir=$(mktemp -d)
+cd "$temp_dir" || exit 1
+
+if [[ "$ROPERDOT_OS_FAMILY" = debian ]]; then
+    # Linux installation via deb package
+    deb_file="tektoncd-cli-${TKN_VERSION}_Linux-64bit.deb"
+    download_url="https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/${deb_file}"
+    
+    echo "Downloading Tekton CLI package..."
+    get-web-file "$download_url" "$deb_file"
+    
+    # Check if download was successful
+    if [[ ! -f "$deb_file" ]]; then
+        echo "Error: Download failed. The requested version may not exist."
+        echo "Please check available versions at: https://github.com/tektoncd/cli/releases"
+        exit 1
+    fi
+    
+    # Install the package
+    sudo dpkg -i "$deb_file"
+elif [[ "$ROPERDOT_OS_ENV" = darwin ]]; then
+    # macOS installation via tar.gz
+    tar_file="tkn_${TKN_VERSION}_Darwin_x86_64.tar.gz"
+    download_url="https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/${tar_file}"
+    
+    echo "Downloading Tekton CLI for macOS..."
+    get-web-file "$download_url" "$tar_file"
+    
+    if [[ ! -f "$tar_file" ]]; then
+        echo "Error: Download failed. The requested version may not exist."
+        echo "Please check available versions at: https://github.com/tektoncd/cli/releases"
+        exit 1
+    fi
+    
+    # Extract and install
+    tar -xzf "$tar_file"
+    mkdir -p "${LOCALUSR}/bin"
+    mv tkn "${LOCALUSR}/bin/"
+fi

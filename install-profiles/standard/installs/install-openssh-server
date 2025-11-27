@@ -1,0 +1,14 @@
+#
+# Description: Install script for openssh-server
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+if [[ "$ROPERDOT_OS_FAMILY" = debian ]]; then
+	sudo apt-get update
+	sudo apt install openssh-server -y
+	sudo ufw allow ssh
+	sudo systemctl enable ssh
+	sudo systemctl start ssh
+fi

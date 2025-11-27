@@ -8,7 +8,7 @@
 if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
 	brew install tesseract
 elif [[ "$ROPERDOT_OS_TYPE" = "linux" ]]; then
-	sudo apt install tesseract-ocr
+	sudo apt install tesseract-ocr -y
 else
 	echo "Unsupported OS for Tesseract install"
 fi

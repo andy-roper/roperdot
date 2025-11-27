@@ -1,18 +1,18 @@
 #
-# Description: Install script for Claude
+# Description: Install script for Claude Desktop
 #
 # Author: Andy Roper <andyroper42@gmail.com>
 # URL: https://github.com/andy-roper/roperdot
 #
 
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
 if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
-	brew install claude
-
-	# configure Claude on MacOS
-elif [[ "$ROPERODT_DESKTOP_ENV" = "windows" ]]; then
-	choco install claude
-
-	# configure Claude on Windows
+    brew install --cask claude
+elif [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+    choco install claude
 else
-	echo "Error: OS not yet configured for Claude install"
+    echo "Claude Desktop is not officially available for Linux yet"
+    echo "Please use the web interface at https://claude.ai"
+    return 1
 fi

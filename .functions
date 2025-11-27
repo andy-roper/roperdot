@@ -8,11 +8,11 @@
 source "${ROPERDOT_DIR}/source-scripts/re-match"
 
 # Characters to escape: `~!#$^&()[]{}\|'"<>? and space
-escape_arg () {
+escape-arg() {
 	echo $(sed -E 's/([][`~!#$^&\(\)\{\}\|'\''\"<>?\\ ])/\\\1/g'<<<"$1")
 }
 
-unset_dot_glob () {
+unset-dot-glob() {
 	if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
 		shopt -u dotglob
 	else
@@ -25,7 +25,7 @@ if [[ "$ROPERDOT_CUSTOM_CD" = true ]]; then
 		compdef __cd=cd
 		compdef cd=cd
 	fi
-	__cd () {
+	__cd() {
 		if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
 			cat <<EOT
 cd: change to a directory
@@ -60,7 +60,7 @@ EOT
 		( "$ROPERDOT_CURRENT_SHELL" = "zsh" && $#funcstack -ne 1 ) ]]; then
 			local arg arg_str
 			for arg in "$@"; do
-				arg="$(escape_arg "$arg")"
+				arg="$(escape-arg "$arg")"
 				arg_str+=" $arg"
 			done
 			eval "\cd $arg_str"
@@ -107,7 +107,7 @@ EOT
 			fi
 		fi
 		p="$(abs-path "$1")"
-		if [[ -n "$(is_archive "$p")" ]]; then
+		if [[ -n "$(is-archive "$p")" ]]; then
 			destdir=$(mktemp -d)
 			pushd "$destdir" || return 1
 			extract-archive "$p"
@@ -118,7 +118,7 @@ EOT
 				echo "When you're done using the dmg, unmount it like: hdiutil detach \"$mount_dir\""
 			fi
 		elif [[ "$ROPERDOT_OS_ENV" = "ubuntu" || "$ROPERDOT_OS_ENV" = "mint" ]] && [[ "$1" =~ \.iso$ ]]; then
-			mount_iso_readonly "$p"
+			mount-iso-readonly "$p"
 		else
 			if [[ -d "$p" ]]; then
 				cd "$p"
@@ -139,7 +139,7 @@ if [[ "$ROPERDOT_CUSTOM_LS" = true ]]; then
 	# Show the contents of a symlink directory argument instead of the symlink itself
 	# Use the -d switch for non-directory arguments to suppress single-level recursion into directories
 	# Match hidden files with *
-	__ls () {
+	__ls() {
 		# Determine which ls command to use
 		local LS_CMD
 		if [[ "$ROPERDOT_OS_ENV" = "darwin" ]] && command -v gls >/dev/null 2>&1; then
@@ -156,7 +156,7 @@ if [[ "$ROPERDOT_CUSTOM_LS" = true ]]; then
 		( "$ROPERDOT_CURRENT_SHELL" = "bash" && ${#FUNCNAME[@]} -gt 1 ) ||
 		( "$ROPERDOT_CURRENT_SHELL" = "zsh" && $#funcstack -ne 1 ) ]]; then
 			for arg in "$@"; do
-				arg="$(escape_arg "$arg")"
+				arg="$(escape-arg "$arg")"
 				arg_str+=" $arg"
 			done
 			eval "$LS_CMD $arg_str"
@@ -184,14 +184,14 @@ if [[ "$ROPERDOT_CUSTOM_LS" = true ]]; then
 				fi
 #				local arg_escaped="${arg// /\\ }"
 #				arg_escaped="${arg_escaped//'/\\'}"
-				local arg_escaped="$(escape_arg "$arg")"
+				local arg_escaped="$(escape-arg "$arg")"
 	            eval $LS_CMD $LS_SWITCHES ${switches[@]} "$arg_escaped"
 			done
 		fi
 		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && shopt -u dotglob || setopt no_glob_dots
 	}
 else
-    __ls () {
+    __ls() {
         ls "$@"
     }
 fi
@@ -201,7 +201,7 @@ if [[ "$ROPERDOT_CUSTOM_CP" = true ]]; then
 		compdef __cp=cp
 		compdef cp=cp
 	fi
-	__cp () {
+	__cp() {
 		# Turn globbing back on
 		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && set +f || set +F
 
@@ -210,7 +210,7 @@ if [[ "$ROPERDOT_CUSTOM_CP" = true ]]; then
 		( "$ROPERDOT_CURRENT_SHELL" = "bash" && ${#FUNCNAME[@]} -gt 1 ) ||
 		( "$ROPERDOT_CURRENT_SHELL" = "zsh" && $#funcstack -ne 1 ) ]]; then
 			for arg in "$@"; do
-				arg="$(escape_arg "$arg")"
+				arg="$(escape-arg "$arg")"
 				arg_str+=" $arg"
 			done
 			eval "\cp $arg_str"
@@ -249,7 +249,7 @@ if [[ "$ROPERDOT_CUSTOM_CP" = true ]]; then
 			while [[ "$arg" =~ $re ]]; do
 				arg="${arg//.../../..}"
 			done
-			arg="$(escape_arg "$arg")"
+			arg="$(escape-arg "$arg")"
 			arg_str+=" $arg"
 		done
 		if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
@@ -257,7 +257,7 @@ if [[ "$ROPERDOT_CUSTOM_CP" = true ]]; then
 		else
 			setopt globdots
 		fi
-		trap unset_dot_glob EXIT
+		trap unset-dot-glob EXIT
 		if [[ -n "$use_cwd" ]]; then
 			eval "\cp ${switches[@]} -- $arg_str ."
 		else
@@ -271,7 +271,7 @@ if [[ "$ROPERDOT_CUSTOM_MV" = true ]]; then
 		compdef __mv=mv
 		compdef mv=mv
 	fi
-	__mv () {
+	__mv() {
 		# Turn globbing back on
 		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && set +f || set +F
 
@@ -280,7 +280,7 @@ if [[ "$ROPERDOT_CUSTOM_MV" = true ]]; then
 		( "$ROPERDOT_CURRENT_SHELL" = "bash" && ${#FUNCNAME[@]} -gt 1 ) ||
 		( "$ROPERDOT_CURRENT_SHELL" = "zsh" && $#funcstack -ne 1 ) ]]; then
 			for arg in "$@"; do
-				arg="$(escape_arg "$arg")"
+				arg="$(escape-arg "$arg")"
 				arg_str+=" $arg"
 			done
 			eval "\mv $arg_str"
@@ -314,7 +314,7 @@ if [[ "$ROPERDOT_CUSTOM_MV" = true ]]; then
 			while [[ "$arg" =~ $re ]]; do
 				arg="${arg//.../../..}"
 			done
-			arg="$(escape_arg "$arg")"
+			arg="$(escape-arg "$arg")"
 			arg_str+=" $arg"
 		done
 		if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
@@ -322,7 +322,7 @@ if [[ "$ROPERDOT_CUSTOM_MV" = true ]]; then
 		else
 			setopt globdots
 		fi
-		trap unset_dot_glob EXIT
+		trap unset-dot-glob EXIT
 		if [[ -n "$use_cwd" ]]; then
 			eval "\mv ${switches[@]} -- $arg_str ."
 		else
@@ -336,7 +336,7 @@ if [[ "$ROPERDOT_CUSTOM_RM" = true ]]; then
 		compdef __rm=rm
 		compdef rm=rm
 	fi
-	__rm () {
+	__rm() {
 		# Turn globbing back on
 		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && set +f || set +F
 
@@ -345,7 +345,7 @@ if [[ "$ROPERDOT_CUSTOM_RM" = true ]]; then
 		( "$ROPERDOT_CURRENT_SHELL" = bash && ${#FUNCNAME[@]} -gt 1 ) ||
 		( "$ROPERDOT_CURRENT_SHELL" = zsh && $#funcstack -ne 1 ) ]]; then
 			for arg in "$@"; do
-				arg="$(escape_arg "$arg")"
+				arg="$(escape-arg "$arg")"
 				arg_str+=" $arg"
 			done
 			eval "\rm $arg_str"
@@ -362,7 +362,7 @@ if [[ "$ROPERDOT_CUSTOM_RM" = true ]]; then
 			while [[ "$arg" =~ $re ]]; do
 				arg="${arg//.../../..}"
 			done
-			arg="$(escape_arg "$arg")"
+			arg="$(escape-arg "$arg")"
 			arg_str+=" $arg"
 		done
 		if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
@@ -370,12 +370,12 @@ if [[ "$ROPERDOT_CUSTOM_RM" = true ]]; then
 		else
 			setopt globdots
 		fi
-		trap unset_dot_glob EXIT
+		trap unset-dot-glob EXIT
 		eval "\rm ${switches[@]} -- $arg_str"
 	}
 fi
 
-cdd () {
+cdd() {
 	if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]] ; then
 		[[ "$ROPERDOT_CURRENT_SHELL" = zsh ]] && compdef cdd=cd
 		cat <<EOT
@@ -399,7 +399,7 @@ EOT
 	fi
 }
 
-cds () {
+cds() {
 	if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]] ; then
 		cat <<EOT
 cds: cd to deep subdirectory under the current directory or a target directory
@@ -422,7 +422,7 @@ EOT
 	fi
 }
 
-lsd () {
+lsd() {
 	if [[ -n "$1" ]]; then
 		ls "$1" | grep "^d"
 	else
@@ -431,7 +431,7 @@ lsd () {
 }
 
 # List all files, long format, colorized, permissions in octal
-function la () {
+function la() {
 	if [[ "$ROPERDOT_OS_ENV" = "darwin" ]] && command -v gls >/dev/null 2>&1; then
 		# Use gls (GNU ls) - gets ISO date format
 		__ls -l --group-directories-first --time-style=long-iso "$@" | awk '
@@ -468,7 +468,7 @@ function la () {
 	fi
 }
 
-lh () {
+lh() {
     __ls -la --color=always --time-style=long-iso --group-directories-first "$@" | awk '
     BEGIN {
         OFS = " "
@@ -519,7 +519,7 @@ lh () {
 }
 
 if [[ $ROPERDOT_CURRENT_SHELL = bash ]]; then
-	dir_stack_chevrons () {
+	dir_stack_chevrons() {
 		local chevron_str dirs_count
 		dirs_count=$(dirs -p | wc -l)
 		for (( i = 1; i < $dirs_count; i++ )) {
@@ -529,7 +529,7 @@ if [[ $ROPERDOT_CURRENT_SHELL = bash ]]; then
 	}
 fi
 
-pushd () {
+pushd() {
 	local path="$(abs-path "$1")"
 	if [[ -d "$path" ]]; then
 		builtin pushd "$path" >/dev/null || return 1
@@ -538,12 +538,12 @@ pushd () {
 	fi
 }
 
-popd () {
+popd() {
 	builtin popd >/dev/null || return 1
 }
 
 # mdd: create a directory and cd to it
-mdd () {
+mdd() {
 	if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]] ; then
 		cat <<EOT
 mdd: create a directory and then cd into it
@@ -556,7 +556,7 @@ EOT
 	fi
 }
 
-_dot () {
+_dot() {
 	if [[ $# -eq 0 ]] ; then
 		cd ~ || return 1
 	else
@@ -578,7 +578,7 @@ if type vi 2>/dev/null | grep alias >/dev/null; then
 	unalias vi
 fi
 
-vi () {
+vi() {
 	if [[ -n $ROPERDOT_VI_BIN ]]; then
 		if [[ -n "$1" ]]; then
 			if [[ -w "$(dirname "$1"))" ]]; then
@@ -599,7 +599,7 @@ vi () {
 }
 
 if command -v nvim >/dev/null 2>&1; then
-	nvim () {
+	nvim() {
 		if [[ -n "$1" ]]; then
 			if [[ -w "$(dirname "$1"))" ]]; then
 				command nvim "$1"
@@ -619,7 +619,7 @@ fi
 if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
 	if command -v perl >/dev/null 2>&1; then
 		# setnf: shows output of set with contents of functions suppressed
-		setnf () {
+		setnf() {
 			if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]] ; then
 				cat <<EOT
 setnf: print trimmed environment variable and function values
@@ -635,9 +635,9 @@ EOT
 
 	fi
 else
-	setnf () {
+	setnf() {
 		set
-		print -f "%s ()\n" "${(ok)functions}"
+		print -f "%s()\n" "${(ok)functions}"
 	}
 fi
 
@@ -648,7 +648,7 @@ if command -v fd >/dev/null 2>&1; then
 
 	# _ff: finds files matching a pattern
 	# called by ff alias
-	_ff () {
+	_ff() {
 		if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
 			cat <<EOT
 ff: find files whose names match a pattern
@@ -687,7 +687,7 @@ EOT
 		fd -gH --no-ignore-vcs ${switches[@]} "$pattern" "$searchpath"
 	}
 
-	_fsz () {
+	_fsz() {
 		if [[ "$1" == "--help" || "$1" == "-?" ]] ; then
 			cat <<EOT
 fsz: find files whose names match a pattern and print size information
@@ -793,7 +793,7 @@ else  # fd is not installed
 
 	# _ff: finds files matching a pattern
 	# called by ff alias
-	_ff () {
+	_ff() {
 		if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]] ; then
 			cat <<EOT
 ff: find files whose names match a pattern
@@ -820,7 +820,7 @@ EOT
 		find "$searchpath" -iname "$pattern" 2>/dev/null
 	}
 
-	_fsz () {
+	_fsz() {
 		if [[ "$1" == "--help" || "$1" == "-?" ]] ; then
 			cat <<EOT
 fsz: find files whose names match a pattern and print size information
@@ -923,7 +923,7 @@ fi  # fd if
 
 if command -v ag >/dev/null 2>&1; then
 	# ft: finds files in the current directory whose contents contain the specified patttern
-	_ft () {
+	_ft() {
 		if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]] ; then
 			cat <<EOT
 ft: search files for a pattern
@@ -1021,7 +1021,7 @@ EOT
 		fi
 	}
 
-	_ftr () {
+	_ftr() {
 		if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]] ; then
 			cat <<EOT
 ftr: recursively search files for a pattern
@@ -1122,7 +1122,7 @@ EOT
 	}
 else
 	# ft: finds files in the current directory whose contents contain the specified patttern
-	_ft () {
+	_ft() {
 		if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]] ; then
 			cat <<EOT
 ft: search files for a pattern
@@ -1178,7 +1178,7 @@ EOT
 		return 0
 	}
 
-	_ftr () {
+	_ftr() {
 		if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]] ; then
 			cat <<EOT
 ftr: recursively search files for a pattern
@@ -1246,12 +1246,12 @@ EOT
 	}
 fi
 
-is_archive () {
+is-archive() {
 	re="\.(zip|ZIP|tar|gz|tgz|7z|rar|r00|Z|cbz|cbr|cbt|cb7|jar|war|ear|tz|taz|bz|bz2|tbz|tb2|tbz2|lzma|tlz|xz|txz|lha)$"
 	[[ "$1" =~ $re ]] && echo true
 }
 
-cdclip () {
+cdclip() {
 	local dest=$(clippaste)
 	[[ "$dest" =~ ^~ && ! -d "$dest" ]] && dest="${dest/\~/$HOME}"
 	if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]] && [[ "$dest" =~ [:\\] ]]; then
@@ -1260,7 +1260,7 @@ cdclip () {
 	cd "$dest" || return 1
 }
 
-t () {
+t() {
 	if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]] ; then
 		cat <<EOT
 t: create a temporary directory
@@ -1277,11 +1277,11 @@ EOT
 }
 
 # Copy with progress
-cpp () {
+cpp() {
 	rsync -Pav --no-perms "$1" "$2"
 }
 
-cr () {
+cr() {
 	if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]] ; then
 		cat <<EOT
 cr: Recursively compress files into an archive file
@@ -1313,7 +1313,7 @@ EOT
 	c -r "$@"
 }
 
-#random () {
+#random() {
 #	if [[ $# == 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]] ; then
 #		cat <<EOT
 #random: print a random number
@@ -1355,11 +1355,11 @@ if command -v whois >/dev/null 2>&1; then
 fi
 
 # direct it all to /dev/null
-nullify () {
+nullify() {
 	"$@" >/dev/null 2>&1
 }
 
-if command -v fzf >/dev/null 2>&1; then
+if command -v fzf >/dev/null 2>&1 && command -v git >/dev/null 2>&1; then
 	# interactive git commit browser using fzf
 	gli() {
 
@@ -1397,16 +1397,16 @@ if command -v fzf >/dev/null 2>&1; then
 	}
 fi
 
-#count () {
+#count() {
 #	[[ $# -eq 0 ]] && local dir="." || local dir="$1"
 #	ls -ApR "$dir" | grep -v "/" | grep -v "^total" | grep -v "^\.:" | grep -v "^$" | wc -l
 #}
 #
-#strlen () {
+#strlen() {
 #	echo $(expr "$1" : '.*')
 #}
 #
-#spawnapp () {
+#spawnapp() {
 #	if [ -z "$2" ]; then
 #		"$1" &
 #	else
@@ -1427,7 +1427,7 @@ source "${ROPERDOT_DIR}/source-scripts/initialize-colors"
 
 initialize_colors
 
-choose-scheme () {
+choose-scheme() {
 	if [[ "$1" == "-?" || "$1" == "-h" || "$1" == "--help" ]]; then
 		cat <<EOT
 choose-scheme: choose a color scheme
@@ -1452,7 +1452,7 @@ EOT
 	fi
 }
 
-man () {
+man() {
 	LESS_TERMCAP_mb=$'\e'"[${COLOR_BRRED_CODE}m" \
 	LESS_TERMCAP_md=$'\e'"[01;${COLOR_BLUE_CODE}m" \
 	LESS_TERMCAP_me=$'\e[0m' \
@@ -1464,29 +1464,34 @@ man () {
 }
 
 if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
-	appdata_wsl="$(win_env_linux_path APPDATA)"
+	appdata_wsl="$(win-env-linux-path APPDATA)"
 
-	mount-drive () {
-		if [[ $# -eq 0 || "$1" == "-?" || "$1" == "-h" || "$1" == "--help" ]]; then
-			cat <<EOT
+	mount-drive() {
+        if [[ $# -eq 0 || "$1" == "-?" || "$1" == "-h" || "$1" == "--help" ]]; then
+            cat <<EOT
 mount-drive: mount a drive in Windows
 Usage: mount-drive <drive-letter>
-
 This script will mount the specified drive letter to /mnt/<drive-letter>. If
 the drive is already mounted, it will be unmounted first.
 EOT
-		return
-		fi
-
-		if [[ -d "/mnt/$1" ]]; then
-			mountpoint -q "/mnt/$1" && sudo umount "/mnt/$1"
-		else
-			[[ -e "/mnt/$1" ]] || sudo mkdir "/mnt/$1"
-		fi
-		sudo mount -t drvfs "$1:" "/mnt/$1"
+            return
+        fi
+        
+        local drive="${1:l}"
+        local mount_point="/mnt/$drive"
+        
+        # Unmount if already mounted
+        while mountpoint -q "$mount_point" 2>/dev/null; do
+            sudo umount "$mount_point"
+        done
+        
+        [[ ! -d "$mount_point" ]] && sudo mkdir -p "$mount_point"
+        
+        # Mount with metadata option for proper timestamp preservation
+        sudo mount -t drvfs -o rw,noatime,uid=1000,gid=1000,metadata,case=off "${drive:u}:" "$mount_point"
 	}
 
-	apply_mapped_drive () {
+	apply-mapped-drive() {
 		local winpath="$1"
 	    local distro_name unc_path mapped_drive
 	    
@@ -1504,7 +1509,7 @@ EOT
 	    printf '%s' "$winpath"
 	}
 
-	pwdwin () {
+	pwdwin() {
 	    if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
 	        cat <<EOT
 pwdwin: Show the present working directory as a Windows path
@@ -1517,13 +1522,13 @@ EOT
 	    winpath=$(wslpath -w "$(pwd)")
 	    
 	    if [[ "$winpath" == *wsl.localhost* ]]; then
-	    	winpath="$(apply_mapped_drive "$winpath")"
+	    	winpath="$(apply-mapped-drive "$winpath")"
 	    fi
 	    
 	    printf '%s\n' "$winpath"
 	}
 
-	winpath () {
+	winpath() {
 		if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
 			cat <<EOT
 winpath: Show the Windows path for a file
@@ -1535,7 +1540,7 @@ EOT
         local winpath
         winpath=$(wslpath -w "$1")
         if [[ "$winpath" == *wsl.localhost* ]]; then
-	    	winpath="$(apply_mapped_drive "$winpath")"
+	    	winpath="$(apply-mapped-drive "$winpath")"
 	    fi
 	    printf '%s\n' "$winpath"
 	}
@@ -1550,7 +1555,7 @@ Usage: clear-claude
 EOT
 				return
 			fi
-			local appdata_wsl="$(win_env_linux_path APPDATA)"
+			local appdata_wsl="$(win-env-linux-path APPDATA)"
 			local claude_cache="${appdata_wsl}/Claude/Cache/Cache_Data"
 			setopt LOCAL_OPTIONS RM_STAR_SILENT
 			\rm -rf "$claude_cache"/*
@@ -1558,7 +1563,7 @@ EOT
 	fi
 fi
 
-up () {
+up() {
 	if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
 		cat <<EOT
 up: cd up to a parent directory
@@ -1583,7 +1588,7 @@ EOT
 }
 
 if command -v ydiff >/dev/null 2>&1; then
-	diff () {
+	diff() {
 		if [[ $# -eq 2 && -f "$1" && -f "$2" ]]; then
 			local f1="$1" f2="$2"
 			shift 2
@@ -1594,7 +1599,7 @@ if command -v ydiff >/dev/null 2>&1; then
 	}
 fi
 
-modtime () {
+modtime() {
 	if [[ $# -eq 0 || ! -f "$1" ]]; then
 		cat <<EOT
 modtime: print the modified time for a file
@@ -1612,20 +1617,20 @@ EOT
 	echo "${t/:/}" | tr ':' '.' | tr -d '-' | tr -d ' '
 }
 
-_rolln () {
+_rolln() {
 	local count=$1
 	shift
 	roll -n $count "$@"
 }
 
-_u () {
+_u() {
 	# Turn globbing back on
 	[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && set +f || set +F
 
 	perl "${ROPERDOT_DIR}/scripts/u.pl" "$@"
 }
 
-bindiff () {
+bindiff() {
 	[[ -n "$diff_app" ]] || diff_app=$0
 	if [[ $# -ne 2 ]]; then
 		cat <<EOT
@@ -1643,151 +1648,8 @@ EOT
 	vimdiff -y <(xxd -l1000 "$1") <(xxd -l1000 "$2") 2>/dev/null
 }
 
-hexdiff () {
+hexdiff() {
 	diff_app=$0 bindiff "$@"
-}
-
-toggle_theme() {
-    local settings_file
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        settings_file="$HOME/Library/Application Support/Code/User/settings.json"
-    else
-        settings_file="$HOME/.config/Code/User/settings.json"
-    fi
-    
-    if [[ ! -f "$settings_file" && -f "/proc/version" ]] && grep -qi "microsoft\|wsl" /proc/version; then
-	    if ! type win_env_linux_path >/dev/null 2>&1; then
-			. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
-		fi
-		local appdata_wsl="$(win_env_linux_path APPDATA)"
-        settings_file="${appdata_wsl}/Code/User/settings.json"
-    fi
-    
-    if [[ ! -f "$settings_file" ]]; then
-        echo "VS Code settings file not found"
-        return 1
-    fi
-    
-    # Get current VS Code theme
-    local current_theme=$(jq -r '.["workbench.colorTheme"] // "Default Dark+"' "$settings_file")
-    
-    # Determine new themes and colors
-    local new_vscode_theme
-    local new_terminal_theme
-    if [[ "$current_theme" == "Default Dark+" ]]; then
-        new_vscode_theme="Solarized Light"
-        new_terminal_theme="Solarized Light"
-        new_sublime_text_theme="Solarized (light)"
-        # Update VS Code theme and set light terminal colors
-        jq --arg theme "$new_vscode_theme" '
-            .["workbench.colorTheme"] = $theme |
-            .["workbench.colorCustomizations"] = {
-                "terminal.background": "#fdf6e3",
-                "terminal.foreground": "#586e75",
-                "terminal.ansiBlack": "#073642",
-                "terminal.ansiRed": "#dc322f",
-                "terminal.ansiGreen": "#859900",
-                "terminal.ansiYellow": "#b58900",
-                "terminal.ansiBlue": "#268bd2",
-                "terminal.ansiMagenta": "#d33682",
-                "terminal.ansiCyan": "#2aa198",
-                "terminal.ansiWhite": "#eee8d5",
-                "terminal.ansiBrightBlack": "#002b36",
-                "terminal.ansiBrightRed": "#cb4b16",
-                "terminal.ansiBrightGreen": "#586e75",
-                "terminal.ansiBrightYellow": "#657b83",
-                "terminal.ansiBrightBlue": "#839496",
-                "terminal.ansiBrightMagenta": "#6c71c4",
-                "terminal.ansiBrightCyan": "#93a1a1",
-                "terminal.ansiBrightWhite": "#fdf6e3",
-                "terminal.selectionBackground": "#586e75",
-                "terminalCursor.background": "#fdf6e3",
-                "terminalCursor.foreground": "#586e75"
-            }
-        ' "$settings_file" > tmp.json && \mv tmp.json "$settings_file"
-    else
-        new_vscode_theme="Default Dark+"
-        new_terminal_theme="Roperdot Hybrid"
-        new_sublime_text_theme="Dark+"
-        # Update VS Code theme and set dark terminal colors
-        jq --arg theme "$new_vscode_theme" '
-            .["workbench.colorTheme"] = $theme |
-            .["workbench.colorCustomizations"] = {
-                "terminal.background": "#161719",
-                "terminal.foreground": "#B8BCBA",
-                "terminal.ansiBlack": "#1E1F22",
-                "terminal.ansiRed": "#922F33",
-                "terminal.ansiGreen": "#7A8431",
-                "terminal.ansiYellow": "#D4804D",
-                "terminal.ansiBlue": "#4D6D8B",
-                "terminal.ansiMagenta": "#71527C",
-                "terminal.ansiCyan": "#4D7B74",
-                "terminal.ansiWhite": "#5D656D",
-                "terminal.ansiBrightBlack": "#2A2D32",
-                "terminal.ansiBrightRed": "#BF5053",
-                "terminal.ansiBrightGreen": "#A6B255",
-                "terminal.ansiBrightYellow": "#EBBB61",
-                "terminal.ansiBrightBlue": "#6F90B0",
-                "terminal.ansiBrightMagenta": "#A27FAD",
-                "terminal.ansiBrightCyan": "#79B2A8",
-                "terminal.ansiBrightWhite": "#B9BCBA",
-                "terminal.selectionBackground": "#B9BCBA",
-                "terminalCursor.background": "#161719",
-                "terminalCursor.foreground": "#B8BCBA"
-            }
-        ' "$settings_file" > tmp.json && \mv tmp.json "$settings_file"
-    fi
-    
-    # Update Windows Terminal theme (only on Windows/WSL)
-    if [[ -f "/proc/version" ]] && grep -qi "microsoft\|wsl" /proc/version; then
-        switch_windows_terminal_theme "$new_terminal_theme"
-    fi
-    
-    # Update Sublime Text theme
-    switch_sublime_text_theme "$new_sublime_text_theme"
-}
-
-switch_windows_terminal_theme() {
-    local target_theme="$1"
-
-	if ! type windows_terminal_settings_location >/dev/null 2>&1; then
-		. "${ROPERDOT_DIR}/source-scripts/windows-terminal-functions"
-	fi    
-    local terminal_settings_file=
-    if [[ ! terminal_settings_file="$(windows_terminal_settings_location)" ]]; then
-    	echo "Windows Terminal settings file not found"
-    	return 1
-    fi
-    
-    # Update both defaults AND the Ubuntu profile
-    if /usr/bin/jq --arg scheme "$target_theme" '
-        .profiles.defaults.colorScheme = $scheme |
-        .profiles.list[] |= if .name == "Ubuntu" then .colorScheme = $scheme else . end
-    ' "$terminal_settings_file" > tmp_terminal.json; then
-        \mv tmp_terminal.json "$terminal_settings_file"
-    else
-        echo "Failed to update Windows Terminal theme"
-        return 1
-    fi
-}
-
-switch_sublime_text_theme() {
-	if ! type win_env_linux_path >/dev/null 2>&1; then
-		. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
-	fi    
-	local appdata_wsl="$(win_env_linux_path APPDATA)"
-
-    local sublime_settings_file="${appdata_wsl}/Sublime Text 3/Packages/User/Preferences.sublime-settings"
-    
-    [[ ! -f "$sublime_settings_file" ]] && return 0
-    
-    local color_scheme="${1}.sublime-color-scheme"
-    
-    # Fix trailing commas
-    sed -i ':a;N;$!ba;s/,\r*\n\([[:space:]]*[]}]\)/\r\n\1/g' "$sublime_settings_file"
-    
-    # Update the color scheme using sed
-    sed -i "s/\"color_scheme\":[[:space:]]*\"[^\"]*\"/\"color_scheme\": \"$color_scheme\"/" "$sublime_settings_file"
 }
 
 jsondiff() {

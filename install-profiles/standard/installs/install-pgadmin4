@@ -32,7 +32,7 @@ if ! get-web-file "https://www.pgadmin.org/static/packages_pgadmin_org.pub" "$TE
 fi
 
 # Install the public key
-sudo gpg --dearmor < "$TEMP_KEY" > /usr/share/keyrings/packages-pgadmin-org.gpg 2>/dev/null || {
+sudo gpg --dearmor < "$TEMP_KEY" | sudo tee /usr/share/keyrings/packages-pgadmin-org.gpg > /dev/null || {
     if [[ ! -f /usr/share/keyrings/packages-pgadmin-org.gpg ]]; then
         log_error "Failed to install pgAdmin repository key"
         rm -f "$TEMP_KEY"

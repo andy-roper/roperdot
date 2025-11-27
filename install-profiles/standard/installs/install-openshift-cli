@@ -1,0 +1,49 @@
+#
+# Description: Install script for OpenShift CLI (oc)
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+OPENSHIFT_VERSION=4
+
+source "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
+# Check if already installed
+if command -v oc >/dev/null 2>&1; then
+    echo "OpenShift CLI (oc) is already installed"
+    exit 0
+fi
+
+echo "Installing OpenShift CLI (oc)..."
+
+# Create temporary directory
+temp_dir=$(mktemp -d)
+cd "$temp_dir" || exit 1
+
+if [[ "$ROPERDOT_OS_ENV" = darwin ]]; then
+    # macOS installation
+    echo "Downloading OpenShift CLI for macOS..."
+    get-web-file "https://mirror.openshift.com/pub/openshift-v${OPENSHIFT_VERSION}/clients/ocp/stable/openshift-client-mac.tar.gz" \
+     "openshift-client-mac.tar.gz"
+    
+    tar -xzf openshift-client-mac.tar.gz
+    
+    # Install to local bin directory (no sudo needed)
+    mkdir -p "${LOCALUSR}/bin"
+    mv oc kubectl "${LOCALUSR}/bin/"
+else
+    # Linux installation
+    echo "Downloading OpenShift CLI for Linux..."
+    get-web-file "https://mirror.openshift.com/pub/openshift-v${OPENSHIFT_VERSION}/clients/ocp/stable/openshift-client-linux.tar.gz" \
+        "openshift-client-linux.tar.gz"
+    
+    tar -xzf openshift-client-linux.tar.gz
+    
+    # Install to /usr/local/bin
+    sudo mv oc kubectl /usr/local/bin/
+fi
+
+# Clean up
+cd - > /dev/null
+rm -rf "$temp_dir"

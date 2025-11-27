@@ -4,11 +4,14 @@
 # Author: Andy Roper <andyroper42@gmail.com>
 # URL: https://github.com/andy-roper/roperdot
 #
-# Last updated for current version of the application on 16 Oct 2025
+# Last updated for current version of the application on 28 Nov 2025
 
 APP_VERSION="24.3.1.347.1826"
+APP_VERSION_LINUX="24.3.1-347.1826"
+
 mac_download_url="https://download.oracle.com/otn_software/java/sqldeveloper/sqldeveloper-${APP_VERSION}-macos-x64.app.zip"
 windows_download_url="https://download.oracle.com/otn_software/java/sqldeveloper/sqldeveloper-${APP_VERSION}-x64.zip"
+linux_download_url="https://download.oracle.com/otn_software/java/sqldeveloper/sqldeveloper-${APP_VERSION_LINUX}.noarch.rpm"
 
 cleanup() {
     [[ -d "$temp_dir" ]] && rm -rf "$temp_dir"
@@ -121,12 +124,78 @@ create_windows_desktop_shortcut() {
     fi
 }
 
+install_sql_developer_for_linux() {
+    temp_dir="$(mktemp -d)"
+    local rpm_file="$temp_dir/sqldeveloper.rpm"
+    
+    trap cleanup EXIT
+    
+    # Check if already installed
+    if [[ -d "/opt/sqldeveloper" && -f "/usr/local/bin/sqldeveloper" ]]; then
+        echo "SQL Developer already installed"
+        return 0
+    fi
+    
+    mkdir -p "$temp_dir"
+    cd "$temp_dir" >/dev/null
+    
+    echo "Downloading $linux_download_url"
+    if ! get-web-file "$linux_download_url" "$rpm_file" >/dev/null; then
+        echo "Download failed"
+        return 1
+    fi
+    
+    if ! command -v alien >/dev/null 2>&1; then
+        echo "Could not find alien, which is required for installing the RPM; aborting"
+        return 1
+    fi
+    
+    echo "Converting and installing RPM..."
+    sudo alien -i "$rpm_file"
+    
+    # Create launcher script that uses SDKMAN Java
+	[[ -d ~/.local/bin ]] || mkdir -p ~/.local/bin
+    tee ~/.local/bin/sqldeveloper > /dev/null << EOT
+#!/bin/bash
+# SQL Developer launcher using SDKMAN Java
+
+# Source SDKMAN to get Java
+export SDKMAN_DIR="$HOME/.sdkman"
+if [[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]]; then
+    source "$SDKMAN_DIR/bin/sdkman-init.sh"
+fi
+
+# Launch SQL Developer
+/opt/sqldeveloper/sqldeveloper.sh "$@"
+EOT
+    chmod 755 ~/.local/bin/sqldeveloper
+
+    # Create desktop file
+    [[ -d ~/.local/share/applications ]] || mkdir -p ~/.local/share/applications
+    cat << EOT > ~/.local/share/applications/sqldeveloper.desktop
+[Desktop Entry]
+Name=Oracle SQL Developer
+Exec=$HOME/.local/bin/sqldeveloper
+Icon=/opt/sqldeveloper/icon.png
+Terminal=false
+Type=Application
+Categories=Development;IDE;Database
+EOT
+   
+    # Update desktop database
+    update-desktop-database "$HOME/.local/share/applications/" 2>/dev/null || true
+ 
+    return 0
+}
+
 if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
     install_sql_developer_for_macos
 elif [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
 	. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
 	. "${ROPERDOT_DIR}/source-scripts/windows-install-functions"
 	install_sql_developer_for_windows
+elif [[ "$ROPERDOT_OS_FAMILY" = "debian" ]]; then
+    install_sql_developer_for_linux
 else
-    echo "SQL Developer install is currently only available for MacOS and Windows"
+    echo "SQL Developer install is not supported on this platform"
 fi

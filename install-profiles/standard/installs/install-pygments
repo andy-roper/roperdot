@@ -28,33 +28,35 @@ if ! command -v python3 >/dev/null 2>&1; then
 	exit 1
 fi
 
-if [[ "$ROPERDOT_OS_TYPE" = "linux" ]]; then
-	if [[ -n "$has_sudo" ]]; then
-		if command -v apt >/dev/null 2>&1; then
-			sudo apt install python-pygments -y && install_succeeded=true
-		elif command -v yum >/dev/null 2>&1; then
-			sudo yum install python-pygments -y && install_succeeded=true
+if ! command -v pygmentize >/dev/null 2>&1; then
+	installing_pygments=true
+	if [[ "$ROPERDOT_OS_TYPE" = "linux" ]]; then
+		if [[ -n "$has_sudo" ]]; then
+			if command -v apt >/dev/null 2>&1; then
+				sudo apt install python-pygments -y && install_succeeded=true
+			elif command -v yum >/dev/null 2>&1; then
+				sudo yum install python-pygments -y && install_succeeded=true
+			fi
+	 	else
+			. "${ROPERDOT_DIR}/source-scripts/find-pip"
+			$pip_bin install --user Pygments && install_succeeded=true
 		fi
- 	else
+	elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
 		. "${ROPERDOT_DIR}/source-scripts/find-pip"
 		$pip_bin install --user Pygments && install_succeeded=true
 	fi
-elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
-	. "${ROPERDOT_DIR}/source-scripts/find-pip"
-	$pip_bin install --user Pygments && install_succeeded=true
 fi
 
-if [[ -n $install_succeeded ]]; then
-	[[ -n $manual_install ]] && copy_man_pages "$INSTALLSOURCE/python/pygmentize.1.gz"
+if [[ -z "$installing_pygments" || -n "$install_succeeded" ]]; then
+#	[[ -n $manual_install ]] && copy_man_pages "$INSTALLSOURCE/python/pygmentize.1.gz"
 	temp_dir="$(mktemp -d)"
 	echo Installing roperdot Pygments style
 	pushd "$(temp_dir)" >/dev/null || return 1
 	unpack "${ROPERDOT_DIR}/apps-and-packages/pygments_style_roperdot.zip"
 	if [[ -n "$has_sudo" ]]; then
-		sudo $python_bin setup.py install
+	    sudo $python_bin -m pip install --break-system-packages .
 	else
-#		python3 ./setup.py install --prefix="$LOCALUSR"
-		$python_bin ./setup.py install --prefix="$LOCAL"
+	    $python_bin -m pip install --user .
 	fi
 	popd >/dev/null || return 1
 	rm -rf "$temp_dir" >/dev/null

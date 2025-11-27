@@ -1,0 +1,24 @@
+#
+# Description: Install script for SDKMAN
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+source "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
+# Back up profile files
+# roperdot-bootstrap will manage initializing SDKMAN instead of the profile
+profile_files=(.profile .bashrc .bash_profile .zshrc)
+for f in "${profile_files[@]}"; do
+	[[ -f "$HOME/$f" ]] && cp -f "$HOME/$f" "$HOME/$f.bak"
+done
+
+# Install SDKMAN in non-interactive mode
+export SDKMAN_DIR="$HOME/.sdkman"
+print-web-file "https://get.sdkman.io" | $ROPERDOT_CURRENT_SHELL
+
+# Restore profile files (roperdot-bootstrap will handle initialization)
+for f in "${profile_files[@]}"; do
+	[[ -f "$HOME/$f.bak" ]] && mv -f "$HOME/$f.bak" "$HOME/$f"
+done

@@ -1,0 +1,70 @@
+#
+# Description: Install script for xsdecaf (XSD schema comparison tool)
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+XSDECAF_VERSION=1.2.0
+
+source "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
+cleanup() {
+	if [[ -n "$temp_dir" ]]; then
+		cd - > /dev/null
+		rm -rf "$temp_dir"
+	fi
+}
+
+trap cleanup EXIT
+
+# Check if already installed
+if command -v xsdecaf >/dev/null 2>&1; then
+    echo "xsdecaf is already installed"
+    exit 0
+fi
+
+if [[ "$ROPERDOT_OS_FAMILY" != debian ]]; then
+    echo "xsdecaf installation is only supported on Debian/Ubuntu systems"
+    exit 1
+fi
+
+echo "Installing xsdecaf XSD Comparator..."
+
+temp_dir=$(mktemp -d)
+chmod 755 "$temp_dir"
+cd "$temp_dir" || exit 1
+
+# Clone the repository
+echo "Cloning xsdecaf repository..."
+git clone https://github.com/juan-ahv/xsdecaf.git
+
+if [[ ! -d xsdecaf ]]; then
+    echo "Error: Failed to clone xsdecaf repository"
+    exit 1
+fi
+
+# Navigate to the deployment directory
+cd xsdecaf/XsDiff-UI/deployment/ || exit 1
+
+deb_file="xsdecaf_${XSDECAF_VERSION}_all.deb"
+
+if [[ ! -f "$deb_file" ]]; then
+    echo "Error: Expected .deb file not found: $deb_file"
+    echo "The repository structure may have changed."
+    exit 1
+fi
+
+# Make the .deb file executable (though not strictly necessary for dpkg)
+chmod +x "$deb_file"
+
+# Install the package
+echo "Installing xsdecaf package..."
+sudo apt install -y "./$deb_file"
+
+# Fix Windows line endings in xsdecaf binary
+if command -v dos2unix >/dev/null 2>&1 && [[ -f /usr/bin/xsdecaf ]]; then
+    sudo dos2unix /usr/bin/xsdecaf 2>/dev/null || true
+fi
+
+echo "xsdecaf installed successfully"

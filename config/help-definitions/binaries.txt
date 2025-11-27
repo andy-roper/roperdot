@@ -1,5 +1,6 @@
 7z: File archiving utility, a port of 7z and 7za for Unix (https://7-zip.org/)
 ag: The Silver Searcher, a code searching tool similar to ack, but faster (https://github.com/ggreer/the_silver_searcher)
+alien: Convert or install RPM packages on Debian-based systems (https://joeyh.name/code/alien/)
 apt-file: Indexes available package contents to allow you to search for a file among them (https://wiki.debian.org/apt-file)
 aws: Amazon Web Services CLI (https://aws.amazon.com/cli/)
 brew: Homebrew package manager for Linux (https://brew.sh/)
@@ -21,6 +22,7 @@ gh: GitHub CLI (https://cli.github.com/)
 gifsicle: GIF manipulation (https://www.lcdf.org/gifsicle/)
 git-lfs: Used to work with large files in Git repositories (https://git-lfs.github.com)
 git: Client for the Git distributed version control system (https://git-scm.com/)
+gradle: Build automation tool for Java and other JVM languages (https://gradle.org)
 grc: Frontend that auto-selects color configs for common commands (https://github.com/garabik/grc)
 grcat: Colorizes text from stdin using regex-based configuration files (https://github.com/garabik/grc)
 htop: More informative version of top (https://hisham.hm/htop/)
@@ -32,8 +34,10 @@ keychain: Frontend for ssh-agent and ssh-add to help manage SSH and GPG keys (ht
 lsusb: (Mac) Lists USB devices
 lynx: Command-line web browser (https://lynx.invisible-island.net/)
 magick: Image editing suite (https://imagemagick.org/)
+make: Build automation tool
 mc: Midnight Commander, a shell-based file manager (http://midnight-commander.org)
 mtr: Network diagnostic tool (https://github.com/traviscross/mtr)
+mvn: Maven: build automation and dependency management tool for Java projects (https://maven.apache.org)
 ncdu: Disk usage analyzer with an ncurses interface (https://dev.yorhel.nl/ncdu)
 netstat: Networking toolkit (e.g. ifconfig and netstat)
 node: JavaScript run-time environment that executes JavaScript code server-side (https://nodejs.org/)
@@ -42,6 +46,7 @@ npx: Runs a command from a local or remote npm package (https://docs.npmjs.com/c
 nslookup: Queries DNS servers for domain name resolution
 nvim: Neovim, a modern Vim editor (https://neovim.io/)
 nvm: Node version manager (https://github.com/nvm-sh/nvm)
+oc: CLI for Red Hat OpenShift container platform and Kubernetes (https://openshift.com)
 openvpn: VPN client (https://openvpn.net/)
 p7zip: Archive manager with support for 7z and many other compression formats (https://p7zip.sourceforge.net/)
 pbcopy: (Mac) Command-line interface for the clipboard
@@ -53,8 +58,10 @@ pygmentize: Generic syntax highlighter for prettifying source code (https://pygm
 python3: Python language interpreter (https://www.python.org/)
 rar: RAR archive/compression tool (https://www.rarlab.com/)
 ruby: Compiler/interpreter for the Ruby programming language (https://www.ruby-lang.org/)
+sdk: SDKMAN: SDK manager for installing and managing parallel versions of JVM tools (https://sdkman.io)
 shellcheck: Shell script linter (https://www.shellcheck.net/)
 speedtest-cli: Command-line interface for testing internet bandwidth with speedtest.net (https://github.com/sivel/speedtest-cli)
+sqlplus: Oracle SQL*Plus CLI for Oracle databases (https://www.oracle.com/database/technologies/instant-client.html)
 ssh-copy-id: Uses locally available keys to authorize logins on remote machines (https://www.ssh.com/ssh/copy-id)
 stage-roperdot: Stages roperdot to Github
 telnet: Telnet client
@@ -62,6 +69,7 @@ telnetd: Telnet client for servers using DARPA standard TELNET protocol
 terminal-notifier: Tool to send macOS user notifications (https://github.com/julienXX/terminal-notifier)
 tesseract: OCR engine library (https://github.com/tesseract-ocr/tesseract)
 testssl: Utility for testing a server's service on any port for TLS/SSL encryption (https://testssl.sh/)
+tkn: Tekton CLI for managing CI/CD pipelines on Kubernetes (https://tekton.dev)
 tnftp: FTP client (https://ftp.netbsd.org/pub/NetBSD/misc/tnftp/)
 tnftpd: FTP server (https://ftp.netbsd.org/pub/NetBSD/misc/tnftp/)
 tree: Recursive directory listing program that produces a depth-indented listing (http://mama.indstate.edu/users/ice/tree/)
@@ -76,6 +84,7 @@ wget: Tool for retrieving content from web servers (https://www.gnu.org/software
 wheel: Python package distribution (https://wheel.readthedocs.io/)
 xclip: Command-line interface to the X11 clipboard (https://github.com/astrand/xclip)
 xmllint: Tool for parsing and beautifying XML (http://xmlsoft.org/xmllint.html)
+xsdecaf: XSD schema comparison and visualization tool (https://github.com/juan-ahv/xsdecaf)
 ydiff: diff colorization tool (https://github.com/ymattw/ydiff)
 z: Jump to frequently used directories based on usage patterns (https://github.com/rupa/z)
 zopfli: Compression library for good but slow deflate or zlib compression (https://github.com/google/zopfli)

@@ -106,8 +106,7 @@
 		"package": "git-lfs",
 		"list_prerequisite": "brew",
 		"install_command": "brew install git-lfs && git lfs install --skip-repo;",
-		"desc": "Replaces large files with text pointers inside Git while storing the contents on a remote server",
-		"exclusionGroups": ["work"]
+		"desc": "Replaces large files with text pointers inside Git while storing the contents on a remote server"
 	},
 	{
 		"app": "gh",
@@ -144,16 +143,22 @@
 		"package": "java",
 		"list_prerequisite": "brew",
 		"install_command": "brew install java;",
-		"desc": "Compiler and run-time environment for Java",
-		"exclusionGroups": ["work"]
+		"desc": "Compiler and run-time environment for Java"
 	},
 	{
 		"app": "jENV",
 		"binary": "jenv",
 		"package": "jenv",
 		"list_prerequisite": "brew",
-		"desc": "Tool for managing the JAVA_HOME environment variable",
-		"exclusionGroups": ["work"]
+		"desc": "Tool for managing the JAVA_HOME environment variable"
+	},
+	{
+	    "app": ".NET SDK",
+	    "binary": "dotnet",
+	    "package": "dotnet",
+		"list_prerequisite": "brew",
+	    "desc": "Microsoft .NET SDK",
+	    "groups": ["dotnet"]
 	},
 	{
 		"app": "AWS CLI",
@@ -266,20 +271,19 @@
 		"desc": "Tool for adding color to the output of various Unix commands and to log files; extensively used by roperdot"
 	},
 	{
-		"app": "Pygments",
-		"binary": "pygmentize",
-		"install_script": "install-pygments",
-		"install_prerequisite": "pip3",
-		"install_command": "install-python-package pygments",
-		"sudo_not_required": true,
-		"desc": "Generic syntax highlighter for prettifying source code; extensively used by roperdot"
+	    "app": "Pygments",
+	    "presence_command": "python3 -c 'from pygments.styles import get_style_by_name; get_style_by_name(\"roperdot\")' 2>/dev/null",
+	    "install_script": "install-pygments",
+	    "sudo_not_required": true,
+	    "desc": "Generic syntax highlighter and installs custom roperdot style"
 	},
 	{
 		"app": "WhisperX",
 		"binary": "whisperx",
 		"install_script": "install-python-package whisperx",
 		"sudo_not_required": true,
-		"desc": "Speech transcription with speaker identification"
+		"desc": "Speech transcription with speaker identification",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "ydiff",

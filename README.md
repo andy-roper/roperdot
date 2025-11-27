@@ -1,6 +1,6 @@
 # roperdot: Cross-Platform Shell Configuration
 
-![Roperdot Prompt Example](images/roperdot-example.png)
+![Roperdot Prompt Example](./images/roperdot-example.png)
 
 ## Design Philosophy
 
@@ -9,8 +9,6 @@ My goal for these dotfiles is to create a hybrid environment where your shell de
 ### Key Features
 
 **Cross-Platform**: I've tried to provide a consistent terminal experience across Windows (WSL/Ubuntu), MacOS, Ubuntu, and Linux Mint.
-
-Note: I've made many changes recently and while MacOS support is solid, the other OSes need to be revisited. I'll be doing that when I have time after soon starting a new job.
 
 **Cross-Shell**: Aliases, functions and scripts in this dotfiles project have been written to work in either bash or zsh.  
 
@@ -34,6 +32,12 @@ On MacOS to download without git:
 cd && mkdir -p roperdot && curl -#L https://github.com/andy-roper/roperdot/tarball/main | tar -xzv --strip-components 1 -C roperdot
 ```
 
+On Ubuntu to download without git:
+
+```bash
+cd && mkdir -p roperdot && wget -qO- https://github.com/andy-roper/roperdot/tarball/main | tar -xzv --strip-components 1 -C roperdot
+```
+
 Running install.sh will take you through an interactive installation in which you can select which configurations to apply and which apps to install.
 
 On Windows, you should install [Chocolatey](https://chocolatey.org) first if you plan to install GUI applications with roperdot.
@@ -52,7 +56,7 @@ MIT License with some GPL v3 components. See **[LICENSE](LICENSE.md)** for detai
 
 ## Note on Contributions  
 
-I'm not currently accepting pull requests or issues at this time due to work commitments and pending architectural changes. I plan to reopen contributions in a couple of months.
+If anyone decides to use my dotfiles, I'm not currently accepting pull requests or issues at this time due to personal and work commitments. I plan to reopen contributions in a few months.
 
 Feel free to fork for your own use in the meantime.
 

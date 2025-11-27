@@ -1,0 +1,51 @@
+#
+# Description: Install script for .NET SDK
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+DOTNET_VERSION=8.0
+
+source "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
+# Check if already installed
+if command -v dotnet >/dev/null 2>&1; then
+    installed_version=$(dotnet --version 2>/dev/null | cut -d. -f1)
+    if [[ "$installed_version" = "${DOTNET_VERSION%.*}" ]]; then
+        echo ".NET SDK ${DOTNET_VERSION} is already installed"
+        exit 0
+    fi
+fi
+
+if [[ "$ROPERDOT_OS_FAMILY" = debian ]]; then
+    echo "Installing .NET SDK ${DOTNET_VERSION}..."
+
+    # Check if Ubuntu 24.04 (needs backports repository)
+    if lsb_release -r | grep -q "24.04"; then
+        echo "Detected Ubuntu 24.04. Using backports repository for .NET ${DOTNET_VERSION}"
+        sudo add-apt-repository ppa:dotnet/backports -y
+        sudo apt update
+        sudo apt install -y "dotnet-sdk-${DOTNET_VERSION}" "dotnet-runtime-${DOTNET_VERSION}"
+    else
+        echo "Detected non-Ubuntu 24.04 system. Installing .NET ${DOTNET_VERSION} via standard method"
+        sudo apt install -y apt-transport-https
+        
+        # Download and install Microsoft package repository
+        temp_dir=$(mktemp -d)
+        cd "$temp_dir" || exit 1
+        
+        ubuntu_version=$(lsb_release -rs)
+        get-web-file "https://packages.microsoft.com/config/ubuntu/${ubuntu_version}/packages-microsoft-prod.deb" \
+         "packages-microsoft-prod.deb"
+        
+        sudo dpkg -i packages-microsoft-prod.deb
+        rm -f packages-microsoft-prod.deb
+        
+        sudo apt update
+        sudo apt install -y "dotnet-sdk-${DOTNET_VERSION}" "dotnet-runtime-${DOTNET_VERSION}"
+        
+        cd - > /dev/null
+        rm -rf "$temp_dir"
+    fi
+fi

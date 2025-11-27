@@ -13,29 +13,17 @@ if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
 	. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
 	def_win_env_linux_path ProgramFiles
 	[[ -d "${ProgramFiles}/Microsoft VS Code" ]] || exit 0
+	if ! command -v code >/dev/null 2>&1; then
+		code () { "${ProgramFiles}/Microsoft VS Code/bin/code" "$@"; }
+	fi
 elif [[ "$ROPERDOT_OS_TYPE" = "linux" ]]; then
 	if command -v snap >/dev/null 2>&1; then
-		sudo systemctl restart snapd  # restart snapd in case certificates have changed
 		sudo snap install --classic code
 	else
-		# Clean up old VS Code repository configurations to prevent conflicts
-		echo "Cleaning up old VS Code repository configurations..."
-		sudo rm -f /etc/apt/sources.list.d/vscode.list*
-		sudo rm -f /etc/apt/keyrings/packages.microsoft.gpg
-		sudo rm -f /usr/share/keyrings/microsoft.gpg
-		
-		# Install prerequisites
-		sudo apt-get update
-		sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
-		
-		echo "Adding VS Code GPG key and repository..."
-		curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /usr/share/keyrings/microsoft.gpg > /dev/null
-		echo "deb [arch=amd64,arm64,armhf signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | \
-			sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
-		
-		# Update package lists and install VS Code
-		sudo apt-get update
-		sudo apt-get install -y code
+		sudo apt install software-properties-common apt-transport-https wget
+		wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | sudo apt-key add -
+		sudo add-apt-repository "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"
+		sudo apt install code
 	fi
 elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
 	if [[ -n "$has_sudo" ]]; then
@@ -45,17 +33,8 @@ elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
 	fi
 fi
 
-if [[ "$ROPERDOT_DESKTOP_ENV" == windows ]]; then
-	if ! command -v code >/dev/null 2>&1; then
-		code () { "${ProgramFiles}/Microsoft VS Code/bin/code" "$@"; }
-	fi
-else
-	if command -v code >/dev/null 2>&1; then
-		local code_bin=$(command -v code)
-		code () { "$code_bin" "$@"; }
-	else
-		exit 0
-	fi
+if [[ "$ROPERDOT_DESKTOP_ENV" != windows ]]; then
+	command -v code >/dev/null 2>&1 || exit 0
 fi
 
 if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
@@ -73,7 +52,7 @@ install_ext () {
 	if [[ -n "$regular_install" ]]; then
 		if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
 			if [[ ! -d ~/.vscode-server/"$1" ]]; then
-				if ! code --install-extension "$1" --force; then
+				if ! code --install-extension "$1"; then
 					echo "DNS issue encountered while installing VSCode extension"
 					if [[ ! -f /etc/wsl.conf.bak ]]; then
 						echo "Backing up /etc/wsl.conf"
@@ -95,18 +74,18 @@ nameserver 10.255.255.254
 search mshome.net
 EOT
 					echo "DNS fix applied, retrying extension install..."
-					code --install-extension "$1" --force
+					code --install-extension "$1"
 				fi
 			fi
 		else
-			[[ -d ~/.vscode/"$1" ]] || code --install-extension "$1" --force
+			[[ -d ~/.vscode/"$1" ]] || code --install-extension "$1"
 		fi
 	fi
 	if [[ -n "$windows_install" && ! -d "$(win_env_linux_path USERPROFILE)/.vscode/extensions/$1" ]]; then
 		temp_wsl="$(win_env_linux_path TEMP)"
 		cat << EOT > "${temp_wsl}/add-extension.bat"
 pushd "%~dp0"
-"$(win_env ProgramFiles)\\Microsoft VS Code\\bin\\code.cmd" --install-extension "$1" --force
+"$(win_env ProgramFiles)\\Microsoft VS Code\\bin\\code.cmd" --install-extension "$1"
 popd
 EOT
 		cat "${temp_wsl}/add-extension.bat"
@@ -127,8 +106,6 @@ fi
 
 # skipping_extension_installs=true
 if [[ -z $skipping_extension_installs ]]; then
-	export NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
-
 	[[ "$ROPERDOT_OS_TYPE" = "linux" && "$ROPERDOT_DESKTOP_ENV" = "windows" ]] && install_ext ms-vscode-remote.remote-wsl
 	[[ -n "$have_shellcheck" ]] && install_ext timonwong.shellcheck
 	install_ext wallabyjs.quokka-vscode
@@ -145,7 +122,7 @@ if [[ -z $skipping_extension_installs ]]; then
 	install_ext donjayamanne.githistory
 	install_ext eamodio.gitlens
 	install_ext github.copilot
-	# install_ext github.copilot-chat  # Commented on 11/28/25 due to crash when installing
+	install_ext github.copilot-chat
 	install_ext ms-azuretools.vscode-containers
 	install_ext yzhang.markdown-all-in-one
 	install_ext oracle.sql-developer

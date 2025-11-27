@@ -11,7 +11,15 @@
 		"binary": "lynx",
 		"package": "lynx",
 		"list_prerequisite": "apt-get",
-		"desc": "Command-line web browser"
+		"desc": "Command-line web browser",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "openssh-server",
+		"binary": "sshd",
+		"install_script": "install-openssh-server",
+		"list_prerequisite": "apt-get",
+		"desc": "OpenSSH server daemon for secure remote shell access"
 	},
 	{
 		"app": "net-tools",
@@ -76,6 +84,13 @@
 		"package": "zopfli",
 		"list_prerequisite": "apt-get",
 		"desc": "Compression library for good but slow deflate or zlib compression"
+	},
+	{
+		"app": "alien",
+		"binary": "alien",
+		"package": "alien",
+		"list_prerequisite": "apt-get",
+		"desc": "Converter/installer for RPMs on Debian-based systems"
 	},
 	{
 		"app": "diff-so-fancy",
@@ -178,6 +193,13 @@
 		"desc": "Tool for installing Python 3 packages"
 	},
 	{
+		"app": "Python pipx",
+		"binary": "pipx",
+		"package": "pipx",
+		"list_prerequisite": "apt-get",
+		"desc": "Tool for installing and running Python apps in isolation"
+	},
+	{
 		"app": "Python setuptools",
 		"presence_command": "$python_bin -c 'import setuptools' >/dev/null 2>&1",
 		"install_script": "install-python3-setuptools",
@@ -201,30 +223,108 @@
 	{
 		"app": "WhisperX",
 		"binary": "whisperx",
-		"install_script": "install-python-package whisperx",
+		"install_command": "install-python-package whisperx",
 		"sudo_not_required": true,
-		"desc": "Speech transcription with speaker identification"
+		"desc": "Speech transcription with speaker identification",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "torch",
 		"presence_command": "$python_bin -c 'import torch' >/dev/null 2>&1",
 		"install_script": "install-torch",
 		"sudo_not_required": true,
-		"desc": "Deep learning framework with GPU acceleration"
+		"desc": "Deep learning framework with GPU acceleration",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Java",
 		"binary": "java",
-		"package": "openjdk-8-jdk",
+		"package": "openjdk-21-jdk",
 		"list_prerequisite": "apt-get",
-		"desc": "Compiler and run-time environment for Java"
+		"desc": "Compiler and run-time environment for Java",
+		"exclusionGroups": ["java-dev"]
+	},
+	{
+	    "app": "SDKMAN",
+	    "presence_command": "[[ -d ~/.sdkman ]]",
+	    "install_script": "install-sdkman",
+	    "sudo_not_required": true,
+	    "desc": "SDK manager for JVM languages",
+	    "groups": ["java-dev"]
+	},
+	{
+	    "app": "Amazon Corretto JDK",
+	    "install_script": "install-amazon-jdk",
+	    "sudo_not_required": true,
+	    "desc": "Amazon Corretto JDK",
+	    "groups": ["java-dev"]
+	},
+	{
+	    "app": "Gradle",
+	    "binary": "gradle",
+	    "install_script": "install-gradle-sdk",
+	    "sudo_not_required": true,
+	    "desc": "Build automation tool",
+	    "groups": ["java-dev"]
+	},
+	{
+	    "app": "Maven",
+	    "binary": "mvn",
+	    "install_script": "install-maven-sdk",
+	    "sudo_not_required": true,
+	    "desc": "Build automation and dependency management for Java",
+	    "groups": ["java-dev"]
+	},
+	{
+	    "app": "Oracle Instant Client",
+	    "presence_command": "[[ -d /opt/oracle/instantclient_21_1 ]]",
+	    "install_script": "install-oracle-instant-client",
+	    "desc": "Oracle database client with SQL*Plus",
+	    "groups": ["java-dev", "oracle"]
 	},
 	{
 		"app": "jENV",
 		"binary": "jenv",
 		"package": "jenv",
 		"install_prerequisite": "brew",
-		"desc": "Tool for managing the JAVA_HOME environment variable"
+		"desc": "Tool for managing the JAVA_HOME environment variable",
+		"exclusionGroups": ["java-dev"]
+	},
+	{
+		"app": "AWS CLI",
+		"binary": "aws",
+		"install_script": "install-awscli",
+		"sudo_not_required": true,
+		"desc": "Amazon Web Services CLI"
+	},
+	{
+	    "app": "Docker CE",
+	    "binary": "docker",
+	    "install_script": "install-docker-ce",
+	    "desc": "Official Docker container platform",
+	    "groups": ["development"]
+	},
+	{
+	    "app": ".NET SDK",
+	    "binary": "dotnet",
+	    "install_script": "install-dotnet-sdk",
+	    "desc": "Microsoft .NET SDK",
+	    "groups": ["dotnet"]
+	},
+	{
+	    "app": "OpenShift CLI",
+	    "binary": "oc",
+	    "install_script": "install-openshift-cli",
+	    "sudo_not_required": true,
+	    "desc": "OpenShift CLI for Kubernetes management",
+	    "groups": ["kubernetes"]
+	},
+	{
+	    "app": "Tekton CLI",
+	    "binary": "tkn",
+	    "install_script": "install-tekton-cli",
+	    "desc": "Tekton Pipelines CLI",
+	    "groups": ["kubernetes"]
 	},
 	{
 		"app": "jq",
@@ -328,11 +428,11 @@
 		"desc": "Tool for adding color to the output of various Unix commands and to log files; extensively used by roperdot"
 	},
 	{
-		"app": "Pygments",
-		"binary": "pygmentize",
-		"install_script": "install-pygments",
-		"sudo_not_required": true,
-		"desc": "Generic syntax highlighter for prettifying source code; extensively used by roperdot"
+	    "app": "Pygments",
+	    "presence_command": "python3 -c 'from pygments.styles import get_style_by_name; get_style_by_name(\"roperdot\")' 2>/dev/null",
+	    "install_script": "install-pygments",
+	    "sudo_not_required": true,
+	    "desc": "Generic syntax highlighter and installs custom roperdot style"
 	},
 	{
 		"app": "ydiff",
@@ -367,7 +467,8 @@
 		"binary": "mc",
 		"install_script": "install-midnight-commander",
 		"sudo_not_required": true,
-		"desc": "Command-line visual file manager"
+		"desc": "Command-line visual file manager",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "tree",
@@ -403,21 +504,24 @@
 		"package": "openvpn",
 		"list_prerequisite": "apt-get",
 		"desc": "VPN client",
-		"include_condition": "[[ \"$ROPERDOT_DESKTOP_ENV\" != \"windows\" ]]"
+		"include_condition": "[[ \"$ROPERDOT_DESKTOP_ENV\" != \"windows\" ]]",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "speedtest-cli",
 		"binary": "speedtest-cli",
 		"package": "speedtest-cli",
 		"list_prerequisite": "apt-get",
-		"desc": "Command-line interface for testing internet bandwidth with speedtest.net"
+		"desc": "Command-line interface for testing internet bandwidth with speedtest.net",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "testssl",
 		"binary": "testssl",
 		"package": "testssl.sh",
 		"list_prerequisite": "apt-get",
-		"desc": "Utility for testing a server's service on any port for TLS/SSL encryption"
+		"desc": "Utility for testing a server's service on any port for TLS/SSL encryption",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "keychain",
@@ -431,7 +535,8 @@
 		"binary": "ssh-copy-id",
 		"package": "ssh-copy-id",
 		"install_prerequisite": "brew",
-		"desc": "Used to install an SSH key on a server as an authorized key"
+		"desc": "Used to install an SSH key on a server as an authorized key",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "entr",
@@ -445,13 +550,29 @@
 		"binary": "ncdu",
 		"package": "ncdu",
 		"list_prerequisite": "apt-get",
-		"desc": "Disk usage analyzer with an ncurses interface"
+		"desc": "Disk usage analyzer with an ncurses interface",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "FFmpeg",
+		"binary": "ffmpeg",
+		"package": "ffmpeg",
+		"desc": "Utility for recording, converting and streaming audio and video",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "gifsicle",
+		"binary": "gifsicle",
+		"package": "gifsicle",
+		"desc": "Tool for creating, editing and getting information about GIF images and animations",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Claude Desktop Commander MCP",
 		"presence_command": "npm view @wonderwhy-er/desktop-commander version 1>/dev/null 2>&1",
 		"install_command": "npx @wonderwhy-er/desktop-commander@latest setup",
 		"install_prerequisite": "npx",
-		"desc": "MCP server for Claude"
+		"desc": "MCP server for Claude",
+		"exclusionGroups": ["work"]
 	}
 ]

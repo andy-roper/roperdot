@@ -113,7 +113,7 @@ For each operating system which supports the application, a call to create the s
 ```bash
 create_binary_script_mac itunes "open -a iTunes"
 
-create_browser_script_mac "$(app_path 'Google Chrome')" chrome "open -a \"Google Chrome\""
+create_browser_script_mac "$(app-path 'Google Chrome')" chrome "open -a \"Google Chrome\""
 ```
 
 The application name used in the create binary script call must be added to a create_app_script call to assign that application to an application type. default_app is set before the calls to create_app_script to designate the default application to use if no matching app script is present for the application type. Multiple applications can be specified so that if one is not present, usage will fall back to another application. Example for MacOS:

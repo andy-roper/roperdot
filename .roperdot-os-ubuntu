@@ -3,40 +3,42 @@ if [[ -e /usr/bin/java ]]; then
 	export JAVA_HOME=$(readlink -f "${f%/*}/../../lib")
 fi
 
-mount_iso_readonly () {
-	re="\.iso$"
-	if [[ -z "$1" || ! "$1" =~ $re ]]; then
-		cat <<EOT
-mount_iso_readonly: mount an ISO image for reading
-Usage: mount_iso_readonly <iso_file>
+if command -v gnome-disk-image-mounter >/dev/null 2>&1; then
+	mount-iso-readonly() {
+		re="\.iso$"
+		if [[ -z "$1" || ! "$1" =~ $re ]]; then
+			cat <<EOT
+mount-iso-readonly: mount an ISO image for reading
+Usage: mount-iso-readonly <iso_file>
 EOT
-		return
-	fi
-	gnome-disk-image-mounter "$1" || exit $?
-	mount_path=$(mount | grep "$1" | awk '{print $3}')
-	cd "$mount_path" || return 1
-}
+			return
+		fi
+		gnome-disk-image-mounter "$1" || exit $?
+		mount_path=$(mount | grep "$1" | awk '{print $3}')
+		cd "$mount_path" || return 1
+	}
 
-mount_iso_writable () {
-	re="\.iso$"
-	if [[ -z "$1" || ! "$1" =~ $re ]]; then
-		cat <<EOT
-mount_iso_writable: mount an ISO image for writing
-Usage: mount_iso_writable <iso_file>
+	mount-iso-writable() {
+		re="\.iso$"
+		if [[ -z "$1" || ! "$1" =~ $re ]]; then
+			cat <<EOT
+mount-iso-writable: mount an ISO image for writing
+Usage: mount-iso-writable <iso_file>
 EOT
-		return
-	fi
-	gnome-disk-image-mounter --writable "$1" || exit $?
-	mount_path=$(mount | grep "$1" | awk '{print $3}')
-	cd "$mount_path" || return 1
-}
+			return
+		fi
+		gnome-disk-image-mounter --writable "$1" || exit $?
+		mount_path=$(mount | grep "$1" | awk '{print $3}')
+		cd "$mount_path" || return 1
+	}
+fi
 
 if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
-	win_env () {
+	win-env() {
 		if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
 			cat <<EOT
-win_env: get the value of a Windows env var
-Usage: win_env [var-name]
+win-env: get the value of a Windows env var
+Usage: win-env [var-name]
 
 If win_env is called with no arguments, it will show all of the environment
 variables defined for Windows.
@@ -50,11 +52,11 @@ EOT
 		fi
 	}
 
-	win_env_linux_path () {
+	win-env-linux-path() {
 		if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
 			cat <<EOT
-win_env_linux_path: get the value of a Windows env var and convert to a WSL path
-Usage: win_env_linux_path <var-name>
+win-env-linux-path: get the value of a Windows env var and convert to a WSL path
+Usage: win-env-linux-path <var-name>
 
 The value of the Windows environment variable named var-name will be echoed
 after being converted to a WSL path using wslpath.
@@ -65,11 +67,11 @@ EOT
 		echo $(wslpath "$winpath")
 	}
 
-	def_win_env_linux_path () {
+	def-win-env-linux-path() {
 		if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
 			cat <<EOT
-def_win_env_linux_path: define an env var from a Windows env var and convert to a WSL path
-Usage: def_win_env_linux_path <var-name> [var-name-to-set]
+def-win-env-linux-path: define an env var from a Windows env var and convert to a WSL path
+Usage: def-win-env-linux-path <var-name> [var-name-to-set]
 
 The value of the Windows environment variable named var-name will be exported
 to an environment variable with the same name after being converted to a WSL
@@ -82,7 +84,8 @@ EOT
 		export "${2:-$1}=$(wslpath "$winpath")"
 	}
 
-	export rd_program_files="$(win_env_linux_path PROGRAMFILES)"
-	export rd_program_files_x86="$(win_env_linux_path "PROGRAMFILES(X86)")"
+	export rd_program_files="$(win-env-linux-path PROGRAMFILES)"
+	export rd_program_files_x86="$(win-env-linux-path "PROGRAMFILES(X86)")"
+
 	alias afk="Rundll32.exe user32.dll,LockWorkStation"
 fi

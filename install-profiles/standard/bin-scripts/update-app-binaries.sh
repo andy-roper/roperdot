@@ -95,7 +95,7 @@ fi
 
 fm_archive () {
     local f="$1"
-    if [[ -n "$(is_archive "$f")" ]]; then
+    if [[ -n "$(is-archive "$f")" ]]; then
         destdir=$(mktemp -d)
         pushd "$destdir" || exit 1
         extract-archive "$f" >/dev/null 2>&1
@@ -105,7 +105,7 @@ fm_archive () {
         mount_dir="$(mount-dmg "$f")"
         [[ -n "$mount_dir" ]] && fm "$mount_dir"
     elif [[ "$ROPERDOT_OS_ENV" = "ubuntu" || "$ROPERDOT_OS_ENV" = "mint" ]] && [[ "$f" =~ \.iso$ ]]; then
-        mount_iso_readonly "$f"
+        mount-iso-readonly "$f"
     else
         echo "Cannot browse $f with file manager"
     fi
@@ -706,31 +706,30 @@ else
     export ROPERDOT_FILE_MANAGER=nautilus
 fi
 EOT
-    create_binary_script_linux fileroller file-roller
-    create_binary_script_linux gedit
+    create_binary_script_linux peazip
+    create_binary_script_linux subl
     create_binary_script_linux opendoc xdg-open
     create_browser_script_linux firefox
-    create_binary_script_linux shotwell     # Ubuntu
-    create_binary_script_linux rhythmbox    # Ubuntu
+    create_binary_script_linux rhythmbox
     create_binary_script_linux totem
     
     create_binary_script_linux code
-    create_binary_script_linux atom
+    create_binary_script_linux notepadqq
     if command -v google-chrome-stable >/dev/null 2>&1; then
         create_browser_script_linux chrome google-chrome-stable
     elif command -v chromium-browser >/dev/null 2>&1; then
         create_browser_script_linux chrome chromium-browser
     fi
     create_binary_script_linux gimp 
-    create_binary_script_linux mcomix
+    create_binary_script_linux calibre
     create_binary_script_linux vlc
     create_binary_script_linux ghostwriter
     
     default_app=show-file
-    create_text_editor_script text-editor-app atom gedit
-    create_app_script code-editor-app code atom gedit
+    create_text_editor_script text-editor-app subl notepadqq
+    create_app_script code-editor-app code subl notepadqq
     create_app_script web-browser-app chrome firefox nautilus
-    create_app_script archive-editor-app fileroller
+    create_app_script archive-editor-app peazip
     create_app_script video-player-app vlc totem
     create_app_script video-editor-app vlc totem
     create_app_script audio-player-app totem
@@ -745,7 +744,7 @@ EOT
     create_app_script presentation-app opendoc
     create_app_script markdown-app ghostwriter
     default_app=list-archive
-    create_app_script comic-viewer-app yacreader fileroller
+    create_app_script comic-viewer-app calibre
     if command -v spacefm >/dev/null 2>&1; then
         echo "alias fm=spacefm" >> "$func_file"
     else
@@ -864,15 +863,14 @@ else
     export ROPERDOT_FILE_MANAGER=nemo
 fi
 EOT
-    create_binary_script_linux fileroller file-roller
+    create_binary_script_linux peazip
     create_binary_script_linux xed
     create_binary_script_linux opendoc xdg-open
     create_browser_script_linux firefox
-    create_binary_script_linux pix
     create_binary_script_linux rhythmbox
     create_binary_script_linux xplayer
     
-    create_binary_script_linux code
+    create_binary_script_linux subl
     create_binary_script_linux atom
     if command -v google-chrome-stable >/dev/null 2>&1; then
         create_browser_script_linux chrome google-chrome-stable
@@ -880,15 +878,15 @@ EOT
         create_browser_script_linux chrome chromium-browser
     fi
     create_binary_script_linux gimp 
-    create_binary_script_linux mcomix
+    create_binary_script_linux calibre
     create_binary_script_linux vlc
     create_binary_script_linux ghostwriter
     
     default_app=show-file
-    create_text_editor_script text-editor-app sublime atom notepadqq xed
-    create_app_script code-editor-app code sublime atom notepadqq xed
+    create_text_editor_script text-editor-app subl notepadqq xed
+    create_app_script code-editor-app code subl notepadqq xed
     create_app_script web-browser-app chrome firefox nemo
-    create_app_script archive-editor-app fileroller
+    create_app_script archive-editor-app peazip
     create_app_script video-player-app vlc xplayer
     create_app_script video-editor-app vlc xplayer
     create_app_script audio-player-app rhythmbox
@@ -903,7 +901,7 @@ EOT
     create_app_script presentation-app opendoc
     create_app_script markdown-app ghostwriter
     default_app=list-archive
-    create_app_script comic-viewer-app yacreader fileroller
+    create_app_script comic-viewer-app peazip
     if command -v spacefm >/dev/null 2>&1; then
         echo "alias fm=spacefm" >> "$func_file"
     else

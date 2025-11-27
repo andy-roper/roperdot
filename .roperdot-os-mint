@@ -3,12 +3,12 @@ if [[ -e /usr/bin/java ]]; then
 	export JAVA_HOME=$(readlink -f "${f%/*}/../../lib")
 fi
 
-mount_iso_readonly () {
+mount-iso-readonly () {
 	re="\.iso$"
 	if [[ -z "$1" || ! "$1" =~ $re ]]; then
 		cat <<EOT
-mount_iso_readonly: mount an ISO image for reading
-Usage: mount_iso_readonly <iso_file>
+mount-iso-readonly: mount an ISO image for reading
+Usage: mount-iso-readonly <iso_file>
 EOT
 		exit 0
 	fi
@@ -17,12 +17,12 @@ EOT
 	cd "$mount_path" || return 1
 }
 
-mount_iso_writable () {
+mount-iso-writable () {
 	re="\.iso$"
 	if [[ -z "$1" || ! "$1" =~ $re ]]; then
 		cat <<EOT
-mount_iso_writable: mount an ISO image for writing
-Usage: mount_iso_writable <iso_file>
+mount-iso-writable: mount an ISO image for writing
+Usage: mount-iso-writable <iso_file>
 EOT
 		exit 0
 	fi
