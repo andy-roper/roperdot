@@ -57,11 +57,12 @@ update_settings () {
 		if [[ -n "$PROCESSING_BASH" ]]; then
 			update_setting --add-to-hashtable "terminal.integrated.profiles.osx" '"bash":{"path":"/usr/local/bin/bash"}'
 		fi
-		if [[ -n "$PROCESSING_ZSH" ]]; then
-			update_setting "terminal.integrated.defaultProfile.osx" "zsh"
-		else
-			update_setting "terminal.integrated.defaultProfile.osx" "bash"
-		fi
+		# if [[ -n "$PROCESSING_ZSH" ]]; then
+		# 	update_setting "terminal.integrated.defaultProfile.osx" "zsh"
+		# else
+		# 	update_setting "terminal.integrated.defaultProfile.osx" "bash"
+		# fi
+		update_setting "terminal.integrated.defaultProfile.osx" "$ROPERDOT_CURRENT_SHELL"
 	elif [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
 		if [[ -n "$PROCESSING_ZSH" ]]; then
 			update_setting --add-to-hashtable "terminal.integrated.profiles.windows" '"WSL zsh":{"path":"${env:windir}\\System32\\wsl.exe","args":["zsh"],"icon":"terminal-ubuntu-wsl"}'
@@ -69,11 +70,12 @@ update_settings () {
 		if [[ -n "$PROCESSING_BASH" ]]; then
 			update_setting --add-to-hashtable "terminal.integrated.profiles.windows" '"WSL bash":{"path":"${env:windir}\\System32\\wsl.exe","icon":"terminal-ubuntu-wsl"}'
 		fi
-		if [[ "$PROCESSING_ZSH" = zsh ]]; then
-			update_setting "terminal.integrated.defaultProfile.windows" "WSL zsh"
-		else
-			update_setting "terminal.integrated.defaultProfile.windows" "WSL bash"
-		fi
+		# if [[ "$PROCESSING_ZSH" = zsh ]]; then
+		# 	update_setting "terminal.integrated.defaultProfile.windows" "WSL zsh"
+		# else
+		# 	update_setting "terminal.integrated.defaultProfile.windows" "WSL bash"
+		# fi
+		update_setting "terminal.integrated.defaultProfile.windows" "WSL $ROPERDOT_CURRENT_SHELL"
 	else
 		if [[ -n "$PROCESSING_ZSH" ]]; then
 			update_setting --add-to-hashtable "terminal.integrated.profiles.linux" '"zsh":{"path":"/bin/zsh"}'
@@ -81,11 +83,12 @@ update_settings () {
 		if [[ -n "$PROCESSING_BASH" ]]; then
 			update_setting --add-to-hashtable "terminal.integrated.profiles.linux" '"bash":{"path":"/bin/bash"}'
 		fi
-		if [[ "$PROCESSING_ZSH" = zsh ]]; then
-			update_setting "terminal.integrated.defaultProfile.linux" "zsh"
-		else
-			update_setting "terminal.integrated.defaultProfile.linux" "bash"
-		fi
+		# if [[ "$PROCESSING_ZSH" = zsh ]]; then
+		# 	update_setting "terminal.integrated.defaultProfile.linux" "zsh"
+		# else
+		# 	update_setting "terminal.integrated.defaultProfile.linux" "bash"
+		# fi
+		update_setting "terminal.integrated.defaultProfile.linux" "$ROPERDOT_CURRENT_SHELL"
 	fi
 }
 
@@ -105,6 +108,6 @@ elif [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
 	[[ -n "$windows_install" ]] && update_settings "$(win_env_linux_path APPDATA)/Code/User"
 	[[ -n "$standard_install" ]] && update_settings "$(win_env_linux_path USERPROFILE)/.vscode"
 else
-	update_settings ~/.vscode
+	update_settings ~/.config/Code/User
 fi
 exit 0
