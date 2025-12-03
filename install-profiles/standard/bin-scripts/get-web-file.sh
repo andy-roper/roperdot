@@ -23,7 +23,7 @@ url=$1
 file=$2
 [[ -z "$file" ]] && file=${url##*/}
 if command -v wget >/dev/null 2>&1; then
-	wget -q --no-check-certificate -O "$file" "$url"
+	wget -q --no-check-certificate --max-redirect=10 -O "$file" "$url"
 elif command -v curl >/dev/null 2>&1; then
 	curl -fsSL --insecure "$url" -o "$file"
 elif command -v lynx >/dev/null 2>&1; then

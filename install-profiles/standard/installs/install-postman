@@ -13,8 +13,41 @@
 
 if [[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" = gnome ]]; then
 	temp_dir="$(mktemp -d)"
-	pushd "$temp_dir" >/dev/null || return 1
-	get-web-file https://dl.pstmn.io/download/latest/linux64 postman.tar.gz
+	pushd "$temp_dir" >/dev/null || exit 1
+	
+	echo "Downloading Postman from https://dl.pstmn.io/download/latest/linux64"
+	
+	# Download with visible output for debugging
+	if command -v wget >/dev/null 2>&1; then
+		wget --no-check-certificate --max-redirect=10 -O postman.tar.gz https://dl.pstmn.io/download/latest/linux64
+	elif command -v curl >/dev/null 2>&1; then
+		curl -L --insecure -o postman.tar.gz https://dl.pstmn.io/download/latest/linux64
+	else
+		echo "Neither wget nor curl found"
+		exit 1
+	fi
+	
+	# Check if download succeeded
+	if [[ ! -f postman.tar.gz || ! -s postman.tar.gz ]]; then
+		echo "Failed to download Postman - file is missing or empty"
+		popd >/dev/null
+		rm -rf "$temp_dir"
+		exit 1
+	fi
+	
+	# Verify the downloaded file is a valid gzip file
+	echo "Verifying downloaded archive..."
+	if ! gzip -t postman.tar.gz 2>&1; then
+		echo "Downloaded file is not a valid gzip archive"
+		echo "File size: $(ls -lh postman.tar.gz)"
+		echo "First few bytes:"
+		head -c 100 postman.tar.gz | od -c
+		popd >/dev/null
+		rm -rf "$temp_dir"
+		exit 1
+	fi
+	
+	echo "Extracting Postman..."
 	sudo tar -xzf postman.tar.gz -C /opt
 	rm postman.tar.gz
 	ln -s /opt/Postman/app/Postman "${ROPERDOT_DIR}/extra-bin/postman"
@@ -32,6 +65,8 @@ Icon=postman.png
 Terminal=false
 Categories=Application;Development;Programming;Internet;Network
 EOT
-	popd >/dev/null || return 1
+	popd >/dev/null || exit 1
 	rm -rf "$temp_dir" >/dev/null
+	
+	echo "Postman installation complete"
 fi

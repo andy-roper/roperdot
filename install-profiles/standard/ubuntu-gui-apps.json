@@ -132,7 +132,9 @@
 		"app": "Postman",
 		"binary": "postman",
 		"install_script": "install-postman",
-		"desc": "REST client"
+		"desc": "REST client",
+		"exclusionGroups": ["work"],
+		"comment": "Disabled for work for now due to SSL handshake failures on a work laptop"
 	},
 	{
 		"app": "SoapUI",
