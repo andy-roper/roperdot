@@ -59,25 +59,79 @@ if [[ ! -f "$sublime_text_dir/Installed Packages/Package Control.sublime-package
 	get-web-file "https://packagecontrol.io/Package%20Control.sublime-package" "$sublime_text_dir/Installed Packages/Package Control.sublime-package"
 fi
 
-if command -v choco >/dev/null 2>&1; then
-	choco list --local-only >/dev/null && have_shellcheck=true
-elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]] && command -v brew >/dev/null 2>&1; then
-	brew list >/dev/null && have_shellcheck=true
-elif command -v apt >/dev/null 2>&1; then
-	apt list --installed >/dev/null && have_shellcheck=true
+# Detect Zscaler MITM proxy in ca-certificates
+if [[ -f /etc/ssl/certs/ca-certificates.crt ]]; then
+	if awk -v cmd='openssl x509 -noout -subject' '/BEGIN/{close(cmd)};{print | cmd}' < /etc/ssl/certs/ca-certificates.crt 2>/dev/null | grep -qi zscaler; then
+		echo "Zscaler detected: packages will be directly downloaded to bypass SSL issues"
+		zscaler_detected=true
+	fi
 fi
 
-if [[ -f "$sublime_user_dir/Package Control.sublime-settings" ]]; then
-	echo "Backing up $sublime_user_dir/Package Control.sublime-settings to $sublime_user_dir/Package Control.sublime-settings.bak"
-	cp "$sublime_user_dir/Package Control.sublime-settings" "$sublime_user_dir/Package Control.sublime-settings.bak"
-#	$python_bin "$ROPERDOT_DIR/bin/set-values-in-json" "$sublime_user_dir/Package Control.sublime-settings" bootstrapped true || { echo "second set-values-in-json failed with exit code $?, continuing to debug..."; }
-	$python_bin "$ROPERDOT_DIR/bin/set-values-in-json" "$sublime_user_dir/Package Control.sublime-settings" bootstrapped true
-	$python_bin "$ROPERDOT_DIR/bin/set-values-in-json" "$sublime_user_dir/Package Control.sublime-settings" --add-to-array installed_packages Alignment BracketHighlighter "Column Select" Emmet HexViewer "HTML-CSS-JS Prettify" HTML5 "Pretty JSON" SideBarEnhancements "Solarized Color Scheme" SublimeCodeIntel SublimeLinter Terminal
+# If Zscaler detected, download packages directly to Packages directory
+if [[ -n "$zscaler_detected" ]]; then
+	packages_dir="${sublime_text_dir}/Packages"
+	[[ -d "$packages_dir" ]] || mkdir -p "$packages_dir"
+	
+	# Define package repositories (GitHub URLs for direct download)
+	declare -A package_repos=(
+		["Alignment"]="https://github.com/wbond/sublime_alignment/archive/refs/heads/master.zip"
+		["BracketHighlighter"]="https://github.com/facelessuser/BracketHighlighter/archive/refs/heads/master.zip"
+		["Column Select"]="https://github.com/ehuss/Sublime-Column-Select/archive/refs/heads/master.zip"
+		["Emmet"]="https://github.com/emmetio/sublime-text-plugin/archive/refs/heads/master.zip"
+		["HexViewer"]="https://github.com/facelessuser/HexViewer/archive/refs/heads/master.zip"
+		["HTML-CSS-JS Prettify"]="https://github.com/victorporof/Sublime-HTMLPrettify/archive/refs/heads/master.zip"
+		["HTML5"]="https://github.com/mrmartineau/HTML5/archive/refs/heads/master.zip"
+		["Pretty JSON"]="https://github.com/dzhibas/SublimePrettyJson/archive/refs/heads/master.zip"
+		["SideBarEnhancements"]="https://github.com/titoBouzout/SideBarEnhancements/archive/refs/heads/st3.zip"
+		["Solarized Color Scheme"]="https://github.com/braver/Solarized/archive/refs/heads/master.zip"
+		["SublimeCodeIntel"]="https://github.com/SublimeCodeIntel/SublimeCodeIntel/archive/refs/heads/master.zip"
+		["SublimeLinter"]="https://github.com/SublimeLinter/SublimeLinter/archive/refs/heads/master.zip"
+		["Terminal"]="https://github.com/wbond/sublime_terminal/archive/refs/heads/master.zip"
+	)
+	
+	for package_name in "${!package_repos[@]}"; do
+		package_dir="${packages_dir}/${package_name}"
+		if [[ ! -d "$package_dir" ]]; then
+			echo "Downloading ${package_name}..."
+			zip_file="/tmp/${package_name}.zip"
+			get-web-file "${package_repos[$package_name]}" "$zip_file"
+			if [[ -f "$zip_file" ]]; then
+				unzip -q "$zip_file" -d "/tmp/${package_name}_extract"
+				# Move the extracted directory (handles master/st3 suffix)
+				extracted_dir=$(find "/tmp/${package_name}_extract" -maxdepth 1 -type d -not -path "/tmp/${package_name}_extract")
+				if [[ -d "$extracted_dir" ]]; then
+					mv "$extracted_dir" "$package_dir"
+					echo "Installed ${package_name}"
+				fi
+				rm -rf "$zip_file" "/tmp/${package_name}_extract"
+			fi
+		fi
+	done
 else
-	cp "$config_files/Package Control.sublime-settings" "$sublime_user_dir"
-fi
+	if command -v choco >/dev/null 2>&1; then
+		choco list --local-only >/dev/null && have_shellcheck=true
+	elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]] && command -v brew >/dev/null 2>&1; then
+		brew list >/dev/null && have_shellcheck=true
+	elif command -v apt >/dev/null 2>&1; then
+		apt list --installed >/dev/null && have_shellcheck=true
+	fi
 
-# [[ -n "$have_shellcheck" ]] && $python_bin "$ROPERDOT_DIR/bin/set-values-in-json" "$sublime_user_dir/Package Control.sublime-settings" --add-to-array installed_packages SublimeLinter-shellcheck || { echo "third set-values-in-json failed with exit code $?, continuing to debug..."; }
+	if [[ -f "$sublime_user_dir/Package Control.sublime-settings" ]]; then
+		echo "Backing up $sublime_user_dir/Package Control.sublime-settings to $sublime_user_dir/Package Control.sublime-settings.bak"
+		cp "$sublime_user_dir/Package Control.sublime-settings" "$sublime_user_dir/Package Control.sublime-settings.bak"
+		
+		if [[ "$zscaler_detected" != true ]]; then
+			$python_bin "$ROPERDOT_DIR/bin/set-values-in-json" "$sublime_user_dir/Package Control.sublime-settings" bootstrapped true
+			$python_bin "$ROPERDOT_DIR/bin/set-values-in-json" "$sublime_user_dir/Package Control.sublime-settings" --add-to-array installed_packages Alignment BracketHighlighter "Column Select" Emmet HexViewer "HTML-CSS-JS Prettify" HTML5 "Pretty JSON" SideBarEnhancements "Solarized Color Scheme" SublimeCodeIntel SublimeLinter Terminal
+		else
+			echo "Skipping Package Control bootstrapped setting due to Zscaler - packages downloaded directly"
+		fi
+	else
+		cp "$config_files/Package Control.sublime-settings" "$sublime_user_dir"
+	fi
+
+	# [[ -n "$have_shellcheck" ]] && $python_bin "$ROPERDOT_DIR/bin/set-values-in-json" "$sublime_user_dir/Package Control.sublime-settings" --add-to-array installed_packages SublimeLinter-shellcheck || { echo "third set-values-in-json failed with exit code $?, continuing to debug..."; }
+fi
 
 # Set terminal spawned by Terminal package to iTerm 2
 if [[ "$ROPERDOT_OS_ENV" = darwin && -d "/Applications/iTerm.app" ]]; then

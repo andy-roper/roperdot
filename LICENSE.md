@@ -27,12 +27,18 @@ THIRD-PARTY SOFTWARE LICENSES
 This repository includes software components with different licenses:
 
 1. xterm-color-count
-   Location: install-profiles/standard/bin-scripts/xterm-color-count.sh  
-   Copyright (c) Victor Engmark  
-   License: GNU General Public License v3.0  
-   Source: https://github.com/l0b0/xterm-color-count  
-   License Text: https://www.gnu.org/licenses/gpl-3.0.txt  
+   Location: install-profiles/standard/bin-scripts/xterm-color-count.sh
+   Copyright (c) Victor Engmark
+   License: GNU General Public License v3.0
+   Source: https://github.com/l0b0/xterm-color-count
+   License Text: https://www.gnu.org/licenses/gpl-3.0.txt
    The script was modified for zsh compatibility.
+2. Sublime Text Visual Studio Code Colour Scheme for Sublime
+   Location: install-profiles/standard/config-files/sublime-text
+   Copyright (c) Vikram Bhaskaran
+   License: MIT License
+   Source: https://github.com/vbasky/sublime-vscode-plus
+   License Text: See LICENSES/sublime-vscode-plus.MIT.txt
 
 ===========================================================================
 

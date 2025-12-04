@@ -66,3 +66,5 @@ These dotfiles use or integrate several fine open source tools. See [third-party
 
 My bash prompt was based on that of [paulirish](https://github.com/paulirish/dotfiles).
 
+Includes Visual Studio Code Plus schemes: https://github.com/vbasky/sublime-vscode-plus
+
