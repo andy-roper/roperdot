@@ -24,47 +24,66 @@ if command -v xsdecaf >/dev/null 2>&1; then
     exit 0
 fi
 
-if [[ "$ROPERDOT_OS_FAMILY" != debian ]]; then
-    echo "xsdecaf installation is only supported on Debian/Ubuntu systems"
-    exit 1
+if [[ "$ROPERDOT_OS_FAMILY" != darwin && "$ROPERDOT_OS_FAMILY" != debian ]]; then
+	echo "xsdecaf installation is only supported on Debian/Ubuntu and MacOS systems"
+	exit 1
 fi
 
 echo "Installing xsdecaf XSD Comparator..."
 
 temp_dir=$(mktemp -d)
-chmod 755 "$temp_dir"
-cd "$temp_dir" || exit 1
 
-# Clone the repository
-echo "Cloning xsdecaf repository..."
-git clone https://github.com/juan-ahv/xsdecaf.git
+if [[ "$ROPERDOT_OS_FAMILY" = debian ]]; then
+	chmod 755 "$temp_dir"
+	cd "$temp_dir" || exit 1
 
-if [[ ! -d xsdecaf ]]; then
-    echo "Error: Failed to clone xsdecaf repository"
-    exit 1
-fi
+	# Clone the repository
+	echo "Cloning xsdecaf repository..."
+	git clone https://github.com/juan-ahv/xsdecaf.git
 
-# Navigate to the deployment directory
-cd xsdecaf/XsDiff-UI/deployment/ || exit 1
+	if [[ ! -d xsdecaf ]]; then
+	    echo "Error: Failed to clone xsdecaf repository"
+	    exit 1
+	fi
 
-deb_file="xsdecaf_${XSDECAF_VERSION}_all.deb"
+	# Navigate to the deployment directory
+	cd xsdecaf/XsDiff-UI/deployment/ || exit 1
 
-if [[ ! -f "$deb_file" ]]; then
-    echo "Error: Expected .deb file not found: $deb_file"
-    echo "The repository structure may have changed."
-    exit 1
-fi
+	deb_file="xsdecaf_${XSDECAF_VERSION}_all.deb"
 
-# Make the .deb file executable (though not strictly necessary for dpkg)
-chmod +x "$deb_file"
+	if [[ ! -f "$deb_file" ]]; then
+	    echo "Error: Expected .deb file not found: $deb_file"
+	    echo "The repository structure may have changed."
+	    exit 1
+	fi
 
-# Install the package
-echo "Installing xsdecaf package..."
-sudo apt install -y "./$deb_file"
+	# Make the .deb file executable (though not strictly necessary for dpkg)
+	chmod +x "$deb_file"
 
-# Fix Windows line endings in xsdecaf binary
-if command -v dos2unix >/dev/null 2>&1 && [[ -f /usr/bin/xsdecaf ]]; then
-    sudo dos2unix /usr/bin/xsdecaf 2>/dev/null || true
+	# Install the package
+	echo "Installing xsdecaf package..."
+	sudo apt install -y "./$deb_file"
+
+	# Fix Windows line endings in xsdecaf binary
+	if command -v dos2unix >/dev/null 2>&1 && [[ -f /usr/bin/xsdecaf ]]; then
+	    sudo dos2unix /usr/bin/xsdecaf 2>/dev/null || true
+	fi
+else
+    cd "$temp_dir" || exit 1
+    
+    git clone https://github.com/juan-ahv/xsdecaf.git
+    cd xsdecaf/XsDiff-UI/target/ || cd xsdecaf/XsDiff-UI/ || exit 1
+    
+    # Copy JAR to /usr/local/lib
+    sudo mkdir -p /usr/local/lib/xsdecaf
+    sudo cp -r *.jar /usr/local/lib/xsdecaf/
+    
+    # Create wrapper script
+    sudo tee /usr/local/bin/xsdecaf > /dev/null << 'EOF'
+#!/bin/sh
+java -jar /usr/local/lib/xsdecaf/xsdecaf.jar "$@"
+EOF
+    sudo chmod +x /usr/local/bin/xsdecaf
 fi
 
 echo "xsdecaf installed successfully"

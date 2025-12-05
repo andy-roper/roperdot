@@ -1,0 +1,39 @@
+#
+# Description: Install script for Gradle via SDKMAN
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+GRADLE_VERSION=8.5
+
+source "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
+# Ensure SDKMAN is available
+if [[ ! -d ~/.sdkman ]]; then
+	echo "Error: SDKMAN is not installed. Please install SDKMAN first."
+	exit 1
+fi
+
+# Source SDKMAN (disable exit-on-error temporarily in case init script has non-zero exit)
+export SDKMAN_DIR="$HOME/.sdkman"
+[[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && { source "$SDKMAN_DIR/bin/sdkman-init.sh" || true; }
+
+# Verify sdk command is available
+if ! type sdk &>/dev/null; then
+    echo "Error: sdk command not available after sourcing sdkman-init.sh"
+    exit 1
+fi
+
+# Install specific Gradle version
+echo "Installing Gradle ${GRADLE_VERSION}..."
+# Use < /dev/null to prevent interactive prompts
+if ! sdk install gradle "${GRADLE_VERSION}"; then
+    echo "Error: Failed to install gradle"
+    exit 1
+fi
+
+# Set as default
+sdk default gradle "${GRADLE_VERSION}"
+
+echo "Gradle ${GRADLE_VERSION} installed successfully"

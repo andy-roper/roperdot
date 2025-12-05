@@ -15,6 +15,12 @@
 		"exclusionGroups": ["work"]
 	},
 	{
+		"app": "openssh-server",
+		"presence_command": "pgrep -q sshd",
+		"install_script": "install-openssh-server",
+		"desc": "OpenSSH server daemon for secure remote shell access"
+	},
+	{
 		"app": "p7zip",
 		"binary": "7z",
 		"package": "p7zip",
@@ -143,14 +149,62 @@
 		"package": "java",
 		"list_prerequisite": "brew",
 		"install_command": "brew install java;",
-		"desc": "Compiler and run-time environment for Java"
+		"desc": "Compiler and run-time environment for Java",
+		"exclusionGroups": ["java-dev"]
+	},
+	{
+	    "app": "SDKMAN",
+	    "presence_command": "[[ -d ~/.sdkman ]]",
+	    "install_script": "install-sdkman",
+	    "sudo_not_required": true,
+	    "desc": "SDK manager for JVM languages",
+	    "groups": ["java-dev"]
+	},
+	{
+	    "app": "Amazon Corretto JDK",
+	    "install_script": "install-amazon-jdk",
+	    "sudo_not_required": true,
+	    "desc": "Amazon Corretto JDK",
+	    "groups": ["java-dev"]
+	},
+	{
+	    "app": "Gradle 7.4.2",
+	    "presence_command": "test -d ~/.sdkman/candidates/gradle/7.4.2",
+	    "install_script": "install-gradle-sdk-7.4.2",
+	    "sudo_not_required": true,
+	    "desc": "Build automation tool",
+	    "groups": ["java-dev"]
+	},
+	{
+	    "app": "Gradle 8.5",
+	    "presence_command": "test -d ~/.sdkman/candidates/gradle/8.5",
+	    "install_script": "install-gradle-sdk-8.5",
+	    "sudo_not_required": true,
+	    "desc": "Build automation tool",
+	    "groups": ["java-dev"]
+	},
+	{
+	    "app": "Maven",
+	    "binary": "mvn",
+	    "install_script": "install-maven-sdk",
+	    "sudo_not_required": true,
+	    "desc": "Build automation and dependency management for Java",
+	    "groups": ["java-dev"]
+	},
+	{
+	    "app": "Oracle Instant Client",
+	    "presence_command": "[[ -d /opt/oracle/instantclient_21_1 ]]",
+	    "install_script": "install-oracle-instant-client",
+	    "desc": "Oracle database client with SQL*Plus",
+	    "groups": ["java-dev", "oracle"]
 	},
 	{
 		"app": "jENV",
 		"binary": "jenv",
 		"package": "jenv",
 		"list_prerequisite": "brew",
-		"desc": "Tool for managing the JAVA_HOME environment variable"
+		"desc": "Tool for managing the JAVA_HOME environment variable",
+		"exclusionGroups": ["java-dev"]
 	},
 	{
 	    "app": ".NET SDK",
@@ -159,6 +213,21 @@
 		"list_prerequisite": "brew",
 	    "desc": "Microsoft .NET SDK",
 	    "groups": ["dotnet"]
+	},
+	{
+	    "app": "OpenShift CLI",
+	    "binary": "oc",
+	    "install_script": "install-openshift-cli",
+	    "sudo_not_required": true,
+	    "desc": "OpenShift CLI for Kubernetes management",
+	    "groups": ["kubernetes"]
+	},
+	{
+	    "app": "Tekton CLI",
+	    "binary": "tkn",
+	    "install_script": "install-tekton-cli",
+	    "desc": "Tekton Pipelines CLI",
+	    "groups": ["kubernetes"]
 	},
 	{
 		"app": "AWS CLI",

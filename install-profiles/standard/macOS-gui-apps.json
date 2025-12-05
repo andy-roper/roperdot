@@ -271,5 +271,12 @@
 		"package_manager": "brew",
 		"desc": "Disk space visualization app",
 		"exclusionGroups": ["work"]
+	},
+	{
+	    "app": "xsdecaf",
+	    "binary": "xsdecaf",
+	    "install_script": "install-xsdecaf",
+	    "desc": "XSD schema comparison tool",
+	    "groups": ["development"]
 	}
 ]

@@ -74,4 +74,5 @@ fi
 rm -rf "$temp_dir"
 
 echo "Oracle Instant Client installed successfully"
-echo "Note: Environment variables (ORACLE_HOME, LD_LIBRARY_PATH) will be set by roperdot-bootstrap"
+echo "Note: Environment variables will be set by roperdot-bootstrap:"
+echo "ORACLE_HOME, and LD_LIBRARY_PATH on Linux or DYLD_LIBRARY_PATH on macOS"

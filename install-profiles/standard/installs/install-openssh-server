@@ -11,4 +11,7 @@ if [[ "$ROPERDOT_OS_FAMILY" = debian ]]; then
 	sudo ufw allow ssh
 	sudo systemctl enable ssh
 	sudo systemctl start ssh
+elif [[ "$ROPERDOT_OS_FAMILY" = darwin ]]; then
+	# Enable Remote Login (SSH server)
+	sudo systemsetup -setremotelogin on
 fi

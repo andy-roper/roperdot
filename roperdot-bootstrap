@@ -755,6 +755,7 @@ for oracle_dir in /opt/oracle/instantclient_*; do
     if [[ -d "$oracle_dir" ]]; then
         export ORACLE_HOME="$oracle_dir"
         export LD_LIBRARY_PATH="$ORACLE_HOME:$LD_LIBRARY_PATH"
+        export DYLD_LIBRARY_PATH="$ORACLE_HOME:$DYLD_LIBRARY_PATH"
         export PATH="$ORACLE_HOME:$PATH"
         break
     fi

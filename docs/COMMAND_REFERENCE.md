@@ -149,6 +149,7 @@ help <text>        # Find commands whose name/description matches the text
 
 ### Code Utilities
 - **`build-classpath`** - Build Java classpath from directory structure
+- **`gt`** - Run a gradle test
 - **`jc`** - Compile Java files with classpath management
 - **`jr`** - Run Java applications with proper classpath
 - **`lq`** - Submit a query to a LoopBack application

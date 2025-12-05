@@ -260,9 +260,17 @@
 	    "groups": ["java-dev"]
 	},
 	{
-	    "app": "Gradle",
-	    "binary": "gradle",
-	    "install_script": "install-gradle-sdk",
+	    "app": "Gradle 7.4.2",
+	    "presence_command": "test -d ~/.sdkman/candidates/gradle/7.4.2",
+	    "install_script": "install-gradle-sdk-7.4.2",
+	    "sudo_not_required": true,
+	    "desc": "Build automation tool",
+	    "groups": ["java-dev"]
+	},
+	{
+	    "app": "Gradle 8.5",
+	    "presence_command": "test -d ~/.sdkman/candidates/gradle/8.5",
+	    "install_script": "install-gradle-sdk-8.5",
 	    "sudo_not_required": true,
 	    "desc": "Build automation tool",
 	    "groups": ["java-dev"]
@@ -404,7 +412,8 @@
 		"presence_command": "$python_bin -c 'import rolldice' >/dev/null 2>&1",
 		"install_command": "install-python-package py-rolldice",
 		"sudo_not_required": true,
-		"desc": "Python module for evaluating dice notation"
+		"desc": "Python module for evaluating dice notation",
+		"groups": ["personal"]
 	},
 	{
 		"app": "playwright",
