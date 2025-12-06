@@ -12,8 +12,8 @@ ${env_var.GIT_STATUS_INFO} \
 right_format = """${custom.status_triangle}${env_var.STATUS_INFO}${custom.context_triangle}$username$hostname${custom.time_triangle}$time${custom.stack_triangle}${env_var.DIR_STACK_INFO}"""
 
 [directory]
-truncation_length = 3
-truncate_to_repo = false
+truncation_length = 5
+truncate_to_repo = true
 fish_style_pwd_dir_length = 1
 format = "[ $path ]($style)"
 style = "bg:blue fg:#ffffff"  # Use ANSI colors

@@ -1587,6 +1587,33 @@ EOT
 	fi
 }
 
+cdj() {
+	if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
+		cat <<EOT
+cdj: cd to a directory containing Java classes
+Usage: cdj
+
+This script finds directories containing .java files and lets you select one.
+It searches upward for 'src' or 'code' directory and searches from there.
+
+Display format:
+  - Within src tree: Shows package path
+  - Within code tree: Shows path from "code" directory
+
+Requirements: fzf
+EOT
+		return
+	fi
+	local dest="$(_cdj "$@")"
+	if [[ $? -eq 1 ]]; then
+		echo "No matching parent directories"
+	elif [[ "$dest" =~ ^Error: ]]; then
+		echo $dest
+	else
+		cd "$dest" || return 1
+	fi
+}
+
 if command -v ydiff >/dev/null 2>&1; then
 	diff() {
 		if [[ $# -eq 2 && -f "$1" && -f "$2" ]]; then

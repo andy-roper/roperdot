@@ -131,27 +131,33 @@ if [[ -z $skipping_extension_installs ]]; then
 
 	[[ "$ROPERDOT_OS_TYPE" = "linux" && "$ROPERDOT_DESKTOP_ENV" = "windows" ]] && install_ext ms-vscode-remote.remote-wsl
 	[[ -n "$have_shellcheck" ]] && install_ext timonwong.shellcheck
-	install_ext wallabyjs.quokka-vscode
+	if [[ ",$install_groups," != *,java-dev,* ]]; then
+		install_ext wallabyjs.quokka-vscode
+		install_ext dbaeumer.vscode-eslint
+		install_ext dbaeumer.jshint
+		install_ext christian-kohler.path-intellisense
+		install_ext redhat.vscode-server-connector
+		install_ext redhat.vscode-community-server-connector
+	fi
+	if [[ ",$install_groups," == *,aws,* ]]; then
+		install_ext amazonwebservices.aws-toolkit-vscode
+		install_ext aws-scripting-guy.cform
+	fi
 	install_ext albymor.increment-selection
 	install_ext redhat.vscode-yaml
-	install_ext amazonwebservices.aws-toolkit-vscode
-	install_ext aws-scripting-guy.cform
 	install_ext atlassian.atlascode
 	install_ext ms-azuretools.vscode-docker
 	install_ext ms-vscode-remote.remote-containers
 	# install_ext msjsdiag.debugger-for-chrome
-	install_ext dbaeumer.vscode-eslint
-	install_ext dbaeumer.jshint
 	install_ext donjayamanne.githistory
 	install_ext eamodio.gitlens
 	install_ext github.copilot
 	# install_ext github.copilot-chat  # Commented on 11/28/25 due to crash when installing
 	install_ext ms-azuretools.vscode-containers
 	install_ext yzhang.markdown-all-in-one
-	install_ext oracle.sql-developer
-	install_ext christian-kohler.path-intellisense
 	install_ext ms-vscode.hexeditor
 
+	# install_ext oracle.sql-developer
 	# install_ext mycelo.oracle-plsql
 	# install_ext mp.vscode-oracle-format
 	# install_ext ms-python.python
@@ -169,8 +175,6 @@ if [[ -z $skipping_extension_installs ]]; then
 	install_ext vscjava.vscode-java-test
 	install_ext vscjava.vscode-maven
 	install_ext redhat.vscode-xml
-	install_ext redhat.vscode-server-connector
-	install_ext redhat.vscode-community-server-connector
 fi
 
 export color_scheme

@@ -4,27 +4,59 @@
 # Author: Andy Roper <andyroper42@gmail.com>
 # URL: https://github.com/andy-roper/roperdot
 #
-if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
-	cat <<EOT
+
+# Parse arguments for --all/-a flag and directory
+ALL_FLAG=false
+TEST_DIR=""
+
+for arg in "$@"; do
+    case "$arg" in
+        --help|-h|-\?)
+            cat <<EOT
 gt: run a gradle test
-Usage: gt [test-dir]
+Usage: gt [OPTIONS] [test-dir]
 
-This script will look for a test with the directory specified by the
-GRADLE_TEST_DIR env var (or the first parameter). It will recursively list
-the classes in that path. Once you choose a class, you'll be prompted to
-choose a test method.
+This script intelligently selects gradle tests to run. By default, if you're
+in a directory containing test classes, it will use only those classes. Otherwise,
+it searches recursively from the base directory.
 
-After choosing a test method, gradle will be executed to run the method.
-If the GRADLE_MODULE env var is used, that will be used as the module in the
-command. Otherwise the script will derive the module name from build.gradle.
+Options:
+  -a, --all     Force recursive search from base directory (ignore local classes)
+  -h, --help    Show this help message
+
+Behavior:
+  - If current directory has test classes: Use only those (non-recursive)
+    - Single class: Auto-select and jump to method selection
+    - Multiple classes: Prompt for class selection
+  - Otherwise: Search recursively from base directory
+  - With --all: Always search recursively, ignore local classes
+
+Base directory priority:
+  1. Command-line argument [test-dir]
+  2. GRADLE_TEST_DIR environment variable
+  3. Current directory (.)
+
+Environment variables:
+  GRADLE_TEST_DIR  Base directory for test search
+  GRADLE_MODULE    Gradle module to use (otherwise auto-detected)
 EOT
-	exit 0
-fi
+            exit 0
+            ;;
+        -a|--all)
+            ALL_FLAG=true
+            ;;
+        *)
+            if [[ -z "$TEST_DIR" ]]; then
+                TEST_DIR="$arg"
+            fi
+            ;;
+    esac
+done
 
 set -e
 
-# Priority: command-line arg > GRADLE_TEST_DIR env var > current directory
-TEST_DIR="${1:-${GRADLE_TEST_DIR:-.}}"
+# Determine base directory (priority: arg > env var > current dir)
+TEST_DIR="${TEST_DIR:-${GRADLE_TEST_DIR:-.}}"
 
 # Expand ~ if present
 TEST_DIR="${TEST_DIR/#\~/$HOME}"
@@ -34,20 +66,67 @@ if [[ ! -d "$TEST_DIR" ]]; then
     exit 1
 fi
 
-# Find all test classes recursively, sort alphabetically, show relative paths
-echo "Finding test classes under $TEST_DIR..."
-TEST_FILE=$(find "$TEST_DIR" -type f \( -name "*Test.java" -o -name "*Tests.java" \) | \
-    sort | \
-    sed "s|^$TEST_DIR/||" | \
-    fzf --prompt="Select test class: " --layout=reverse -0 --height 33%)
-
-if [[ -z "$TEST_FILE" ]]; then
-    echo "No test selected"
-    exit 0
+# Determine if we should use local (non-recursive) mode
+LOCAL_MODE=false
+if [[ "$ALL_FLAG" == false ]]; then
+    # Check if current directory has .java files with @Test annotation
+    if compgen -G "*.java" > /dev/null 2>&1; then
+        if grep -l "@Test" *.java 2>/dev/null | grep -q .; then
+            LOCAL_MODE=true
+        fi
+    fi
 fi
 
-# Reconstruct full path
-FULL_PATH="$TEST_DIR/$TEST_FILE"
+# Find test class(es)
+if [[ "$LOCAL_MODE" == true ]]; then
+    # Non-recursive: use only test classes in current directory
+    echo "Finding test classes in current directory..."
+    
+    # Find test files in current directory only
+    LOCAL_TEST_FILES=$(find . -maxdepth 1 -type f \( -name "*Test.java" -o -name "*Tests.java" \) -exec grep -l "@Test" {} \; 2>/dev/null | sed 's|^\./||' | sort)
+    
+    if [[ -z "$LOCAL_TEST_FILES" ]]; then
+        echo "No test classes found in current directory"
+        exit 1
+    fi
+    
+    # Count test files
+    TEST_FILE_COUNT=$(echo "$LOCAL_TEST_FILES" | wc -l | tr -d ' ')
+    
+    if [[ "$TEST_FILE_COUNT" -eq 1 ]]; then
+        # Single test class - auto-select it
+        TEST_FILE="$LOCAL_TEST_FILES"
+        echo "Auto-selected: $TEST_FILE"
+    else
+        # Multiple classes - let user choose
+        TEST_FILE=$(echo "$LOCAL_TEST_FILES" | \
+            fzf --prompt="Select test class: " --layout=reverse -0 --height=33%)
+        
+        if [[ -z "$TEST_FILE" ]]; then
+            echo "No test selected"
+            exit 0
+        fi
+    fi
+    
+    # Use current directory as base
+    FULL_PATH="./$TEST_FILE"
+    
+else
+    # Recursive mode: search from base directory
+    echo "Finding test classes under $TEST_DIR..."
+    TEST_FILE=$(find "$TEST_DIR" -type f \( -name "*Test.java" -o -name "*Tests.java" \) | \
+        sort | \
+        sed "s|^$TEST_DIR/||" | \
+        fzf --prompt="Select test class: " --layout=reverse -0 --height=33%)
+    
+    if [[ -z "$TEST_FILE" ]]; then
+        echo "No test selected"
+        exit 0
+    fi
+    
+    # Reconstruct full path
+    FULL_PATH="$TEST_DIR/$TEST_FILE"
+fi
 
 # Extract package name from the Java file
 PACKAGE=$(grep -m 1 "^package " "$FULL_PATH" | sed 's/package \(.*\);/\1/')

@@ -1,12 +1,12 @@
 #
-# Description: Updates Visual Studio Code settings.json for the color scheme
+# Description: Updates Visual Studio Code settings.json
 #
 # Author: Andy Roper <andyroper42@gmail.com>
 # URL: https://github.com/andy-roper/roperdot
 #
 if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
 	cat <<EOT
-update-vscode-settings: updates Visual Studio Code settings.json for the color scheme
+update-vscode-settings: updates Visual Studio Code settings.json
 Usage: update-vscode-settings
 
 The settings.json file in roperdot/config/color-schemes/source/<scheme>/VSCode
@@ -89,6 +89,15 @@ update_settings () {
 		# 	update_setting "terminal.integrated.defaultProfile.linux" "bash"
 		# fi
 		update_setting "terminal.integrated.defaultProfile.linux" "$ROPERDOT_CURRENT_SHELL"
+	fi
+
+	if [[ ",$install_groups," == *,java-dev,* ]]; then
+		update_setting "java.import.gradle.home" "$HOME/.sdkman/candidates/gradle/current"
+	    update_setting "java.import.gradle.java.home" "$HOME/.sdkman/candidates/java/current"
+	    update_setting "java.jdt.ls.vmargs" "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx4G -Xms100m -Xlog:disable"
+	    update_setting "java.import.gradle.wrapper.enabled" false
+	    update_setting --add-to-hashtable "java.test.config" '"name":"TestConfigWithVmArgs"'
+	    update_setting --add-to-hashtable "java.test.config" '"vmArgs":["--add-opens=java.base/java.lang=ALL-UNNAMED","--add-opens=java.base/java.math=ALL-UNNAMED"]'
 	fi
 }
 
