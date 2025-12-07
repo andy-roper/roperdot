@@ -455,7 +455,8 @@
 		"binary": "tesseract",
 		"install_script": "install-tesseract",
 		"sudo_not_required": true,
-		"desc": "OCR engine library"
+		"desc": "OCR engine library",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "shellcheck",

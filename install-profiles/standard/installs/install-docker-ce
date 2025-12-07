@@ -7,7 +7,7 @@
 
 source "${ROPERDOT_DIR}/source-scripts/install-script-functions"
 
-if [[ "$ROPERDOT_OS_FAMILY" = debian ]]; then
+if [[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" != windows ]]; then
     echo "Installing Docker CE..."
 
     # Install prerequisites

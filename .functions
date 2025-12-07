@@ -1593,23 +1593,35 @@ cdj() {
 cdj: cd to a directory containing Java classes
 Usage: cdj
 
-This script finds directories containing .java files and lets you select one.
-It searches upward for 'src' or 'code' directory and searches from there.
+This function finds directories containing .java files and lets you select one to
+cd into.
+
+The cached directory list is built from the 'code' directory.
+If you're within a 'src' subdirectory, only directories under that src are shown.
+
+Options:
+  --build   Rebuild the directory cache
+  filter    Optional case-insensitive filter for directory list
 
 Display format:
   - Within src tree: Shows package path
-  - Within code tree: Shows path from "code" directory
+  - Within code tree: Shows path from code
 
-Requirements: fzf
+The directory list is cached at ~/.cache/cdj/dirs for performance. The cache is
+is built from entire 'code' directory.
+
+Additional directories:
+  You can include additional directories (without .java files) by listing them in:
+    ~/.config/cdj/additional-dirs.txt
+  
+  Format: One absolute path per line (tilde expansion supported)
 EOT
 		return
 	fi
 	local dest="$(_cdj "$@")"
-	if [[ $? -eq 1 ]]; then
-		echo "No matching parent directories"
-	elif [[ "$dest" =~ ^Error: ]]; then
+	if [[ "$dest" =~ ^Error: ]]; then
 		echo $dest
-	else
+	elif [[ -n "$dest" ]]; then
 		cd "$dest" || return 1
 	fi
 }

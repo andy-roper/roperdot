@@ -168,7 +168,7 @@ if [[ -z "$TEST_METHODS" ]]; then
 else
     # Add "Run all tests in class" option
     SELECTED=$(echo -e "<< Run all tests in class >>\n$(echo "$TEST_METHODS" | sort)" | \
-        fzf --prompt="Select test method: " --layout=reverse -0 --height=33%)
+        fzf --prompt="Select test method: " --layout=reverse --exact -0 --height=33%)
     
     if [[ "$SELECTED" == "<< Run all tests in class >>" ]] || [[ -z "$SELECTED" ]]; then
         TEST_TARGET="$CLASS_NAME"

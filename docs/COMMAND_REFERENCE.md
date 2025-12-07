@@ -152,6 +152,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`cdj`** - cd to a directory containing Java classes
 - **`gt`** - Run a gradle test
 - **`jc`** - Compile Java files with classpath management
+- **`je`** - Search for and edit a Java file
 - **`jr`** - Run Java applications with proper classpath
 - **`lq`** - Submit a query to a LoopBack application
 - **`set-values-in-json`** - Set top-level values in a JSON file

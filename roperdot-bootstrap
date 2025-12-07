@@ -83,6 +83,7 @@ do_timing "phase 1a"
 export LOCAL=~/.local
 export LOCALUSR=$LOCAL/usr
 [[ -d "${LOCALUSR}/bin" ]] || mkdir -p "${LOCALUSR}/bin"
+[[ -d "${ROPERDOT_DIR}/extra-bin" ]] || mkdir "${ROPERDOT_DIR}/extra-bin"
 
 do_timing "phase 1b"
 source "${ROPERDOT_DIR}/source-scripts/detect-os"

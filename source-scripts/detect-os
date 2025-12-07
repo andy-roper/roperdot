@@ -52,7 +52,7 @@ if [[ -f /etc/os-release ]]; then
 			if [[ "$XDG_CURRENT_DESKTOP" =~ KDE ]]; then
 				ROPERDOT_OS_ENV=kubuntu
 				ROPERDOT_DESKTOP_ENV=kde
-			elif [[ "$XDG_CURRENT_DESKTOP" =~ GNOME ]]; then
+			elif [[ "$XDG_CURRENT_DESKTOP" =~ (GNOME|Unity) ]]; then
 				ROPERDOT_OS_ENV=ubuntu
 				ROPERDOT_DESKTOP_ENV=gnome
 			else

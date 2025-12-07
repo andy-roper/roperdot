@@ -12,7 +12,8 @@
 		"subdir": "Mozilla Firefox",
 		"package_manager": "choco",
 		"install_script": "install-firefox",
-		"desc": "Web browser"
+		"desc": "Web browser",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Sublime Text 3",
@@ -29,12 +30,6 @@
 		"package_manager": "choco",
 		"desc": "Free extensible IDE",
 		"disable_null_stdin": true
-	},
-	{
-		"app": "shellcheck",
-		"package": "shellcheck",
-		"package_manager": "choco",
-		"desc": "Shell script static analysis tool"
 	},
 	{
 		"app": "Eclipse IDE for Java EE Developers",
@@ -83,14 +78,16 @@
 		"package": "soapui",
 		"package_manager": "choco",
 		"install_prerequisite": "java",
+		"desc": "REST client",
 		"groups": ["development"],
-		"desc": "REST client"
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Notion",
 		"package": "notion",
 		"package_manager": "choco",
-		"desc": "Note taking/organizing app"
+		"desc": "Note taking/organizing app",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Directory Opus",
@@ -103,7 +100,8 @@
 		"app": "LibreOffice",
 		"package": "libreoffice-fresh",
 		"package_manager": "choco",
-		"desc": "Productivity suite"
+		"desc": "Productivity suite",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Adobe Reader DC",
@@ -112,42 +110,46 @@
 		"package_manager": "choco",
 		"desc": "Adobe PDF reader",
 		"shortcut_name": "Acrobat Reader",
-		"shortcut_path": "%PROGRAMFILES(x86)%\\Adobe\\Acrobat Reader DC\\Reader\\AcroRd32.exe"
+		"shortcut_path": "%PROGRAMFILES(x86)%\\Adobe\\Acrobat Reader DC\\Reader\\AcroRd32.exe",
+		"exclusionGroups": ["work"]
 	},
 	{
-		"app": "Ghostwriter",
-		"package": "ghostwriter",
+		"app": "Typora",
+		"package": "typora",
 		"package_manager": "choco",
-		"desc": "Markdown editor"
+		"desc": "Markdown editor",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Claude",
 		"package": "claude",
 		"package_manager": "choco",
 		"install_script": "install-claude",
-		"desc": "Claude AI"
+		"desc": "Claude AI",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "7-Zip",
 		"package": "7zip",
 		"package_manager": "choco",
 		"desc": "File archiver utility",
-		"shortcut_path": "%PROGRAMFILES%\\7-Zip\\7zFM.exe"
+		"shortcut_path": "%PROGRAMFILES%\\7-Zip\\7zFM.exe",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "WinRAR",
 		"package": "winrar",
 		"package_manager": "choco",
 		"desc": "File archiver utility",
-		"exclusionGroups": ["work"],
-		"shortcut_path": "%PROGRAMFILES%\\WinRAR\\WinRAR.exe"
+		"shortcut_path": "%PROGRAMFILES%\\WinRAR\\WinRAR.exe",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Dropbox",
 		"package": "dropbox",
 		"package_manager": "choco",
-		"exclusionGroups": ["work"],
-		"desc": "Secure file sharing and storage solution"
+		"desc": "Secure file sharing and storage solution",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "VirtualBox",
@@ -209,7 +211,8 @@
 		"app": "IrfanView",
 		"package": "irfanview",
 		"package_manager": "choco",
-		"desc": "Image viewer"
+		"desc": "Image viewer",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Calibre",
@@ -245,14 +248,16 @@
 		"package": "wireshark",
 		"package_manager": "choco",
 		"desc": "Network protocol analyzer",
-		"shortcut_path": "%PROGRAMFILES%\\Wireshark\\Wireshark.exe"
+		"shortcut_path": "%PROGRAMFILES%\\Wireshark\\Wireshark.exe",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "OpenVPN",
 		"package": "openvpn",
 		"package_manager": "choco",
 		"desc": "VPN client",
-		"groups": ["development"]
+		"groups": ["development"],
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Docker",
