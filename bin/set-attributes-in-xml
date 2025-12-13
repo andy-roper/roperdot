@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+"""
+Description: Sets attribute values in an XML file
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+"""
+import sys
+import os.path
+import xml.etree.ElementTree as ET
+
+def help():
+    print('''
+set-attributes-in-xml: set attribute values in an XML file
+Usage:
+set-attributes-in-xml <xml-file> <element-type> <selector> <attr1> <value1> [<attr2> <value2> ...]
+
+Selector formats:
+  name:value    - Find element where attribute 'name' equals 'value'
+  value         - Shorthand for name="value" (backwards compatible)
+
+Examples:
+  # Find by name attribute (Notepad++ config.xml)
+  set-attributes-in-xml config.xml GUIConfig ScintillaPrimaryView fontSize "11"
+  
+  # Find by name attribute explicitly (stylers.xml)
+  set-attributes-in-xml stylers.xml WidgetStyle name:"Default Style" fontName "Hack Nerd Font" fontSize "11"
+  
+  # Find by styleID attribute
+  set-attributes-in-xml stylers.xml WidgetStyle styleID:32 fontName "Courier New"
+'''[1:-1])
+    quit()
+
+args = sys.argv[1:]
+if len(args) < 4 or args[0] in ['--help', '-?', '-h']:
+    help()
+
+fileName = args.pop(0)
+elementType = args.pop(0)
+selector = args.pop(0)
+
+if len(args) == 0 or len(args) % 2 != 0:
+    print("Error: Attributes must be provided in key-value pairs")
+    help()
+
+# Parse selector
+if ':' in selector:
+    searchAttrName, searchAttrValue = selector.split(':', 1)
+else:
+    # Backwards compatibility: assume searching by name="value"
+    searchAttrName = "name"
+    searchAttrValue = selector
+
+# Parse XML
+if os.path.exists(fileName):
+    tree = ET.parse(fileName)
+    root = tree.getroot()
+else:
+    print(f"Error: File '{fileName}' does not exist")
+    sys.exit(1)
+
+# Find element(s) with matching attribute
+found = False
+for elem in root.iter(elementType):
+    if elem.get(searchAttrName) == searchAttrValue:
+        found = True
+        # Set all the attributes provided
+        while len(args) > 0:
+            attrName = args.pop(0)
+            attrValue = args.pop(0)
+            elem.set(attrName, attrValue)
+        break
+
+if not found:
+    print(f"Error: Could not find <{elementType} {searchAttrName}=\"{searchAttrValue}\">")
+    sys.exit(1)
+
+# Write back to file with XML declaration
+tree.write(fileName, encoding='UTF-8', xml_declaration=True)
+
+# Fix formatting - ET doesn't preserve exact formatting
+with open(fileName, 'r', encoding='UTF-8') as f:
+    content = f.read()
+
+# Ensure there's a space before ?> in the XML declaration
+if content.startswith("<?xml") and "?>" in content:
+    declaration_end = content.index("?>") + 2
+    declaration = content[:declaration_end]
+    if not declaration.endswith(" ?>"):
+        declaration = declaration.replace("?>", " ?>")
+        content = declaration + content[declaration_end:]
+    
+with open(fileName, 'w', encoding='UTF-8') as f:
+    f.write(content)

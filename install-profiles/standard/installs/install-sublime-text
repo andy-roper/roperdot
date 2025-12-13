@@ -39,7 +39,7 @@ if [[ -d "$sublime_user_dir" ]]; then
 	source "${ROPERDOT_DIR}/source-scripts/input-functions"
 	ask_yn_n "Apply updates to Sublime Text 3 user preferences and install recommended packages" y || exit 0
 else
-	mkdir -p "$config_files"
+	mkdir -p "$sublime_user_dir"
 fi
 
 . "${ROPERDOT_DIR}/source-scripts/find-pip"
@@ -53,6 +53,9 @@ if [[ -f "$sublime_user_dir/Preferences.sublime-settings" ]]; then
 else
 	cp "$config_files/Preferences.sublime-settings" "$sublime_user_dir"
 fi
+
+# Copy schemes
+cp "$config_files/"*.sublime-color-scheme "$sublime_user_dir"
 
 if [[ ! -f "$sublime_text_dir/Installed Packages/Package Control.sublime-package" ]]; then
 	[[ -d "$sublime_text_dir/Installed Packages" ]] || mkdir -p "$sublime_text_dir/Installed Packages"

@@ -13,6 +13,40 @@ if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
 	. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
 	def_win_env_linux_path ProgramFiles
 	[[ -d "${ProgramFiles}/Microsoft VS Code" ]] || exit 0
+	
+	# Check if NODE_EXTRA_CA_CERTS needs to be set for corporate environments
+	echo -e "\nIf you're in a corporate environment with custom SSL certificates,"
+	echo -e "VS Code extension installation may fail without setting NODE_EXTRA_CA_CERTS.\n"
+	if prompt_yes_no "Do you need to set a custom CA certificate for VS Code?"; then
+		echo -e "\nOpening file picker dialog to select your certificate file..."
+		
+		cert_path=$(powershell.exe -Command "
+			Add-Type -AssemblyName System.Windows.Forms
+			\$dialog = New-Object System.Windows.Forms.OpenFileDialog
+			\$dialog.Title = 'Select Corporate Certificate File'
+			\$dialog.Filter = 'Certificate Files (*.crt;*.pem;*.cer)|*.crt;*.pem;*.cer|All Files (*.*)|*.*'
+			\$dialog.InitialDirectory = [Environment]::GetFolderPath('UserProfile') + '\\Downloads'
+			if (\$dialog.ShowDialog() -eq 'OK') {
+				Write-Output \$dialog.FileName
+			}
+		" | tr -d '\r')
+		
+		if [[ -n "$cert_path" ]]; then
+			# Convert to Linux path to verify it exists
+			linux_cert_path=$(wslpath "$cert_path" 2>/dev/null)
+			if [[ -f "$linux_cert_path" ]]; then
+				echo "Selected certificate: $cert_path"
+				echo "Setting NODE_EXTRA_CA_CERTS environment variable for Windows..."
+				powershell.exe -Command "[Environment]::SetEnvironmentVariable('NODE_EXTRA_CA_CERTS', '$cert_path', 'User')"
+				echo "Certificate path set successfully."
+			else
+				echo "Warning: Certificate file not found at $cert_path"
+				echo "You may need to set NODE_EXTRA_CA_CERTS manually later."
+			fi
+		else
+			echo "No certificate selected. Skipping..."
+		fi
+	fi
 elif [[ "$ROPERDOT_OS_TYPE" = "linux" ]]; then
 	if command -v snap >/dev/null 2>&1; then
 		sudo systemctl restart snapd  # restart snapd in case certificates have changed
@@ -75,25 +109,45 @@ install_ext () {
 			if [[ ! -d ~/.vscode-server/"$1" ]]; then
 				if ! code --install-extension "$1" --force; then
 					echo "DNS issue encountered while installing VSCode extension"
+					
+					# Handle /etc/wsl.conf backup and update
 					if [[ ! -f /etc/wsl.conf.bak ]]; then
 						echo "Backing up /etc/wsl.conf"
-						sudo cp /etc/wsl.conf /etc/wsl.conf.bak
+						sudo cp /etc/wsl.conf /etc/wsl.conf.bak 2>/dev/null || sudo touch /etc/wsl.conf.bak
 					fi
-					if [[ ! -f /etc/resolv.conf.bak ]]; then
+					
+					# Update wsl.conf - check if [network] section exists
+					if ! sudo grep -q '^\[network\]' /etc/wsl.conf 2>/dev/null; then
+						echo "Adding [network] section to /etc/wsl.conf"
+						echo -e "\n[network]\ngenerateResolvConf = false" | sudo tee -a /etc/wsl.conf > /dev/null
+					elif ! sudo grep -q '^generateResolvConf' /etc/wsl.conf 2>/dev/null; then
+						echo "Adding generateResolvConf to [network] section"
+						sudo sed -i '/^\[network\]/a generateResolvConf = false' /etc/wsl.conf
+					else
+						echo "Updating generateResolvConf setting"
+						sudo sed -i 's/^generateResolvConf.*/generateResolvConf = false/' /etc/wsl.conf
+					fi
+					
+					# Handle /etc/resolv.conf - preserve if it's a symlink
+					if [[ -L /etc/resolv.conf ]]; then
+						echo "/etc/resolv.conf is a symlink, unlinking it"
+						sudo unlink /etc/resolv.conf
+					fi
+					
+					if [[ -f /etc/resolv.conf && ! -f /etc/resolv.conf.bak ]]; then
 						echo "Backing up /etc/resolv.conf"
 						sudo cp /etc/resolv.conf /etc/resolv.conf.bak
 					fi
-					echo "Updating /etc/wsl.conf and /etc/resolv.conf"
-					sudo cat << EOT | sudo tee /etc/wsl.conf > /dev/null
-[network]
-generateResolvConf = false
-EOT
-					sudo cat << EOT | sudo tee /etc/resolv.conf > /dev/null
+					
+					# Create new resolv.conf with DNS servers
+					echo "Updating /etc/resolv.conf with custom DNS servers"
+					sudo tee /etc/resolv.conf > /dev/null << EOT
 nameserver 8.8.8.8
 nameserver 1.1.1.1
 nameserver 10.255.255.254
 search mshome.net
 EOT
+					
 					echo "DNS fix applied, retrying extension install..."
 					code --install-extension "$1" --force
 				fi

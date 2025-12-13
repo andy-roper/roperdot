@@ -20,7 +20,17 @@
 		"package": "sublimetext3",
 		"package_manager": "choco",
 		"install_script": "install-sublime-text",
-		"desc": "Developers' text editor"
+		"desc": "Developers' text editor",
+		"exclusionGroups": ["work"]
+	},
+	{
+		"app": "Notepad++",
+		"package": "notepadplusplus",
+		"package_manager": "choco",
+		"install_script": "install-notepad-plus-plus",
+		"desc": "Developers' text editor",
+		"disable_null_stdin": true,
+		"groups": ["work"]
 	},
 	{
 		"app": "Visual Studio Code",

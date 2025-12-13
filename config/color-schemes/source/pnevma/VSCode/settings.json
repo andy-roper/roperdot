@@ -19,6 +19,6 @@
 		"terminal.ansiBrightCyan": "#bdebe4",
 		"terminal.ansiBrightWhite": "#ffffff"
 	},
-	"terminal.integrated.fontFamily": "Hack Nerd Font Mono",
+	"terminal.integrated.fontFamily": "Hack Nerd Font",
 	"terminal.integrated.fontSize": 13
 }

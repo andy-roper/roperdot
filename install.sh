@@ -91,10 +91,10 @@ else
 	exit 1
 fi
 
-[[ -n "$installs_to_pause" ]] && export installs_to_pause
-
 source "${ROPERDOT_DIR}/source-scripts/detect-os"
 [[ -z "$ROPERDOT_OS_ENV" ]] && echo "Could not detect OS properly. Exiting the install." && exit 1
+
+[[ -n "$installs_to_pause" ]] && export installs_to_pause
 
 command -v bash >/dev/null 2>&1 && export bash_present=true
 command -v zsh >/dev/null 2>&1 && export zsh_present=true

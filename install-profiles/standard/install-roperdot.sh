@@ -921,15 +921,51 @@ if [[ -f "${ROPERDOT_DIR}/important-install-messages.txt" ]]; then
 	rm "${ROPERDOT_DIR}/important-install-messages.txt" >/dev/null 2>&1
 fi
 
+if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]] && ! grep -q "^\[interop\]" /etc/wsl.conf; then
+	echo "Updating wsl.conf to ensure Windows interoperability."
+
+	if [[ ! -f /etc/wsl.conf.bak ]]; then
+		echo "Backing up /etc/wsl.conf"
+		sudo cp /etc/wsl.conf /etc/wsl.conf.bak 2>/dev/null || sudo touch /etc/wsl.conf.bak
+	fi
+
+	sudo tee -a /etc/wsl.conf > /dev/null << EOT
+[interop]
+enabled = true
+appendWindowsPath = true
+EOT
+	
+	cat << EOT
+If you're on a corporate machine and encounter issues running Windows commands from within WSL,
+restart WSL by doing "wsl --shutdown" in a PowerShell terminal to apply the interop changes to
+wsl.conf and then open a new WSL terminal.
+EOT
+fi
+
 if [[ -n "$ROPERDOT_DESKTOP_ENV" ]]; then
+# 	cat <<EOT
+
+# Installation complete.
+
+# I've included the Hack Nerd Font in this installation. It's a great terminal font which originates here:
+# https://github.com/ryanoasis/nerd-fonts
+
+# You should restart your terminal application to see the changes take effect.
+
+# EOT
 	cat <<EOT
 
 Installation complete.
 
-I've included the Hack Nerd Font in this installation. It's a great terminal font which originates here:
-https://github.com/ryanoasis/nerd-fonts
+Several applications such as Windows Terminal, Notepad++, Visual Studio Code and Sublime Text 3 are
+configured to use the font Hack Nerd Font.
 
-You should restart your terminal application to see the changes take effect.
+To install that font:
+1. Download it from https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.zip
+2. Extract the zip
+3. Right-click on the font and select "Install for all users"
+
+You should then restart your terminal application to see the changes take effect.
 
 EOT
 elif [[ -n "$skipped_config_update" ]]; then

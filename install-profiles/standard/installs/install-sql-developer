@@ -41,10 +41,10 @@ install_sql_developer_for_macos() {
     
     if [[ -d "SQLDeveloper.app" ]]; then
         if [[ -d "$HOME/Applications" ]]; then
-            mv "SQLDeveloper.app" "$HOME/Applications/"
+            mv "SQLDeveloper.app" "$HOME/Applications/" >/dev/null 2>&1
             echo "SQL Developer installed to $HOME/Applications/SQLDeveloper.app"
         else
-            mv "SQLDeveloper.app" "/Applications/"
+            mv "SQLDeveloper.app" "/Applications/" >/dev/null 2>&1
             echo "SQL Developer installed to /Applications/SQLDeveloper.app"
         fi
     else
@@ -76,12 +76,13 @@ install_sql_developer_for_windows() {
     
     # SQL Developer for Windows typically extracts to a "sqldeveloper" folder
     if [[ -d "sqldeveloper" ]]; then
+    	echo "Installation will continue after a parent folder is selected"
     	if ! parent_dir="$(directory_selection_dialog 'Select Parent Folder for Installation' sqldeveloper)"; then
     		return 1
     	fi
 
     	echo "Moving sqldeveloper to $(wslpath -w "$parent_dir")..."
-        if mv "sqldeveloper" "$parent_dir"; then
+        if mv "sqldeveloper" "$parent_dir" >/dev/null 2>&1; then
         	local install_path="$parent_dir/sqldeveloper"
             echo "SQL Developer installed to $install_path"
             

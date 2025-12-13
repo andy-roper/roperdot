@@ -1,5 +1,5 @@
 #
-# Description: Allow selection of a directory containing Java classes
+# Description: Allow selection of a Java project directory
 #
 # Author: Andy Roper <andyroper42@gmail.com>
 # URL: https://github.com/andy-roper/roperdot
@@ -7,16 +7,17 @@
 
 if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
     cat <<EOT
-_cdj: Allow selection of a directory containing Java classes
-Usage: _cdj [--build] [filter]
+_cdj: Allow selection of a Java project directory
+Usage: _cdj [--all] [--build] [filter]
 
 This script finds directories containing .java files or Makefiles and lets you select one.
 
-The cached directory list is built from the 'code' directory.
-If you're within a 'src' subdirectory, only directories under that src are shown.
+The cached directory list is built from the topmost 'code' directory.
+If you're within a 'src' subdirectory, only directories under that src are shown
+(unless --all is used).
 
 Options:
-  -a, --all     Find directories relative to code regardless of current directory
+  -a, --all     Show all cached directories instead of filtering to current src context
   -b, --build   Rebuild the directory cache
   filter        Optional case-insensitive filter for directory list
 
@@ -26,21 +27,12 @@ Display format:
 
 The directory list is cached at ~/.cache/cdj/dirs for performance. The cache is
 is built from entire 'code' directory.
-
-Additional directories:
-  You can include additional directories (without .java files or Makefiles) by listing them in:
-    ~/.config/cdj/additional-dirs.txt
-  
-  Format: One absolute path per line (tilde expansion supported, # for comments)
 EOT
     exit 0
 fi
 
 # Cache file location
 CACHE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/cdj/dirs"
-
-# Additional directories config file
-ADDITIONAL_DIRS_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/cdj/additional-dirs.txt"
 
 # Parse arguments
 REBUILD=false
@@ -69,21 +61,25 @@ if ! command -v fzf >/dev/null 2>&1; then
     exit 1
 fi
 
-# Find code directory by traversing up
+# Find code directory by traversing up (finds the topmost 'code' directory)
 find_code_root() {
     local current="$(pwd)"
+    local topmost_code=""
     
     while [[ "$current" != "/" ]]; do
         if [[ -d "$current/code" ]]; then
-            echo "$current/code"
-            return 0
+            topmost_code="$current/code"
         fi
         if [[ "$(basename "$current")" == "code" ]]; then
-            echo "$current"
-            return 0
+            topmost_code="$current"
         fi
         current="$(dirname "$current")"
     done
+    
+    if [[ -n "$topmost_code" ]]; then
+        echo "$topmost_code"
+        return 0
+    fi
     
     return 1
 }
@@ -137,36 +133,6 @@ build_cache() {
     # Combine java and makefile directories
     if [[ -n "$MAKEFILE_DIRS" ]]; then
         JAVA_DIRS=$(printf "%s\n%s" "$JAVA_DIRS" "$MAKEFILE_DIRS")
-    fi
-    
-    # Add additional directories from config file if it exists
-    echo "DEBUG: Checking for $ADDITIONAL_DIRS_FILE..." >&2
-    if [[ -f "$ADDITIONAL_DIRS_FILE" ]]; then
-        echo "Adding directories from $ADDITIONAL_DIRS_FILE..." >&2
-        while IFS= read -r dir; do
-            echo "DEBUG: Read line: '$dir'" >&2
-            # Skip empty lines and comments
-            [[ -z "$dir" || "$dir" == \#* ]] && continue
-            
-            # Expand tilde
-            expanded_dir="${dir/#\~/$HOME}"
-            echo "DEBUG: Expanded to: '$expanded_dir'" >&2
-            
-            # Only add if it exists and is under CODE_ROOT
-            if [[ -d "$expanded_dir" ]]; then
-                if [[ "$expanded_dir" == "$CODE_ROOT"* ]]; then
-                    echo "  Adding: $expanded_dir" >&2
-                    JAVA_DIRS=$(printf "%s\n%s" "$JAVA_DIRS" "$expanded_dir")
-                else
-                    echo "  Skipping (not under CODE_ROOT): $expanded_dir" >&2
-                    echo "DEBUG: CODE_ROOT is: $CODE_ROOT" >&2
-                fi
-            else
-                echo "  Skipping (not found): $expanded_dir" >&2
-            fi
-        done < "$ADDITIONAL_DIRS_FILE"
-    else
-        echo "DEBUG: File not found at $ADDITIONAL_DIRS_FILE" >&2
     fi
     
     # Sort and remove duplicates

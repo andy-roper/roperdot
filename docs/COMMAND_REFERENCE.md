@@ -148,6 +148,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`undopush`** - Undoes a git push
 
 ### Code Utilities
+- **`add-element-to-xml`** - Add an element to an XML file
 - **`build-classpath`** - Build Java classpath from directory structure
 - **`cdj`** - cd to a directory containing Java classes
 - **`gt`** - Run a gradle test
@@ -155,6 +156,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`je`** - Search for and edit a Java file
 - **`jr`** - Run Java applications with proper classpath
 - **`lq`** - Submit a query to a LoopBack application
+- **`set-attributes-in-xml`** - Set attributes in an XML file
 - **`set-values-in-json`** - Set top-level values in a JSON file
 
 ## System Administration

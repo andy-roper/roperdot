@@ -1,0 +1,196 @@
+#
+# Description: Install script for Notepad++
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+columnsplusplus_version="1.3"
+compare_version="2.2.0"
+dark_npp_version="0.5.0.0"
+hexeditor_version="0.9.14"
+jstool_version="25.11.16"
+nppexec_version="0810"
+xmltools_version="3.1.1.13"
+
+# Only install on Windows
+if [[ "$ROPERDOT_DESKTOP_ENV" != windows ]]; then
+	echo "Notepad++ is only supported on Windows. Skipping installation."
+	exit 0
+fi
+
+plugin_extract_dir="$(mktemp -d)"
+plugin_src_dir="$(mktemp -d)"
+mkdir -p "$plugin_extract_dir" "$plugin_src_dir"
+pushd "$plugin_extract_dir" >/dev/null
+
+trap cleanup EXIT
+
+cleanup() {
+	[[ -d "$plugin_extract_dir" ]] && rm -rf "$plugin_extract_dir" >/dev/null
+	[[ -d "$plugin_src_dir" ]] && rm -rf "$plugin_src_dir" >/dev/null
+	popd >/dev/null
+}
+
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+. "${ROPERDOT_DIR}/source-scripts/win-path-functions"
+. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
+. "${ROPERDOT_DIR}/source-scripts/find-pip"
+
+# Install Notepad++ via Chocolatey
+choco install -y --ignore-pending-reboot notepadplusplus || exit $?
+
+# Set up paths
+notepadpp_dir="$(win_env_linux_path APPDATA)/Notepad++"
+notepadpp_win_dir="$(win_env PROGRAMFILES)\\Notepad++"
+notepadpp_plugin_dir="$notepadpp_win_dir\\plugins"
+notepadpp_exe="$notepadpp_win_dir\\notepad++.exe"
+plugins_dir="${notepadpp_dir}/plugins"
+config_files="${ROPERDOT_DIR}/install-profiles/standard/config-files/notepad-plus-plus"
+
+[[ -d "$plugins_dir" ]] || mkdir -p "$plugins_dir"
+
+# Launch Notepad++ to generate config files if needed
+if [[ ! -f "$notepadpp_dir/config.xml" ]]; then
+	echo -e "\nLaunching Notepad++ to generate initial configuration files..."
+	echo "Notepad++ will open automatically. Close the application to continue the installation."
+	powershell.exe -Command "Start-Process -FilePath '$notepadpp_exe' -Wait"
+fi
+
+# Configure other settings in config.xml
+echo -e "Configuring Notepad++ settings...\n"
+if [[ -f "$notepadpp_dir/config.xml" ]]; then
+	cp "$notepadpp_dir/config.xml" "$notepadpp_dir/config.xml.bak"
+	
+	$python_bin "$ROPERDOT_DIR/bin/set-attributes-in-xml" "$notepadpp_dir/config.xml" \
+		GUIConfig "name:DarkMode" \
+		smoothFont "yes"
+
+	$python_bin "$ROPERDOT_DIR/bin/set-attributes-in-xml" "$notepadpp_dir/config.xml" \
+		GUIConfig "name:DarkMode" \
+		enable "yes"
+	
+	$python_bin "$ROPERDOT_DIR/bin/set-attributes-in-xml" "$notepadpp_dir/config.xml" \
+	    GUIConfig "name:DarkMode" \
+	    darkThemeName "Fluent.xml"
+fi
+
+# Install and configure Fluent theme
+echo -e "Installing Fluent theme...\n"
+
+if get-web-file "https://raw.githubusercontent.com/ikoshura/Fluent-Npp/main/Fluent.xml"; then
+	[[ -d "$notepadpp_dir/themes" ]] || mkdir -p "$notepadpp_dir/themes"
+	mv Fluent.xml "$notepadpp_dir/themes" >/dev/null 2>&1
+	theme_file="$notepadpp_dir/themes/Fluent.xml"
+
+	$python_bin "$ROPERDOT_DIR/bin/set-attributes-in-xml" "$theme_file" \
+		WidgetStyle "name:Global override" \
+		fontName "Hack Nerd Font" \
+		fontSize "11"
+
+	$python_bin "$ROPERDOT_DIR/bin/add-element-to-xml" "$theme_file" \
+		GlobalStyles WidgetStyle \
+		name "Bookmark margin" styleID "0" bgColor "000000"
+
+	$python_bin "$ROPERDOT_DIR/bin/add-element-to-xml" "$theme_file" \
+		GlobalStyles WidgetStyle \
+		name "Change History margin" styleID "0" bgColor "000000"
+else
+	echo "Warning: Could not download Fluent style"
+fi
+
+echo -e "Creating DarkNpp configuration file\n"
+cat << EOT > "$notepadpp_dir/plugins/config/DarkNpp.ini"
+[DarkNpp]
+useDark=1
+micaType=2
+EOT
+
+echo "Installing Notepad++ plugins..."
+
+download_and_extract_plugin() {
+	local plugin_name="$1"
+	local github_url="$2"
+	shift
+	shift
+	
+	echo "Downloading: $plugin_name..."
+	
+	plugin_dir="$plugin_src_dir/$plugin_name"
+	mkdir "$plugin_dir"
+	successful_download=true
+	if [[ "$github_url" =~ .zip$ ]]; then
+		if get-web-file "$github_url" plugin.zip; then
+			if unzip -q plugin.zip 2>/dev/null; then
+				for f in "$@"; do
+					if [[ -d "$f" ]]; then
+						cp -r "$f" "$plugin_dir"
+					elif [[ -f "$f" ]]; then
+						cp "$f" "$plugin_dir"
+					else
+						echo "Could not find $f"
+						successful_download=
+						break
+					fi
+				done
+				rm -rf "$plugin_extract_dir"/* >/dev/null 2>&1
+			fi
+		fi
+	else
+		pushd "$plugin_dir" >/dev/null
+		get-web-file "$github_url"
+		[[ $(find . | wc -l) -gt 1 ]] || successful_download=
+		popd >/dev/null
+	fi
+	if [[ -n "$successful_download" ]]; then
+		echo "Downloaded $plugin_name"
+	else
+		echo "Warning: Error downloading $plugin_name"
+	fi
+}
+
+# Download plugins
+
+download_and_extract_plugin "JsonTools" \
+	"https://github.com/molsonkiko/JsonToolsNppPlugin/releases/latest/download/Release_x64.zip" \
+	"JsonTools.dll"
+
+download_and_extract_plugin "DarkNpp" \
+	"https://github.com/ozone10/Npp-DarkNpp/releases/download/v${dark_npp_version}/DarkNpp.dll_${dark_npp_version}_x64.zip" \
+	"DarkNpp.dll"
+
+download_and_extract_plugin "XMLTools" \
+	"https://github.com/morbac/xmltools/releases/download/${xmltools_version}/XMLTools-${xmltools_version}-x64.zip" \
+	"XMLTools.dll"
+
+download_and_extract_plugin "JSTool" \
+	"https://cytranet-dal.dl.sourceforge.net/project/jsminnpp/Uni/JSToolNPP.${jstool_version}.uni.64.zip" \
+	"JSMinNPP.dll"
+
+download_and_extract_plugin "HexEditor" \
+	"https://github.com/chcg/NPP_HexEdit/releases/download/${hexeditor_version}/HexEditor_${hexeditor_version}_x64.zip" \
+	"HexEditor.dll"
+
+download_and_extract_plugin "NppExec" \
+	"https://github.com/d0vgan/nppexec/releases/download/NppExec_v${nppexec_version}/NppExec_${nppexec_version}_dll_x64.zip" \
+	"NppExec.dll"
+
+download_and_extract_plugin "Compare" \
+	"https://github.com/pnedev/comparePlus/releases/download/cp_${compare_version}/ComparePlus_cp_${compare_version}_x64.zip" \
+	"ComparePlus.dll" "libs"
+
+download_and_extract_plugin "ColumnsPlusPlus" \
+	"https://github.com/Coises/ColumnsPlusPlus/releases/download/v${columnsplusplus_version}/ColumnsPlusPlus-${columnsplusplus_version}-x64.zip" \
+	"ColumnsPlusPlus.dll"
+
+download_and_extract_plugin "SQLinForm" \
+	"https://www.sqlinform.com/npp/SQLinFormNpp64.dll"
+
+download_and_extract_plugin "NppAstyle" \
+	"https://github.com/JetNpp/NppAstyle/archive/refs/heads/master.zip" \
+	"NppAstyle-master/bin/NppAstyle(x64).dll"
+
+src_dir="$(wslpath -w "$plugin_src_dir")"
+powershell.exe -Command "Copy-Item -Path '$src_dir\\*' -Destination '$notepadpp_plugin_dir' -Recurse -Force"
+
+echo -e "\nNotepad++ installation complete!"

@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+"""
+Description: Adds a new element to an XML file
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+"""
+import sys
+import os.path
+import xml.etree.ElementTree as ET
+
+def help():
+    print('''
+add-element-to-xml: add a new element to an XML file
+Usage:
+add-element-to-xml <xml-file> <parent-path> <element-type> <attr1> <value1> [<attr2> <value2> ...]
+
+Parent path formats:
+  ElementType              - Find first matching element type
+  ElementType:attr:value   - Find element where attribute equals value
+  .//ElementType           - XPath expression
+
+Examples:
+  # Add to GlobalStyles parent
+  add-element-to-xml Fluent.xml GlobalStyles WidgetStyle name "Bookmark margin" styleID "0" bgColor "000000"
+  
+  # Add to specific parent by attribute
+  add-element-to-xml config.xml GUIConfigs:name:ScintillaPrimaryView Setting fontSize "11"
+  
+  # Add using XPath
+  add-element-to-xml config.xml ".//GlobalStyles" WidgetStyle name "Custom Style" bgColor "FF0000"
+'''[1:-1])
+    quit()
+
+args = sys.argv[1:]
+if len(args) < 3 or args[0] in ['--help', '-?', '-h']:
+    help()
+
+fileName = args.pop(0)
+parentPath = args.pop(0)
+elementType = args.pop(0)
+
+if len(args) == 0 or len(args) % 2 != 0:
+    print("Error: Attributes must be provided in key-value pairs")
+    help()
+
+# Parse XML
+if os.path.exists(fileName):
+    tree = ET.parse(fileName)
+    root = tree.getroot()
+else:
+    print(f"Error: File '{fileName}' does not exist")
+    sys.exit(1)
+
+# Find parent element
+parent = None
+if parentPath.startswith('.//') or parentPath.startswith('./'):
+    # XPath expression
+    parent = root.find(parentPath)
+elif ':' in parentPath:
+    # Format: ElementType:attrName:attrValue
+    parts = parentPath.split(':', 2)
+    if len(parts) == 3:
+        parentType, attrName, attrValue = parts
+        for elem in root.iter(parentType):
+            if elem.get(attrName) == attrValue:
+                parent = elem
+                break
+    else:
+        print(f"Error: Invalid parent path format: {parentPath}")
+        sys.exit(1)
+else:
+    # Simple element type
+    parent = root.find(f'.//{parentPath}')
+
+if parent is None:
+    print(f"Error: Could not find parent element: {parentPath}")
+    sys.exit(1)
+
+# Create new element with attributes
+new_elem = ET.Element(elementType)
+while len(args) > 0:
+    attrName = args.pop(0)
+    attrValue = args.pop(0)
+    new_elem.set(attrName, attrValue)
+
+# Add element to parent
+parent.append(new_elem)
+
+# Write back to file with XML declaration
+tree.write(fileName, encoding='UTF-8', xml_declaration=True)
+
+# Fix formatting - ET doesn't preserve exact formatting
+with open(fileName, 'r', encoding='UTF-8') as f:
+    content = f.read()
+
+# Ensure there's a space before ?> in the XML declaration
+if content.startswith("<?xml") and "?>" in content:
+    declaration_end = content.index("?>") + 2
+    declaration = content[:declaration_end]
+    if not declaration.endswith(" ?>"):
+        declaration = declaration.replace("?>", " ?>")
+        content = declaration + content[declaration_end:]
+    
+with open(fileName, 'w', encoding='UTF-8') as f:
+    f.write(content)

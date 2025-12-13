@@ -72,11 +72,19 @@ get_font_dir() {
     case "$ROPERDOT_DESKTOP_ENV" in
         "windows")
             # Always use per-user font directory (no admin required)
-            if [[ -n "$app_local_path" ]]; then
-                echo "$app_local_path/Microsoft/Windows/Fonts"
-            elif [[ -n "$user_profile" ]]; then
-                echo "$user_profile/AppData/Local/Microsoft/Windows/Fonts"
+            # Source Windows environment functions if needed
+            if ! command -v win_env_linux_path >/dev/null 2>&1; then
+                if [[ -f "${ROPERDOT_DIR}/source-scripts/win-env-functions" ]]; then
+                    . "${ROPERDOT_DIR}/source-scripts/win-env-functions"
+                fi
+            fi
+            
+            # Use Windows LOCALAPPDATA environment variable
+            if command -v win_env_linux_path >/dev/null 2>&1; then
+                local localappdata=$(win_env_linux_path LOCALAPPDATA)
+                echo "$localappdata/Microsoft/Windows/Fonts"
             else
+                # Fallback to constructed path
                 echo "/mnt/c/Users/$(whoami)/AppData/Local/Microsoft/Windows/Fonts"
             fi
             ;;
@@ -174,14 +182,51 @@ register_windows_fonts() {
     log_info "Registering fonts in Windows user registry..."
     local registered_count=0
     
-    # Register each font file (no need to copy again - already done in install_fonts)
+    # Register each font file
     for font_file in "${installed_files[@]}"; do
         local filename=$(basename "$font_file")
-        local display_name=$(get_font_display_name "$filename")
+        local registry_value="$filename"
         local font_type="(TrueType)"
         
-        # For user fonts, registry needs the full path
-        local registry_value="$windows_font_dir\\$filename"
+        # Get font subfamily (style) from filename as fallback
+        local style_from_filename=""
+        if [[ "$filename" =~ -Bold.*Italic ]]; then
+            style_from_filename="Bold Italic"
+        elif [[ "$filename" =~ -BoldItalic ]]; then
+            style_from_filename="Bold Italic"
+        elif [[ "$filename" =~ -Bold ]]; then
+            style_from_filename="Bold"
+        elif [[ "$filename" =~ -Italic ]]; then
+            style_from_filename="Italic"
+        elif [[ "$filename" =~ -Regular ]]; then
+            style_from_filename="Regular"
+        fi
+        
+        # Get the actual font family name from the TTF file using PowerShell
+        local display_name=""
+        if command -v powershell.exe >/dev/null 2>&1; then
+            local family_name=$(powershell.exe -NoProfile -Command "
+                \$fontFile = \"\$env:LOCALAPPDATA\\Microsoft\\Windows\\Fonts\\$filename\"
+                Add-Type -AssemblyName System.Drawing
+                \$fontCollection = New-Object System.Drawing.Text.PrivateFontCollection
+                \$fontCollection.AddFontFile(\$fontFile)
+                \$fontCollection.Families[0].Name
+            " 2>/dev/null | tr -d '\r')
+            
+            if [[ -n "$family_name" && -n "$style_from_filename" ]]; then
+                if [[ "$style_from_filename" == "Regular" ]]; then
+                    display_name="$family_name"
+                else
+                    display_name="$family_name $style_from_filename"
+                fi
+            fi
+        fi
+        
+        # Fallback to filename-based name if PowerShell extraction failed
+        if [[ -z "$display_name" ]]; then
+            display_name=$(get_font_display_name "$filename")
+            log_warning "Could not extract font info from $filename, using: $display_name"
+        fi
         
         # Add to Windows registry
         if reg.exe add "$registry_hive\\$registry_path" /v "$display_name $font_type" /t REG_SZ /d "$registry_value" /f >/dev/null 2>&1; then
@@ -194,6 +239,65 @@ register_windows_fonts() {
     
     if [[ $registered_count -gt 0 ]]; then
         log_success "Registered $registered_count fonts in user registry"
+        
+        # Register fonts with Windows using Shell.Application COM object
+        # This is what Windows Font Settings uses internally and properly registers per-user fonts
+        log_info "Registering fonts with Windows font system..."
+        if command -v powershell.exe >/dev/null 2>&1; then
+            # Build list of font filenames to register
+            # Only register Regular variants - Bold/Italic variants cause "not a valid font" errors
+            local font_filenames=()
+            for font_file in "${installed_files[@]}"; do
+                local filename=$(basename "$font_file")
+                # Only include Regular variants
+                if [[ "$filename" =~ -Regular\. ]]; then
+                    font_filenames+=("$filename")
+                fi
+            done
+            
+            # Build PowerShell script to register only the newly installed fonts
+            local ps_script="
+                \$ErrorActionPreference = 'SilentlyContinue'
+                \$fontDir = \"\$env:LOCALAPPDATA\\Microsoft\\Windows\\Fonts\"
+                \$shell = New-Object -ComObject Shell.Application
+                \$fontsFolder = \$shell.Namespace(0x14)  # CSIDL_FONTS
+                
+                # Only process the fonts we just installed
+                \$fontFiles = @(
+                    $(printf '"%s",' "${font_filenames[@]}" | sed 's/,$//')
+                )
+                
+                \$successCount = 0
+                foreach (\$filename in \$fontFiles) {
+                    \$fontPath = Join-Path \$fontDir \$filename
+                    if (Test-Path \$fontPath) {
+                        try {
+                            # CopyHere triggers Windows font registration even though file already exists
+                            # 0x10 = FOF_SILENT, 0x4 = FOF_NOCONFIRMATION
+                            \$fontsFolder.CopyHere(\$fontPath, 0x14)
+                            \$successCount++
+                        } catch {
+                            # Ignore errors - font may already be registered
+                        }
+                    }
+                }
+                
+                Write-Output \"Registered \$successCount fonts\"
+            "
+            
+            local result=$(powershell.exe -NoProfile -Command "$ps_script" 2>/dev/null | tail -1)
+            log_success "$result with Windows font system"
+            
+            # Also broadcast WM_FONTCHANGE for good measure
+            powershell.exe -NoProfile -Command "
+                \$signature = '[DllImport(\"user32.dll\", SetLastError=true, CharSet=CharSet.Auto)] public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam, uint fuFlags, uint uTimeout, out IntPtr lpdwResult);'
+                \$type = Add-Type -MemberDefinition \$signature -Name FontNotify -Namespace Win32 -PassThru
+                \$result = [IntPtr]::Zero
+                \$type::SendMessageTimeout(0xffff, 0x001D, [IntPtr]::Zero, [IntPtr]::Zero, 2, 1000, [ref]\$result) | Out-Null
+            " >/dev/null 2>&1
+        else
+            log_warning "PowerShell not available - may need to log out/in to see fonts"
+        fi
     fi
 }
 
@@ -213,10 +317,21 @@ install_fonts() {
     for font_file in "$font_files_dir"/*.ttf "$font_files_dir"/*.otf; do
         if [[ -f "$font_file" ]]; then
             local filename=$(basename "$font_file")
-            cp "$font_file" "$font_dir/"
-            log_info "Installed: $filename"
-            installed_files+=("$font_file")
-            ((installed_count++))
+            local dest_file="$font_dir/$filename"
+            
+            # Check if font already exists
+            if [[ -f "$dest_file" ]]; then
+                log_info "Already exists: $filename"
+                continue
+            fi
+            
+            if cp "$font_file" "$dest_file" 2>/dev/null; then
+                log_info "Installed: $filename"
+                installed_files+=("$dest_file")
+                ((installed_count++))
+            else
+                log_warning "Failed to copy: $filename"
+            fi
         fi
     done
     
