@@ -275,7 +275,6 @@ help <text>        # Find commands whose name/description matches the text
 - **`choose-scheme`** - Interactive color scheme selection for all applications
 - **`compare-colors`** - Compare color schemes side by side
 - **`compare-color-scheme`** - Print colors defined for a color scheme
-- **`configure-windows-terminal` (Windows)** - Imports schemes into Windows Terminal settings and sets the current scheme
 - **`gen-all-color-schemes`** - Call gen-color-files for each available color scheme
 - **`gen-color-files`** - Generate color files for a color scheme
 - **`generate-dircolors`** - Generate .dircolors from a source file
@@ -285,6 +284,9 @@ help <text>        # Find commands whose name/description matches the text
 - **`xterm-color-count`** - Display terminal color capabilities
 
 ### Configuration
+- **`configure-windows-console` (Windows)** - Set colors and font for Ubuntu in Windows console
+- **`configure-windows-terminal` (Windows)** - Import color schemes into Windows Terminal settings and set the font to use
+- **`set-windows-terminal-default-profile` (Window)** - Set default profile for Windows Terminal
 - **`unload-roperdot`** - Resets ~/.dircolors and ~/.vimrc to their contents before roperdot was started
 - **`update-app-binaries`** - Updates ~/.roperdot-os-functions and app binaries for the current OS
 - **`update-vscode-settings`** - Updates Visual Studio Code settings.json for the color scheme

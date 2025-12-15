@@ -24,7 +24,8 @@ get_wsl_guid() {
     
     if [[ -f "$settings_file" ]]; then
         # Extract GUID for the specified WSL distribution, excluding hidden profiles
-        jq -r ".profiles.list[] | select(.name == \"$distro_name\" and .source == \"Microsoft.WSL\" and (.hidden != true)) | .guid" "$settings_file" 2>/dev/null | head -1
+        # Use tail -1 to get the LAST non-hidden profile (tends to be the working one)
+        jq -r ".profiles.list[] | select(.name == \"$distro_name\" and .source == \"Microsoft.WSL\" and (.hidden != true)) | .guid" "$settings_file" 2>/dev/null | tail -1
     fi
 }
 

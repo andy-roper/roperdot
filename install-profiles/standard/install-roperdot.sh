@@ -742,6 +742,9 @@ if [[ "$ROPERDOT_DESKTOP_ENV" == "windows" ]]; then
 		set-windows-terminal-default-profile
 	fi
 
+	# Do the same for Windows Console for Ubuntu
+	configure-windows-console
+
 	cat <<EOT
 This install can update various Windows configurations for you:
 

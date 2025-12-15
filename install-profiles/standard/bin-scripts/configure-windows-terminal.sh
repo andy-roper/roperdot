@@ -104,10 +104,10 @@ if [[ "$ROPERDOT_COMMON_COLOR_SCHEME" == default ]]; then
 else
 	target_scheme="Roperdot ${ROPERDOT_COMMON_COLOR_SCHEME}"
 fi
-# Update both defaults AND the Ubuntu profile
+# Update both defaults AND all Ubuntu profiles (there may be duplicates)
 if /usr/bin/jq --arg scheme "$target_scheme" '
     .profiles.defaults.colorScheme = $scheme |
-    .profiles.list[] |= if .name == "Ubuntu" then 
+    .profiles.list[] |= if .name == "Ubuntu" and .hidden != true then 
         .colorScheme = $scheme | 
         .font = {"face": "Hack Nerd Font", "size": 11} 
     else . end
