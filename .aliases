@@ -248,7 +248,7 @@ if command -v git >/dev/null 2>&1; then
 	alias gda='git diff HEAD'
 	alias glg='git log --graph --oneline --decorate --all'
 	alias gld='git log --pretty=format:"%h %ad %s" --date=short --all'
-	alias gm='git merge --no-ff'
+#	alias gm='git merge --no-ff'
 	alias gma='git merge --abort'
 	alias gmc='git merge --continue'
 	alias gnit='git init'

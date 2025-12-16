@@ -946,29 +946,14 @@ EOT
 fi
 
 if [[ -n "$ROPERDOT_DESKTOP_ENV" ]]; then
-# 	cat <<EOT
-
-# Installation complete.
-
-# I've included the Hack Nerd Font in this installation. It's a great terminal font which originates here:
-# https://github.com/ryanoasis/nerd-fonts
-
-# You should restart your terminal application to see the changes take effect.
-
-# EOT
 	cat <<EOT
 
 Installation complete.
 
-Several applications such as Windows Terminal, Notepad++, Visual Studio Code and Sublime Text 3 are
-configured to use the font Hack Nerd Font.
+I've included the Hack Nerd Font in this installation. It's a great terminal font which originates here:
+https://github.com/ryanoasis/nerd-fonts
 
-To install that font:
-1. Download it from https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.zip
-2. Extract the zip
-3. Right-click on the font and select "Install for all users"
-
-You should then restart your terminal application to see the changes take effect.
+You should restart your terminal application to see the changes take effect.
 
 EOT
 elif [[ -n "$skipped_config_update" ]]; then

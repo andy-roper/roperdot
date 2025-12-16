@@ -142,6 +142,8 @@ help <text>        # Find commands whose name/description matches the text
 - **`git-lfs`** - Used to work with large files in Git repositories (https://git-lfs.github.com)
 - **`git-overwritten`** - Show files that have been overwritten in commits
 - **`gli`** - Interactive git commit browser using fzf
+- **`gi`** - Git Information: interactive git information viewer
+- **`gm`** - Git Manager: interactive git workflow helper
 - **`gr`** - Navigate to git repository root directory
 - **`master`** - git checkout master
 - **`push`** - git push
