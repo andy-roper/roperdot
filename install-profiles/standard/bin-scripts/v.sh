@@ -17,9 +17,18 @@ This script will call the appropriate application to view a file. The viewer
 is determined by the file's extension and the viewers defined in
 ~/.bashrc-this-os-functions.
 
-If fzf is installed and no file arguments are provided, fzf will be used to
-allow the user to select a file in the current directory. If the argument is
-a directory, fzf will be used for selecting a file in that directory.
+If no arguments are provided and a filename that's present in the current
+directory is present in the clipboard, that file will be viewed.
+
+If fzf is installed and no arguments are provided and the clipboard is empty
+or if its contents don't match a filename, fzf will be used to allow the user
+to select a file in the current directory.
+
+If fzf is installed and the argument is a directory, fzf will be used for
+selecting a file in that directory.
+
+If the argument or the clipboard contents is a hyperlink, it will be opened in
+a browser.
 
 If roperdot/edit-and-view-override is defined it will be sourced. Define
 view_override function to override processing of arbitrary extensions. See
@@ -59,25 +68,36 @@ call_override () {
 	return 1
 }
 
-if [[ "$1" = "-b" ]]; then
-	shift
-	view_mode=binary
-elif [[ "$1" = "-t" ]]; then
-	shift
-	view_mode=terminal
-fi
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+		-b)	view_mode=binary && shift ;;
+		-t)	view_mode=terminal && shift ;;
+		*) break ;;
+	esac
+done
 files=()
 if [[ $# -eq 0 ]]; then
-	if [[ $(clippaste | grep "^\(http\|www\)") ]]; then
-		web-browser-app "$(clippaste)"
-	else
+	clip_contents=$(clippaste)
+	if [[ "$clip_contents" =~ ^(https?://|www\.) ]]; then
+		web-browser-app "$clip_contents"
+		exit 0
+	fi
+	if [[ -n "$clip_contents" && ${#clip_contents} -le 255 && ! "$clip_contents" =~ $'\n' && ! "$clip_contents" =~ $'\t' && ! "$clip_contents" =~ [\*\?\[\$] ]]; then
+	    if [[ -f "./$clip_contents" ]]; then
+	    	files=("$clip_contents")
+			found_clip_file=true
+		fi
+	fi
+	if [[ -z "$found_clip_file" ]]; then
 		command -v fzf >/dev/null 2>&1 || help
 		f="$(find . -maxdepth 1 -type f -printf '%f\n' | sort | fzf --no-sort -0 --height 33% --layout=reverse)"
 		[[ -n "$f" ]] && files+=("$f") || exit 0
 	fi
 elif [[ -d "$1" ]]; then
 	command -v fzf >/dev/null 2>&1 || help
-	f="$(find "$1" -maxdepth 1 -type f | sort | fzf --no-sort -0 --height 33% --layout=reverse)"
+	d="$1"
+	[[ "$d" =~ /$ ]] || d="$d/"
+	f="$(find "$d" -maxdepth 1 -type f | sort | fzf --no-sort -0 --height 33% --layout=reverse)"
 	[[ -n "$f" ]] && files+=("$f") || exit 0
 else
 	for f; do

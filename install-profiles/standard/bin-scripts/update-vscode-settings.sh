@@ -47,6 +47,7 @@ update_settings () {
 	echo "Updating $vs_code_settings_path/settings.json"
 	update_setting @"$ROPERDOT_DIR/config/color-schemes/source/$color_scheme/VSCode/settings.json"
 
+	update_setting "copyOnSelect" true
 	update_setting "workbench.colorTheme" "Default Dark+"
 	update_setting "terminal.integrated.scrollback" 10000
 

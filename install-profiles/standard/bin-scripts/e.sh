@@ -13,12 +13,19 @@ This script will call the appropriate application to edit a file. The editor
 is determined by the file's extension and the editors defined in
 ~/.bashrc-this-os-functions.
 
-If fzf is installed and no file arguments are provided, fzf will be used to
-allow the user to select a file in the current directory. If the argument is
-a directory, fzf will be used for selecting a file in that directory.
+If no arguments are provided and a filename that's present in the current
+directory is present in the clipboard, that file will be edited.
 
-If you're working in a graphical environment and the target file doesn't exist,
-a new file will be created using touch before editing it with a text editor.
+If fzf is installed and no arguments are provided and the clipboard is empty
+or if its contents don't match a filename, fzf will be used to allow the user
+to select a file in the current directory.
+
+If fzf is installed and the argument is a directory, fzf will be used for
+selecting a file in that directory.
+
+If you're working in a graphical environment and the target file specified by
+the argument doesn't exist, a new file will be created using touch before
+editing it with a text editor.
 
 If roperdot/edit-and-view-override is defined it will be sourced. Define
 the edit_override function to override processing of arbitrary extensions. See
@@ -55,12 +62,23 @@ call_override () {
 
 files=()
 if [[ $# -eq 0 ]]; then
-	command -v fzf >/dev/null 2>&1 || help
-	f="$(find . -maxdepth 1 -type f -printf '%f\n' | sort | fzf --no-sort -0 --height 33% --layout=reverse)"
-	[[ -n "$f" ]] && files+=("$f") || exit 0
+	clip_contents=$(clippaste)
+	if [[ -n "$clip_contents" && ${#clip_contents} -le 255 && ! "$clip_contents" =~ $'\n' && ! "$clip_contents" =~ $'\t' && ! "$clip_contents" =~ [\*\?\[\$] ]]; then
+	    if [[ -f "./$clip_contents" ]]; then
+	    	files=("$clip_contents")
+			found_clip_file=true
+		fi
+	fi
+	if [[ -z "$found_clip_file" ]]; then
+		command -v fzf >/dev/null 2>&1 || help
+		f="$(find . -maxdepth 1 -type f -printf '%f\n' | sort | fzf --no-sort -0 --height 33% --layout=reverse)"
+		[[ -n "$f" ]] && files+=("$f") || exit 0
+	fi
 elif [[ -d "$1" ]]; then
 	command -v fzf >/dev/null 2>&1 || help
-	f="$(find "$1" -maxdepth 1 -type f | sort | fzf -0 --no-sort --height 33% --layout=reverse)"
+	d="$1"
+	[[ "$d" =~ /$ ]] || d="$d/"
+	f="$(find "$d" -maxdepth 1 -type f | sort | fzf -0 --no-sort --height 33% --layout=reverse)"
 	[[ -n "$f" ]] && files+=("$f") || exit 0
 else
 	for f; do
