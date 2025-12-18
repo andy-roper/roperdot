@@ -4,6 +4,25 @@ command -v debug >/dev/null 2>&1 || . "${ROPERDOT_DIR}/source-scripts/debug"
 
 ROPERDOT_LOG_FILE=${ROPERDOT_LOG_FILE:-$HOME/roperdot-install.log}
 
+if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+	if [[ -z "$choco_apps" ]]; then
+	    if command -v choco.exe >/dev/null 2>&1; then
+	        if [[ $ROPERDOT_CURRENT_SHELL = bash ]]; then
+	            mapfile -t choco_apps < <(choco.exe list --local-only 2>/dev/null | grep -v "Chocolatey" | awk '{print $1}')
+	        else
+	            choco_apps=("${(@f)$(choco.exe list --local-only 2>/dev/null | grep -v 'Chocolatey' | awk '{print $1}')}")
+	        fi
+	        export choco_apps
+	    fi
+	fi
+	if [[ -z "$app_local_path" ]]; then
+		. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
+		def_win_env_linux_path LOCALAPPDATA app_local_path
+		def_win_env_linux_path PROGRAMFILES program_files_path
+		def_win_env_linux_path "PROGRAMFILES(X86)" program_files_86_path
+	fi
+fi
+
 log () {
 	if [[ -n "$1" ]]; then
 		echo "if"
@@ -53,26 +72,31 @@ gui_app_presence_and_path () {
 			# Check if app was installed with Chocolatey
 			if [[ "$present_only" = "true" ]]; then
 				for app_name in "${choco_apps[@]}"; do
-					[[ "$app_name" = "$app" ]] && return 0
+					[[ "$app_name" = "$package" ]] && return 0
 				done
 			fi
 			
 			[[ -z "$app_dir" ]] && app_dir="$app"
-			if [[ "$app_dir" =~ \* ]]; then
+			if [[ "$app_dir" =~ [*] ]]; then
+				echo "In if"
 				app_path="$(find "$program_files_path" -maxdepth 1 -type d -iname "$app_dir" 2>/dev/null)"
 				if [[ -z "$app_path" ]]; then
 					app_path="$(find "$program_files_86_path" -maxdepth 1 -type d -iname "$app_dir" 2>/dev/null)"
 					[[ -z "$app_path" ]] && app_path="$(find "$app_local_path" -maxdepth 1 -type d -iname "$app_dir" 2>/dev/null)"
 				fi
 			else
+				echo "In else"
 				if [[ -d "${program_files_path}/$app_dir" ]]; then
 					app_path="${program_files_path}/$app_dir"
 				elif [[ -d "${program_files_86_path}/$app_dir" ]]; then
 					app_path="${program_files_86_path}/$app_dir"
 				elif [[ -d "${app_local_path}/$app_dir" ]]; then
 					app_path="${app_local_path}/$app_dir"
+				elif [[ -d "${app_local_path}/Programs/$app_dir" ]]; then
+					app_path="${app_local_path}/Programs/$app_dir"
 				fi
 			fi
+			echo "app_path: $app_path"
 		fi
 	else
 		case "$ROPERDOT_OS_ENV" in

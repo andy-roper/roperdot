@@ -141,7 +141,6 @@
 		"binary": "fdfind",
 		"install_script": "install-fd",
 		"sudo_not_required": true,
-		"presence_command": "command -v fd >/dev/null 2>&1 || command -v fd-find >/dev/null 2>&1",
 		"desc": "A simple, fast and user-friendly alternative to find"
 	},
 	{

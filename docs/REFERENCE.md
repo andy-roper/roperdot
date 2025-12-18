@@ -186,14 +186,6 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" to pro
 
 - Update install-claude to add configuration
 
-- Update install-apps to support installation of a single app or list of apps outside of installing roperdot
-
-  - Sample invocation: install-apps gui "Some App"
-
-  - The app name will be looked up in the appropriate JSON based on the app property
-
-  - Provide for selection of apps to install using fzf if gui/shell is passed as the first argument but no second argument is passed
-
 - Revisit issue where the prompt hangs if there's no internet connection
   This is due to `git rev-parse --git-dir` causing a hang likely because either Git is trying to contact credential helpers (the `/home/linuxbrew/.linuxbrew/bin/gh` helper) or there's a WSL-specific filesystem/network interaction issue
 
@@ -213,8 +205,6 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" to pro
   \# Hardcoded version reference: SQL Developer v23.1.1.345.2114, last updated on 9/23/2025
 
   - Create a script named “list-hardcoded-installs” to do a recursive grep to list them
-
-- Implement conditioning of VS Code extensions based on group in install-vscode
 
 - Finish implementing change scheme
 

@@ -185,15 +185,13 @@ if [[ -z $skipping_extension_installs ]]; then
 
 	[[ "$ROPERDOT_OS_TYPE" = "linux" && "$ROPERDOT_DESKTOP_ENV" = "windows" ]] && install_ext ms-vscode-remote.remote-wsl
 	[[ -n "$have_shellcheck" ]] && install_ext timonwong.shellcheck
-	if [[ ",$install_groups," != *,java-dev,* ]]; then
+	if [[ ",$install_groups," != *,work,* ]]; then
 		install_ext wallabyjs.quokka-vscode
 		install_ext dbaeumer.vscode-eslint
 		install_ext dbaeumer.jshint
 		install_ext christian-kohler.path-intellisense
 		install_ext redhat.vscode-server-connector
 		install_ext redhat.vscode-community-server-connector
-	fi
-	if [[ ",$install_groups," == *,aws,* ]]; then
 		install_ext amazonwebservices.aws-toolkit-vscode
 		install_ext aws-scripting-guy.cform
 	fi

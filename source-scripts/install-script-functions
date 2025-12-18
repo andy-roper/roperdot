@@ -1,6 +1,8 @@
 [[ $ROPERDOT_CURRENT_SHELL = bash ]] && shopt -s extglob || setopt ksh_glob
 
-command -v choco.exe >/dev/null 2>&1 && choco () { choco.exe $@; }
+if command -v choco.exe >/dev/null 2>&1; then
+	function choco () { choco.exe $@; }
+fi
 command -v unpack >/dev/null 2>&1 || . "${ROPERDOT_DIR}/source-scripts/unpack"
 command -v nice_copy >/dev/null 2>&1 || . "${ROPERDOT_DIR}/source-scripts/nice-copy"
 

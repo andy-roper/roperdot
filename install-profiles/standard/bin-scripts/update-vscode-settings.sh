@@ -50,6 +50,7 @@ update_settings () {
 	update_setting "copyOnSelect" true
 	update_setting "workbench.colorTheme" "Default Dark+"
 	update_setting "terminal.integrated.scrollback" 10000
+	update_setting "terminal.integrated.copyOnSelection" true
 
 	if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
 		if [[ -n "$PROCESSING_ZSH" ]]; then
@@ -92,7 +93,7 @@ update_settings () {
 		update_setting "terminal.integrated.defaultProfile.linux" "$ROPERDOT_CURRENT_SHELL"
 	fi
 
-	if [[ ",$install_groups," == *,java-dev,* ]]; then
+	if [[ ",$install_groups," == *,work,* ]]; then
 		update_setting "java.import.gradle.home" "$HOME/.sdkman/candidates/gradle/current"
 	    update_setting "java.import.gradle.java.home" "$HOME/.sdkman/candidates/java/current"
 	    update_setting "java.jdt.ls.vmargs" "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx4G -Xms100m -Xlog:disable"

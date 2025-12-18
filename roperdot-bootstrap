@@ -103,6 +103,7 @@ if [[ "$CURRENT_VERSION" != "$ROPERDOT_VERSION" ]] || [[ -z "$CURRENT_VERSION" ]
 	echo "Copying scripts to ${ROPERDOT_DIR}/bin-${ROPERDOT_CURRENT_SHELL}"
 	ROPERDOT_SHELL_TO_COPY=$ROPERDOT_CURRENT_SHELL
 	source "${ROPERDOT_DIR}/source-scripts/copy-scripts"
+	generate-help
 	unset ROPERDOT_SHELL_TO_COPY
     sed -i.bak "s/^export ROPERDOT_VERSION=.*/export ROPERDOT_VERSION=$CURRENT_VERSION/" ~/roperdot-loader
 fi

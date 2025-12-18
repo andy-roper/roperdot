@@ -118,7 +118,7 @@
 		"app_dir": "SQLDeveloper.app",
 		"install_script": "install-sql-developer",
 		"desc": "Oracle SQL Developer",
-		"groups": ["oracle"]
+		"groups": ["work"]
 	},
 	{
 		"app": "Sourcetree",

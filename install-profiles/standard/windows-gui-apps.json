@@ -2,14 +2,14 @@
 	{
 		"app": "Google Chrome",
 		"package": "googlechrome",
-		"subdir": "Google/Chrome",
+		"app_dir": "Google/Chrome",
 		"package_manager": "choco",
 		"desc": "Web browser"
 	},
 	{
 		"app": "Firefox",
 		"package": "firefox",
-		"subdir": "Mozilla Firefox",
+		"app_dir": "Mozilla Firefox",
 		"package_manager": "choco",
 		"install_script": "install-firefox",
 		"desc": "Web browser",
@@ -65,7 +65,7 @@
 	{
 		"app": "P4Merge",
 		"package": "p4merge",
-		"subdir": "Perforce",
+		"app_dir": "Perforce",
 		"package_manager": "choco",
 		"desc": "Visual diff and merge tool"
 	},
@@ -116,7 +116,7 @@
 	{
 		"app": "Adobe Reader DC",
 		"package": "adobereader",
-		"subdir": "Adobe/Acrobat Reader DC",
+		"app_dir": "Adobe/Acrobat Reader DC",
 		"package_manager": "choco",
 		"desc": "Adobe PDF reader",
 		"shortcut_name": "Acrobat Reader",
@@ -133,6 +133,7 @@
 	{
 		"app": "Claude",
 		"package": "claude",
+		"app_dir": "AnthropicClaude",
 		"package_manager": "choco",
 		"install_script": "install-claude",
 		"desc": "Claude AI",
@@ -164,6 +165,7 @@
 	{
 		"app": "VirtualBox",
 		"package": "virtualbox",
+		"app_dir": "Oracle/VirtualBox",
 		"package_manager": "choco",
 		"install_script": "install-virtualbox",
 		"desc": "Hypervisor for virtualization",
@@ -172,7 +174,7 @@
 	{
 		"app": "FileZilla",
 		"package": "filezilla",
-		"subdir": "FileZilla FTP Client",
+		"app_dir": "FileZilla FTP Client",
 		"install_script": "install-filezilla",
 		"package_manager": "choco",
 		"desc": "FTP client"
@@ -180,7 +182,6 @@
 	{
 		"app": "Slack",
 		"package": "slack",
-		"subdir": "slack",
 		"package_manager": "choco",
 		"desc": "Team messaging app",
 		"groups": ["development"],
@@ -196,7 +197,7 @@
 	{
 		"app": "VLC",
 		"package": "vlc",
-		"subdir": "VideoLan/VLC",
+		"app_dir": "VideoLan/VLC",
 		"package_manager": "choco",
 		"desc": "Multimedia player",
 		"groups": ["personal"]
@@ -212,7 +213,7 @@
 	{
 		"app": "GIMP",
 		"package": "gimp",
-		"subdir": "GIMP*",
+		"app_dir": "GIMP 2",
 		"package_manager": "choco",
 		"desc": "Graphics editor",
 		"exclusionGroups": ["work"]
@@ -241,7 +242,7 @@
 	{
 		"app": "Shark007's Advanced Codecs",
 		"package": "advanced-codecs",
-		"subdir": "Shark007",
+		"app_dir": "Shark007",
 		"package_manager": "choco",
 		"desc": "Video and audio codecs",
 		"groups": ["personal"]

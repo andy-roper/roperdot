@@ -251,6 +251,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`def-win-env-linux-path` (Windows)** - Define an env var from a Windows env var and convert to a WSL path
 - **`escape-arg`** - Escape metacharacters in an argument
 - **`h`** - History
+- **`install-app`** - Install or upgrade an application
 - **`is-archive`** - Test if a filename is an archive file
 - **`keyhelp`** - Show keyboard shortcut information
 - **`now`** - Print current time

@@ -113,7 +113,7 @@
 		"binary": "sqldeveloper",
 		"install_script": "install-sql-developer",
 		"desc": "Oracle SQL Developer",
-		"groups": ["oracle"]
+		"groups": ["work"]
 	},
 	{
 		"app": "P4Merge",
