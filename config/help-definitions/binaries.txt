@@ -31,6 +31,7 @@ jenv: Tool for managing the JAVA_HOME environment variable (https://www.jenv.be/
 jq: Utility like sed for JSON data (https://jqlang.org/)
 js-beautify: JavaScript/CSS/HTML formatter (https://beautifier.io/)
 keychain: Frontend for ssh-agent and ssh-add to help manage SSH and GPG keys (https://www.funtoo.org/Keychain)
+liquibase: Open-source database schema change management tool
 lsusb: (Mac) Lists USB devices
 lynx: Command-line web browser (https://lynx.invisible-island.net/)
 magick: Image editing suite (https://imagemagick.org/)

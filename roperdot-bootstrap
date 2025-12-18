@@ -767,6 +767,9 @@ if command -v dotnet >/dev/null 2>&1; then
     export PATH="$HOME/.dotnet/tools:$PATH"
 fi
 
+# Liquibase
+[[ -d /opt/liquibase ]] && export PATH="$PATH:/opt/liquibase"
+
 if [[ -f /etc/ssl/certs/ca-certificates.crt ]]; then
     export NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
     export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt

@@ -68,6 +68,7 @@ roperdot makes use of a number of excellent third party terminal applications.
 - **[`git-lfs`](https://git-lfs.github.com/)** - Git large file storage
 - **[`gradle`](https://gradle.org)** - Build automation tool for Java and other JVM languages
 - **[`jq`](https://jqlang.org/)** - JSON processor and formatter
+- **[`liquibase`](https://www.liquibase.com/community)** - Open-source database schema change management tool
 - **`mvn`** - [Maven](https://maven.apache.org): build automation and dependency management tool for Java projects
 - **[`Neovim`](https://neovim.io/)** - Modern Vim editor
 - **[`oc`](https://openshift.com)** - CLI for Red Hat OpenShift container platform and Kubernetes

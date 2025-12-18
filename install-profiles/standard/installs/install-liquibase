@@ -1,0 +1,21 @@
+#
+# Description: Install script for Liquibase
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+# Last updated for current version on 17 Dec 2025
+# https://www.liquibase.com/download-community
+
+VERSION=5.0.1
+
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
+temp_dir="$(mktemp -d)"
+pushd "$temp_dir" >/dev/null || return 1
+get-web-file https://package.liquibase.com/downloads/cli/liquibase/releases/download/v${VERSION}/liquibase-${VERSION}.tar.gz liquibase.tar.gz
+sudo mkdir -p /opt/liquibase
+sudo tar -xzf liquibase.tar.gz -C /opt/liquibase
+popd >/dev/null || return 1
+rm -rf "$temp_dir" >/dev/null

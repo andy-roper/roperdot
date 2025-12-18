@@ -239,7 +239,7 @@
 		"package": "openjdk-21-jdk",
 		"list_prerequisite": "apt-get",
 		"desc": "Compiler and run-time environment for Java",
-		"exclusionGroups": ["java-dev"]
+		"exclusionGroups": ["work"]
 	},
 	{
 	    "app": "SDKMAN",
@@ -247,14 +247,14 @@
 	    "install_script": "install-sdkman",
 	    "sudo_not_required": true,
 	    "desc": "SDK manager for JVM languages",
-	    "groups": ["java-dev"]
+	    "groups": ["work"]
 	},
 	{
 	    "app": "Amazon Corretto JDK",
 	    "install_script": "install-amazon-jdk",
 	    "sudo_not_required": true,
 	    "desc": "Amazon Corretto JDK",
-	    "groups": ["java-dev"]
+	    "groups": ["work"]
 	},
 	{
 	    "app": "Gradle",
@@ -262,7 +262,7 @@
 	    "install_script": "install-gradle-sdk",
 	    "sudo_not_required": true,
 	    "desc": "Build automation tool",
-	    "groups": ["java-dev"]
+	    "groups": ["work"]
 	},
 	{
 	    "app": "Maven",
@@ -270,14 +270,14 @@
 	    "install_script": "install-maven-sdk",
 	    "sudo_not_required": true,
 	    "desc": "Build automation and dependency management for Java",
-	    "groups": ["java-dev"]
+	    "groups": ["work"]
 	},
 	{
 	    "app": "Oracle Instant Client",
 	    "presence_command": "[[ -d /opt/oracle/instantclient_21_1 ]]",
 	    "install_script": "install-oracle-instant-client",
 	    "desc": "Oracle database client with SQL*Plus",
-	    "groups": ["java-dev", "oracle"]
+	    "groups": ["work"]
 	},
 	{
 		"app": "jENV",
@@ -285,7 +285,7 @@
 		"package": "jenv",
 		"install_prerequisite": "brew",
 		"desc": "Tool for managing the JAVA_HOME environment variable",
-		"exclusionGroups": ["java-dev"]
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "AWS CLI",
@@ -306,7 +306,7 @@
 	    "binary": "dotnet",
 	    "install_script": "install-dotnet-sdk",
 	    "desc": "Microsoft .NET SDK",
-	    "groups": ["dotnet"]
+	    "groups": ["work"]
 	},
 	{
 	    "app": "OpenShift CLI",
@@ -314,14 +314,21 @@
 	    "install_script": "install-openshift-cli",
 	    "sudo_not_required": true,
 	    "desc": "OpenShift CLI for Kubernetes management",
-	    "groups": ["kubernetes"]
+	    "groups": ["work"]
 	},
 	{
 	    "app": "Tekton CLI",
 	    "binary": "tkn",
 	    "install_script": "install-tekton-cli",
 	    "desc": "Tekton Pipelines CLI",
-	    "groups": ["kubernetes"]
+	    "groups": ["work"]
+	},
+	{
+	    "app": "Liquibase",
+	    "binary": "liquibase",
+	    "install_script": "install-liquibase",
+	    "desc": "Open-source database schema change management tool",
+	    "groups": ["work"]
 	},
 	{
 		"app": "jq",
