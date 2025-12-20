@@ -76,7 +76,7 @@ I wrote functions that do that work instead by setting environment variables tha
 
 I've enhanced the behavior of the ls, cd, cp, mv and rm commands when they're run in a shell but I wanted to avoid impacting script execution. I did this by using aliases that override the behavior in the shell by calling (for instance) __ls, which is a function defined in .functions.
 
-The use of these enhanced commands can be enabled/disabled with environment variables in ~/roperdot-loader.
+See **[ENHANCED_SHELL_COMMANDS](./ENHANCED_SHELL_COMMANDS.md)**.
 
 ## Color Schemes
 
@@ -96,7 +96,7 @@ Much of this is controlled by roperdot/source-scripts/initialize-colors which ut
 
 ## fzf Integration
 
-fzf is used by multiple commands (cd, cdd, cds, e, up and v) for selection of files and directories. The fzf plugin is also used in vim.
+fzf is used by multiple commands (cd, cdd, cds, e, nav, up and v) for selection of files and directories. The fzf plugin is also used in vim.
 
 ## Adding New Scripts
 

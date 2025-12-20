@@ -41,6 +41,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`cdp`** - cd to the previous directory
 - **`cds`** - Deep subdirectory selection with recursive search
 - **`mdd`** - Create a directory and cd into it
+- **`nav`** - Navigate directories interactively
 - **`t`** - create a temporary directory within the current directory and cd to it
 - **`up`** - Select and navigate to parent directory levels
 - **`-`** - cd to the previous directory

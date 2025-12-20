@@ -588,14 +588,23 @@ EOT
 	if [[ -z "$resume_step" || "$resume_step" -le 5 ]]; then
 		[[ -e ~/roperdot-loader-extra ]] && rm ~/roperdot-loader-extra >/dev/null
 #		export ROPERDOT_PROFILES="$base_profile"
-		for profile in "${extra_profiles[@]}"; do
-#			ROPERDOT_PROFILES="${ROPERDOT_PROFILES}::${profile}"
-			if [[ -z "$ROPERDOT_PROFILES" ]]; then
-				ROPERDOT_PROFILES="$profile"
-			else
-				ROPERDOT_PROFILES="${ROPERDOT_PROFILES}::${profile}"
-			fi
-		done
+
+		if [[ -n "$extra_profiles" ]]; then
+		    if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
+		        IFS=',' read -ra extra_profiles_array <<< "$extra_profiles"
+		    else
+		        extra_profiles_array=("${(@s|,|)extra_profiles}")
+		    fi
+
+			for profile in "${extra_profiles_array[@]}"; do
+				if [[ -z "$ROPERDOT_PROFILES" ]]; then
+					ROPERDOT_PROFILES="$profile"
+				else
+					ROPERDOT_PROFILES="${ROPERDOT_PROFILES}::${profile}"
+				fi
+			done
+		fi
+
 		CURRENT_VERSION=$(cat "$ROPERDOT_DIR/VERSION" 2>/dev/null | tr -d '\n\r ')
 		cat << EOT > ~/roperdot-loader
 # [[ -n "\$ROPERDOT_LOADED" ]] && return

@@ -26,6 +26,24 @@ else
 	typeset -A app_descriptions
 fi
 
+# Check if all prerequisites are available
+check_prerequisites() {
+	local prereq_string="$1"
+	[[ -z "$prereq_string" ]] && return 0
+	
+	# Split on comma and check each
+	local IFS=','
+	local prereqs=($prereq_string)
+	for prereq in "${prereqs[@]}"; do
+		prereq=$(echo "$prereq" | xargs)  # trim whitespace
+		if ! command -v "$prereq" >/dev/null 2>&1; then
+			echo "$prereq"  # Return the missing prerequisite
+			return 1
+		fi
+	done
+	return 0
+}
+
 # Function to check if app is present (for shell apps)
 app_is_present() {
 	local app="$1" binary="$2" package="$3" installer="$4" presence_command="$5"
@@ -117,7 +135,17 @@ build_app_list() {
 		app_descriptions[$app]="$desc"
 		
 		if [[ "$is_installed" = false ]]; then
-			app_states[$app]="not_installed"
+			# Check if prerequisites are met for apps not yet installed
+			if [[ -n "$install_prerequisite" ]]; then
+				local missing_prereq
+				if ! missing_prereq=$(check_prerequisites "$install_prerequisite"); then
+					app_states[$app]="missing_prerequisite:$missing_prereq"
+				else
+					app_states[$app]="not_installed"
+				fi
+			else
+				app_states[$app]="not_installed"
+			fi
 		elif [[ "$upgrade_type" = "manual" ]]; then
 			app_states[$app]="manual_upgrade"
 		else
@@ -144,6 +172,10 @@ show_app_menu() {
 				not_installed)  display_line="${app}${desc}" ;;
 				manual_upgrade) display_line="${app} [manual upgrade]${desc}" ;;
 				can_upgrade)    display_line="${app} [upgrade]${desc}" ;;
+				missing_prerequisite:*)
+					local missing=$(echo "$state" | cut -d: -f2-)
+					display_line="${app} [missing: ${missing}]${desc}"
+					;;
 			esac
 			
 			menu_items+=("$display_line")
@@ -160,6 +192,10 @@ show_app_menu() {
 				not_installed)  display_line="${app}${desc}" ;;
 				manual_upgrade) display_line="${app} [manual upgrade]${desc}" ;;
 				can_upgrade)    display_line="${app} [upgrade]${desc}" ;;
+				missing_prerequisite:*)
+					local missing=$(echo "$state" | cut -d: -f2-)
+					display_line="${app} [missing: ${missing}]${desc}"
+					;;
 			esac
 			
 			menu_items+=("$display_line")
@@ -486,6 +522,15 @@ To upgrade $selected_app, please:
 4. Upgrade the application accordingly
 
 Note: Install scripts are not idempotent and cannot be re-run to upgrade.
+EOT
+			;;
+		missing_prerequisite:*)
+			local missing=$(echo "$app_state" | cut -d: -f2-)
+			cat <<EOT
+This app requires '$missing' to be installed first.
+
+$selected_app cannot be installed until you have '$missing' available.
+Please install '$missing' and try again.
 EOT
 			;;
 		*)

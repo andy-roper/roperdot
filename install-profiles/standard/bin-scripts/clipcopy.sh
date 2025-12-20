@@ -33,7 +33,17 @@ if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
 elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
 	clip_app=pbcopy
 else
-	clip_app=xclip
+	# Linux - check for available clipboard utilities
+	if command -v xclip &>/dev/null; then
+		clip_app="xclip -selection clipboard"
+	elif command -v xsel &>/dev/null; then
+		clip_app="xsel --clipboard --input"
+	elif command -v wl-copy &>/dev/null; then
+		clip_app="wl-copy"
+	else
+		echo "Error: No clipboard utility found" >&2
+		exit 1
+	fi
 fi
 # if [[ ("$ROPERDOT_CURRENT_SHELL" = "bash" || "$ROPERDOT_OS_ENV" = darwin) && "$input" = "-" ]]; then
 if [[ "$input" = "-" ]]; then

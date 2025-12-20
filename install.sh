@@ -5,6 +5,14 @@
 # URL: https://github.com/andy-roper/roperdot
 #
 
+# If I decide to reinstitute support for base_profile:
+#
+# Add this back into help:
+# --base-profile  Install using a profile other than the standard one; the
+#                 argument following the switch is the name of the profile
+# Uncomment code in while loop below
+# Replace any hardcoded references to standard in this script, install-apps, install-roperdot.sh etc.
+
 help () {
 	cat <<EOT
 install.sh  Install roperdot
@@ -14,8 +22,6 @@ Options:
                 argument following the switch is the name of the profile
 --all-gui       Install all available GUI applications
 --all-shell     Install all available shell applications
---base-profile  Install using a profile other than the standard one; the
-                argument following the switch is the name of the profile
 --groups        (comma-separated) For apps with groups defined, only install those
                 with a matching group. For apps with exclusionGroups defined, skip
                 installing if the list contains a specified group.
@@ -67,10 +73,10 @@ while [[ $# -gt 0 ]]; do
 			extra_profiles="$1"
 		fi
 		shift
-	elif [[ "$arg" = "--base-profile" ]]; then
-		export base_profile="$1"
-		[[ -z "$base_profile" ]] && help
-		shift
+#	elif [[ "$arg" = "--base-profile" ]]; then
+#		export base_profile="$1"
+#		[[ -z "$base_profile" ]] && help
+#		shift
 	elif [[ "$arg" = "--groups" ]]; then
 	    export install_groups="$1"
 	    [[ -z "$install_groups" ]] && help

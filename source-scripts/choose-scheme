@@ -48,7 +48,35 @@ else
 		source "${ROPERDOT_DIR}/config/color-schemes/source/${ROPERDOT_COMMON_COLOR_SCHEME}/common-color-env-vars"
 	fi
 fi
+
 if command -v code >/dev/null 2>&1; then
 	export color_scheme
 	update-vscode-settings
+fi
+
+if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
+    echo "Updating Windows Terminal colors..."
+    
+    . "${ROPERDOT_DIR}/source-scripts/windows-terminal-functions"
+
+    if terminal_settings_file="$(windows_terminal_settings_location)"; then
+        if [[ "$color_scheme" == "default" ]]; then
+            target_scheme="Roperdot ${ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME}"
+        else
+            target_scheme="Roperdot ${color_scheme}"
+        fi
+        
+        # Update both defaults AND all Ubuntu profiles
+        if /usr/bin/jq --arg scheme "$target_scheme" '
+            .profiles.defaults.colorScheme = $scheme |
+            .profiles.list[] |= if .name == "Ubuntu" and .hidden != true then 
+                .colorScheme = $scheme 
+            else . end
+        ' "$terminal_settings_file" > /tmp/wt_settings.json; then
+            mv /tmp/wt_settings.json "$terminal_settings_file"
+            echo "Updated Windows Terminal to scheme: $target_scheme"
+        else
+            echo "Warning: Failed to update Windows Terminal scheme"
+        fi
+    fi
 fi

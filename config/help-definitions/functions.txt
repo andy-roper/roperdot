@@ -29,6 +29,7 @@ modtime: Prints the modified time for a file in a format that's compatible with 
 mount-drive: (Windows) Mounts a drive in /mnt
 mount-iso-readonly: (Ubuntu and Mint) Mounts an ISO image for reading
 mount-iso-writable: (Ubuntu and Mint) Mounts an ISO image for writing
+nav: Navigates directories interactively
 nullify: Directs all output for a command to /dev/null
 prepend-to-path-var: Prepends a directory to the PATH env var
 pwdwin: (Windows) Shows the present working directory as a Windows path

@@ -93,24 +93,6 @@ fi
 [[ -n $PROCESSING_BASH ]] && echo "Creating bash scripts"
 [[ -n $PROCESSING_ZSH ]] && echo "Creating zsh scripts"
 
-fm_archive () {
-    local f="$1"
-    if [[ -n "$(is-archive "$f")" ]]; then
-        destdir=$(mktemp -d)
-        pushd "$destdir" || exit 1
-        extract-archive "$f" >/dev/null 2>&1
-        popd || exit 1
-        fm "$destdir"
-    elif [[ "$ROPERDOT_OS_ENV" = "darwin" && "$1" =~ \.dmg$ ]]; then
-        mount_dir="$(mount-dmg "$f")"
-        [[ -n "$mount_dir" ]] && fm "$mount_dir"
-    elif [[ "$ROPERDOT_OS_ENV" = "ubuntu" || "$ROPERDOT_OS_ENV" = "mint" ]] && [[ "$f" =~ \.iso$ ]]; then
-        mount-iso-readonly "$f"
-    else
-        echo "Cannot browse $f with file manager"
-    fi
-}
-
 # last_matching_dir will return the lexicographically largest directory matching the string
 last_matching_dir () {
     re_match "$1" "^(.*)/(.*?)\$"
@@ -590,6 +572,7 @@ EOH
     fi
 }
 EOT
+		echo "export ROPERDOT_FILE_MANAGER=$primary_fm" >> "$func_file"
     else
         cat << EOT >> "$func_file"
 fm () {
@@ -605,6 +588,8 @@ EOH
     [[ \$# -eq 0 ]] && finder || finder "\$1"
 }
 EOT
+
+		echo "export ROPERDOT_FILE_MANAGER=finder" >> "$func_file"
     fi
     application_path="$(app_path 'Sublime Text')"
     create_binary_script_mac "$application_path" sublime-text "\"${application_path}/Contents/SharedSupport/bin/subl\" --add"
@@ -778,6 +763,7 @@ EOH
     [[ \$# -eq 0 ]] && dolphin || dolphin "\$1"
 }
 EOT
+	echo "export ROPERDOT_FILE_MANAGER=dolphin" >> "$func_file"
     create_binary_script_linux kate
     create_binary_script_linux /opt/sublime_text_2 sublime /opt/sublime_text_2/sublime_text
     create_binary_script_linux ark

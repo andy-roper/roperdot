@@ -15,6 +15,8 @@ EOT
 	exit 0
 fi
 
+. "${ROPERDOT_DIR}/source-scripts/input-functions"
+
 # Get current branch name
 get_current_branch() {
     git rev-parse --abbrev-ref HEAD
@@ -37,7 +39,7 @@ get_main_branch() {
 # Prompt for commit message
 get_commit_message() {
     local branch="$1"
-    echo "Enter commit message:" >&2
+    echo "Enter commit message (branch prefix is automatic):" >&2
     read -r message
     echo "${branch}: ${message}"
 }
@@ -103,6 +105,7 @@ Push to branch (add, commit, push)
 Commit and push (commit, push)
 Merge from $main_branch (fetch, merge origin/$main_branch)
 Merge to $main_branch (checkout $main_branch, merge current)
+Force sync with remote
 EOF
 )
     
@@ -120,6 +123,14 @@ case "$action" in
     "Merge to"*)
         command=$(action_merge_to_main)
         ;;
+    "Force sync with remote")
+		if ask_yn_n "Discard local changes and replace with remote"; then
+			command="git fetch origin && git reset --hard origin/main"
+		else
+			echo "Aborting update"
+			exit 0
+		fi
+		;;
     *)
         echo "No action selected" >&2
         exit 0

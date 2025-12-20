@@ -16,8 +16,15 @@ if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
 	pbpaste
 elif [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
 	powershell.exe -command 'Get-Clipboard' | tr -d '\r'
-elif command -v xclip >/dev/null 2>&1; then
-	xclip -o
 else
-	echo "xclip is not installed. Please install it."
+	if command -v xclip &>/dev/null; then
+		xclip -selection clipboard -o
+	elif command -v xsel &>/dev/null; then
+		xsel --clipboard --output
+	elif command -v wl-copy &>/dev/null; then
+		wl-paste
+	else
+		echo "Error: No clipboard utility found" >&2
+		exit 1
+	fi
 fi

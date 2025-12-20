@@ -206,8 +206,6 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" to pro
 
   - Create a script named “list-hardcoded-installs” to do a recursive grep to list them
 
-- Finish implementing change scheme
-
 - Test upgrading to a later Python version (e.g. 3.13)
 
   - Need to ask user about switching to newer version instead of arbitrarily doing so
@@ -217,8 +215,9 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" to pro
 
 - Revisit installing non-standard installation
 
-  - Need to support a different/second install profile
+  - Need to support installing extra profiles in addition to standard
   - Need to support installing a second profile after installing standard
+  - Need to support a different base profile instead of standard
 
 - Consider trying [scoop](https://github.com/ScoopInstaller/Scoop) to install GUI apps for non-admin Windows users
 
@@ -240,9 +239,13 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" to pro
   - [httpie](https://github.com/httpie/cli): user-friendly HTTP client
   - [procs](https://github.com/dalance/procs): modern ps alternative
 
-- Update VS Code configuration when switching scheme (colors only)
-
 - Institute use of print_important_message during after after install
 
   - Use while installing to print important messages and to accumulate them to re-print them at the end of the install
   - Use for things like running update-vscode-settings for VS Code, importing iTerm2 profile, etc.
+
+- Expand themes/schemes supported by apps, preferably synced to my terminal color schemes
+
+  - VS Code workbench theme
+  - Sublime Text
+  - Notepad++

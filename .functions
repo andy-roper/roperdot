@@ -31,6 +31,9 @@ if [[ "$ROPERDOT_CUSTOM_CD" = true ]]; then
 cd: change to a directory
 Usage: cd [target]
 
+If no arguments are passed and the clipboard contains a directory name,
+cd will change to that directory.
+
 If fzf is installed:
 * If no target is given or if the target is ".", cd will prompt the user to
   select a subdirectory of the current directory to change to.
@@ -65,6 +68,17 @@ EOT
 			done
 			eval "\cd $arg_str"
 			return $?
+		fi
+
+		if [[ $# -eq 0 ]]; then
+			clip_contents=$(clippaste)
+			if [[ -n "$clip_contents" && ${#clip_contents} -le 255 && ! "$clip_contents" =~ $'\n' && ! "$clip_contents" =~ $'\t' && ! "$clip_contents" =~ [\*\?\[\$] ]]; then
+			    if [[ -d "$clip_contents" ]]; then
+			    	cd "$clip_contents"
+			    	clipclear
+			    	return
+				fi
+			fi
 		fi
 
 		local p dir pattern
@@ -530,11 +544,36 @@ if [[ $ROPERDOT_CURRENT_SHELL = bash ]]; then
 fi
 
 pushd() {
+	if [[ $# -eq 0 ]]; then
+		clip_contents=$(clippaste)
+		if [[ -n "$clip_contents" && ${#clip_contents} -le 255 && ! "$clip_contents" =~ $'\n' && ! "$clip_contents" =~ $'\t' && ! "$clip_contents" =~ [\*\?\[\$] ]]; then
+		    if [[ -d "$clip_contents" ]]; then
+		    	builtin pushd "$clip_contents" >/dev/null
+		    	clipclear
+		    	return
+			fi
+		fi
+
+		local p dir pattern
+		if command -v fzf >/dev/null 2>&1; then
+			p="$(find -L . -maxdepth 1 -type d ! -path . -iname "*" -printf '%f\n' | sort)"
+			if [[ -z "$p" ]]; then
+				echo "No matching directories"
+			elif [[ "$(wc -l<<<$p)" -eq 1 ]]; then
+				builtin pushd "$p" >/dev/null
+			else
+				p="$(fzf -0 --no-sort --height 33% --layout=reverse<<<"$p")"
+				[[ -n "$p" ]] && builtin pushd "$p" >/dev/null
+			fi
+			return
+		fi
+	fi
+
 	local path="$(abs-path "$1")"
 	if [[ -d "$path" ]]; then
 		builtin pushd "$path" >/dev/null || return 1
 	else
-		echo -bash: pushd: "$path": No such file or directory
+		echo pushd: "$path": No such file or directory
 	fi
 }
 
@@ -1064,7 +1103,7 @@ EOT
 			[[ "$1" == "--filenames" ]] && filename_flag=--files-with-matches && shift && continue
 			[[ "$1" =~ [aA] ]] && type_flag=--unrestricted
 			[[ "$1" =~ [cC] ]] && unset case_flag
-			[[ "$1" =~ [eE] ]] && type_flag=NO_HIDDEN
+			[[ "$1" =~ [eE] ]] && type_flag=--skip-hidden
 			[[ "$1" =~ [fF] ]] && filename_flag=--files-with-matches
 			[[ "$1" =~ [sS] ]] && sort_output=true
 			shift
@@ -1103,6 +1142,10 @@ EOT
 					file_pattern="${file_pattern/\./\\.}"
 					file_pattern="${file_pattern/\*/.*}"
 					if [[ -n "$target_dir" ]]; then
+						if [[ ! -d "$target_dir" ]]; then
+							echo "Error: directory not found"
+							return
+						fi
 						if [[ -n "$sort_output" ]]; then
 							ag --nogroup --color $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern" "$target_dir" | sort
 						else
@@ -1232,6 +1275,10 @@ EOT
 				elif [[ "$1" =~ / ]]; then
 					local dir="${1%/*}"
 					local filespec="${1##*/}"
+					if [[ ! -d "$dir" ]]; then
+						echo "Error: directory not found"
+						return
+					fi
 					grep -r $case_flag $filename_flag --include="$filespec" -FHn "$pattern" "$dir"
 				else
 					if [ "$ROPERDOT_OS_ENV" = "darwin" ]; then
@@ -1587,6 +1634,25 @@ EOT
 	fi
 }
 
+nav() {
+	if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
+		cat <<EOT
+nav: Navigate directories interactively
+
+Usage: nav [directory]
+
+nav allows the user to interactively navigate directories. The user will be
+prompted for which directory to select when multiple directories are available.
+nav will automatically navigate through single-child directories, both when
+traversing downward and upward. When "STOP HERE" is selected, the currently
+selected directory will become the current one.
+EOT
+		return
+	fi
+	local dest="$(_nav "$@")"
+	[[ -n "$dest" ]] && cd "$dest"
+}
+
 cdj() {
 	if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
 		cat <<EOT
@@ -1734,4 +1800,22 @@ EOT
     fi
     
     rm -f "$temp1" "$temp2" >/dev/null
+}
+
+fm_archive () {
+    local f="$1"
+    if [[ -n "$(is-archive "$f")" ]]; then
+        destdir=$(mktemp -d)
+        pushd "$destdir" || exit 1
+        extract-archive "$f" >/dev/null 2>&1
+        popd || exit 1
+        fm "$destdir"
+    elif [[ "$ROPERDOT_OS_ENV" = "darwin" && "$1" =~ \.dmg$ ]]; then
+        mount_dir="$(mount-dmg "$f")"
+        [[ -n "$mount_dir" ]] && fm "$mount_dir"
+    elif [[ "$ROPERDOT_OS_ENV" = "ubuntu" || "$ROPERDOT_OS_ENV" = "mint" ]] && [[ "$f" =~ \.iso$ ]]; then
+        mount-iso-readonly "$f"
+    else
+        echo "Cannot browse $f with file manager"
+    fi
 }

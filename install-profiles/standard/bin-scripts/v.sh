@@ -86,6 +86,7 @@ if [[ $# -eq 0 ]]; then
 	    if [[ -f "./$clip_contents" ]]; then
 	    	files=("$clip_contents")
 			found_clip_file=true
+			clipclear
 		fi
 	fi
 	if [[ -z "$found_clip_file" ]]; then
