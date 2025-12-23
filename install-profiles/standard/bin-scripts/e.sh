@@ -133,6 +133,9 @@ if [[ -n "$ROPERDOT_DESKTOP_ENV" ]]; then
 			*.@(odp|ppt|pptx|pptm) )
 				presentation-app "$f"
 				;;
+			*.@(md|markdown) )
+				markdown-app "$f"
+				;;
 			*.@(azw|epub|mobi) )
 				ebook-viewer-app "$f"
 				;;
