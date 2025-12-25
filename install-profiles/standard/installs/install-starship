@@ -29,7 +29,7 @@ if [[ -n $askstarship ]] && ask_yn_n "Install starship and use recommended promp
     [[ -d ~/.config/starship ]] || mkdir -p ~/.config/starship
     cp "${ROPERDOT_DIR}/config/apps/starship/"* ~/.config/starship
     
-    if ! grep -q "starship init zsh" ~/.zshrc 2>/dev/null; then
-        echo 'eval "$(starship init zsh)"' >> ~/.zshrc
-    fi
+#    if ! grep -q "starship init zsh" ~/.zshrc 2>/dev/null; then
+#        echo 'eval "$(starship init zsh)"' >> ~/.zshrc
+#    fi
 fi

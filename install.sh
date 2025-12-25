@@ -38,6 +38,21 @@ EOT
 
 [[ "$1" = "--help" || "$1" = "-h" || "$1" = "-?" ]] && help
 
+# if [[ "$1" != "--auto-launched" ]]; then
+# 	# Check if running inside Windows Terminal
+# 	if [[ -n "${WT_SESSION:-}" || -n "${WT_PROFILE_ID:-}" ]]; then
+# 	    cat <<EOT
+# The roperdot install configures Windows Terminal, and must be run in a PowerShell window instead.
+
+# Launching the install in a PowerShell window and exiting this script...
+# EOT
+# 		ORIGINAL_ARGS="$@"
+# 		[[ -z "$ORIGINAL_ARGS" ]] && ORIGINAL_ARGS="--dummy-option"
+# 		powershell.exe -Command "Start-Process -Verb RunAs -FilePath 'powershell.exe' -ArgumentList '-NoExit','-Command','wsl -d Ubuntu -e bash $HOME/roperdot/install.sh --auto-launched $ORIGINAL_ARGS'"
+# 	    exit 0
+# 	fi
+# fi
+
 export base_profile=standard extra_profiles
 
 # Assume user wants to accept recommended answers if stdin isn't connected to a TTY

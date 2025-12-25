@@ -79,7 +79,6 @@ fi
 source "${ROPERDOT_DIR}/source-scripts/do-timing"
 do_timing "phase 1a"
 
-#export LOCALUSR="${ROPERDOT_DIR}/local-usr"
 export LOCAL=~/.local
 export LOCALUSR=$LOCAL/usr
 [[ -d "${LOCALUSR}/bin" ]] || mkdir -p "${LOCALUSR}/bin"
@@ -148,69 +147,12 @@ fi
 do_timing "phase 2a"
 
 [[ -d "${LOCAL}/bin" ]] && PATH="${LOCAL}/bin:$PATH"
-[[ -d "${LOCALUSR}/bin" ]] && PATH="${LOCALUSR}/bin:$PATH"
+PATH="${LOCALUSR}/bin:$PATH"
 re=/usr/local/bin
 # For Perl-compatible regexes to work with brew-installed zsh on Mac, /usr/local/bin must precede /usr/bin in PATH
 # [[ -d "/usr/local/bin" && ! "$PATH" =~ $re ]] && PATH="$PATH:/usr/local/bin"
 [[ -d "/usr/local/bin" && ! "$PATH" =~ $re ]] && PATH="/usr/local/bin:$PATH"
 
-# Simplified legacy Python block on 8/25/2025
-#if ! command -v python >/dev/null 2>&1; then
-#	PYBIN=$(command -v python3)
-#	[[ -z "$PYBIN" ]] && PYBIN=$(command -v python2)
-#	if [[ -n "$PYBIN" ]]; then
-#		echo "Creating python symlink for $PYBIN"
-#		BINPATH="${PYBIN%/*}"
-#		sudo ln -s "$PYBIN" "$BINPATH/python"
-#		unset PYBIN BINPATH
-#	fi
-#fi
-#if [[ -d "$LOCALUSR/lib" ]]; then
-#	local_python_dir="$(find "$LOCALUSR/lib" -name "python*" 2>/dev/null)"
-#	if [[ -n "$local_python_dir" ]]; then
-#		if [[ -n "$PYTHONPATH" ]]; then
-#			export PYTHONPATH="$PYTHONPATH:$local_python_dir/site-packages"
-#		else
-#			export PYTHONPATH="$local_python_dir/site-packages"
-#		fi
-#	fi
-#fi
-#if [[ -d ~/Library/Python ]]; then
-#	if command -v python3 >/dev/null 2>&1; then
-#		re_match "$(python3 --version)" ' ([0-9]+\.[0-9]+)'
-#	else
-#		re_match "$(python --version)" ' ([0-9]+\.[0-9]+)'
-#	fi
-#	ver="${re_match[1]}"
-#	if [[ -n $ver ]]; then
-#		spd=~/Library/Python/$ver/lib/python/site-packages
-#		if [[ -d $spd ]]; then
-#			if [[ -n "$PYTHONPATH" ]]; then
-#				export PYTHONPATH="$PYTHONPATH:$spd"
-#			else
-#				export PYTHONPATH="$spd"
-#			fi
-#		fi
-#	fi
-#fi
-#if [[ "$ROPERDOT_OS_TYPE" = mac ]]; then
-#	if command -v python3 >/dev/null 2>&1; then
-#		re_match "$(python3 --version)" ' ([0-9]+\.[0-9]+)'
-#	else
-#		re_match "$(python --version)" ' ([0-9]+\.[0-9]+)'
-#	fi
-#	ver="${re_match[1]}"
-#	if [[ -n "$ver" ]]; then
-#		spd=~/".local/lib/python${ver}/site-packages"
-#		if [[ -d $spd ]]; then
-#			if [[ -n "$PYTHONPATH" ]]; then
-#				export PYTHONPATH="$PYTHONPATH:$spd"
-#			else
-#				export PYTHONPATH="$spd"
-#			fi
-#		fi
-#	fi
-#fi
 if ! command -v python >/dev/null 2>&1 && [[ -f /usr/bin/python3 ]]; then
     ln -sf /usr/bin/python3 "${ROPERDOT_DIR}/extra-bin/python"
 fi
@@ -332,16 +274,17 @@ export MANPAGER="less -X"
 
 # Prefer US English and use UTF-8
 # Set locale with fallback
-if locale -a 2>/dev/null | grep -qi -E "en_US\.utf-?8"; then
-    export LC_ALL="en_US.UTF-8"
-    export LANG="en_US.UTF-8"
-elif locale -a 2>/dev/null | grep -qi -E "C\.utf-?8"; then
-    export LC_ALL="C.UTF-8"
-    export LANG="C.UTF-8"
-else
-    # Don't set LC_ALL, just use basic LANG
-    export LANG="C"
-fi
+# Try to set UTF-8 locale with fallback chain
+for locale_candidate in "en_US.UTF-8" "en_US.utf8" "C.UTF-8" "C.utf8"; do
+    if locale -a 2>/dev/null | grep -qFx "$locale_candidate"; then
+        export LC_ALL="$locale_candidate"
+        export LANG="$locale_candidate"
+        break
+    fi
+done
+
+# If nothing worked, fall back to C
+[[ -z "$LANG" ]] && export LANG="C"
 
 if [[ -d /home/linuxbrew/.linuxbrew/bin ]]; then
 	export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin"
@@ -368,6 +311,7 @@ if command -v fzf >/dev/null 2>&1; then
 		export R_DEFAULT_COMMAND='fd --type file --follow --hidden --exclude .git'
 		export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 		export FZF_DEFAULT_OPTS="--extended"
+		unset have_fd
 	fi
 fi
 
@@ -399,41 +343,6 @@ else
 	}
 fi
 
-# 1 Jan 2019: wrapped ROPERDOT_PROMPT_COMMAND code in check for store_history to avoid repeating commands if the bootstrap is
-# sourced multiple times
-if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
-	if [[ ! "$ROPERDOT_PROMPT_COMMAND" =~ store_history ]]; then
-		if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
-			title () {
-				echo -ne "\033]0;$@\007"
-			}
-#			if [[ "$ROPERDOT_SHOW_GIT_PROMPT_INFO" = "true" ]]; then
-#				export ROPERDOT_PROMPT_COMMAND="${ROPERDOT_PROMPT_COMMAND:+$ROPERDOT_PROMPT_COMMAND$'\n'}title ${USER}@${HOSTNAME%%.*};prompt_git;store_history;apply_scheme;set +f"
-#			else
-#				export ROPERDOT_PROMPT_COMMAND="${ROPERDOT_PROMPT_COMMAND:+$ROPERDOT_PROMPT_COMMAND$'\n'}title ${USER}@${HOSTNAME%%.*};store_history;apply_scheme;set +f"
-#			fi
-			if [[ "$ROPERDOT_SHOW_GIT_PROMPT_INFO" = "true" ]]; then
-				export ROPERDOT_PROMPT_COMMAND="${ROPERDOT_PROMPT_COMMAND:+$ROPERDOT_PROMPT_COMMAND$'\n'}title ${USER}@${HOSTNAME%%.*};prompt_git;store_history;set +f"
-			else
-				export ROPERDOT_PROMPT_COMMAND="${ROPERDOT_PROMPT_COMMAND:+$ROPERDOT_PROMPT_COMMAND$'\n'}title ${USER}@${HOSTNAME%%.*};store_history;set +f"
-			fi
-		else
-#			if [[ "$ROPERDOT_SHOW_GIT_PROMPT_INFO" = "true" ]]; then
-#				export ROPERDOT_PROMPT_COMMAND="${ROPERDOT_PROMPT_COMMAND:+$ROPERDOT_PROMPT_COMMAND$'\n'}prompt_git;store_history;apply_scheme;set +f"
-#			else
-#				export ROPERDOT_PROMPT_COMMAND="${ROPERDOT_PROMPT_COMMAND:+$ROPERDOT_PROMPT_COMMAND$'\n'}store_history;apply_scheme;set +f"
-#			fi
-			if [[ "$ROPERDOT_SHOW_GIT_PROMPT_INFO" = "true" ]]; then
-				export ROPERDOT_PROMPT_COMMAND="${ROPERDOT_PROMPT_COMMAND:+$ROPERDOT_PROMPT_COMMAND$'\n'}prompt_git;store_history;set +f"
-			else
-				export ROPERDOT_PROMPT_COMMAND="${ROPERDOT_PROMPT_COMMAND:+$ROPERDOT_PROMPT_COMMAND$'\n'}store_history;set +f"
-			fi
-			# To make available in history the most recently executed command in another terminal session, just press
-			# Enter to issue a null command
-		fi
-	fi
-fi
-
 if [[ -n "$ROPERDOT_HISTORY_BY_SESSION" ]]; then
 	export HISTSIZE=2000
 	export HISTFILESIZE=2000
@@ -441,11 +350,10 @@ if [[ -n "$ROPERDOT_HISTORY_BY_SESSION" ]]; then
 	export HISTFILE=$HOME/.bash_history.$$
 	# Delete history files for inactive sessions
 	while IFS= read -r -d '' hf; do
-#		if [[ "$hf" =~ \.([0-9]+)$ ]]; then
-#			pid=${BASH_REMATCH[1]}
-		if re_match "$hf" "\.([0-9]+)$" ]]; then
-			pid="${re_match[1]}"
-			ps | grep "$pid.*[b]ash" >/dev/null || \rm "$hf"
+		if re_match "$hf" '\.([0-9]+)$'; then
+		    pid="${re_match[1]}"
+		    # Just check if PID exists (any process)
+		    kill -0 "$pid" 2>/dev/null || \rm "$hf"
 		fi
 	done < <(find ~ -maxdepth 1 -name ".bash_history.*" -print0)
 	# Delete history file on shell exit
@@ -486,14 +394,11 @@ elif infocmp xterm-256color >/dev/null 2>&1; then
     export TERM=xterm-256color
 fi
 
-if [[ "$ROPERDOT_OS_ENV" = "darwin" && "$TERM_PROGRAM" == "Apple_Terminal" ]]; then
-    export STARSHIP_CONFIG="$HOME/.config/starship/starship-terminal.toml"
+if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]]; then
     export TERM=xterm-256color # Force 256-color mode for other apps too
     unset COLORTERM  # Don't advertise 24-bit support
     # Vim: Use 256-color compatible colorscheme
     export VIM_COLOR_MODE="256color"
-else
-	export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
 fi
 
 do_timing "phase 9b"
@@ -515,7 +420,7 @@ do_timing "phase 9d"
 initialize_colors
 
 do_timing "phase 9e"
-[[ "$ROPERDOT_CURRENT_SHELL" = bash && -e "${ROPERDOT_DIR}/.bash_prompt" ]] && source "${ROPERDOT_DIR}/.bash_prompt"
+# [[ "$ROPERDOT_CURRENT_SHELL" = bash && -e "${ROPERDOT_DIR}/.bash_prompt" ]] && source "${ROPERDOT_DIR}/.bash_prompt"
 
 # export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
@@ -585,6 +490,7 @@ for link_file in "${link_files[@]}"; do
 		break
 	fi
 done
+unset link_files
 
 if [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
 	# File completion (can match files in subdirectories)
@@ -604,137 +510,183 @@ if [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
 
 	# format-specific completion
 	compdef '_files -g "*.sql" -g "*.json" -g "*.js" -g "*.html" -g "*.css"' format
+fi
 
-	# Define functions needed by Starship prompt
+# Pre-calculate prompt colors (used by set_git_info)
+PROMPT_RESET=$(printf '\033[0m')
+PROMPT_TRIANGLE=$(printf '\uE0B0')
 
-	function set_git_info() {
-	    if ! git rev-parse --git-dir >/dev/null 2>&1; then
-	    	export GIT_STATUS_INFO=""
-	    	return
-	    fi
+PROMPT_GREEN_FG=$(printf '\033[0;%sm' "${COLOR_GREEN_CODE}")
+PROMPT_GREEN_BG=$((COLOR_GREEN_CODE + 10))
+PROMPT_BLACK_ON_GREEN=$(printf '\033[0;%s;%sm' "${COLOR_BLACK_CODE}" "${PROMPT_GREEN_BG}")
 
-        local branch=$(git branch --show-current 2>/dev/null)
+PROMPT_YELLOW_FG=$(printf '\033[0;%sm' "${COLOR_YELLOW_CODE}")
+PROMPT_YELLOW_BG=$((COLOR_YELLOW_CODE + 10))
+PROMPT_BLACK_ON_YELLOW=$(printf '\033[0;%s;%sm' "${COLOR_BLACK_CODE}" "${PROMPT_YELLOW_BG}")
+
+PROMPT_BLACK_BG=$((COLOR_BLACK_CODE + 10))
+
+# For Apple Terminal
+PROMPT_GREEN_INITIAL_TRIANGLE=$(printf '\033[%s;%sm' "${PROMPT_GREEN_BG}" "${COLOR_BLACK_CODE}")
+PROMPT_GREEN_ON_BLACK=$(printf '\033[0;%s;40m' "${COLOR_GREEN_CODE}")
+PROMPT_YELLOW_INITIAL_TRIANGLE=$(printf '\033[%s;%sm' "${PROMPT_YELLOW_BG}" "${COLOR_BLACK_CODE}")
+PROMPT_YELLOW_ON_BLACK=$(printf '\033[0;%s;40m' "${COLOR_YELLOW_CODE}")
+
+# For non-Apple Terminal
+PROMPT_GREEN_INITIAL_TRIANGLE_BLUE=$(printf '\033[%s;%sm' "${PROMPT_GREEN_BG}" "${COLOR_BLUE_CODE}")
+PROMPT_YELLOW_INITIAL_TRIANGLE_BLUE=$(printf '\033[%s;%sm' "${PROMPT_YELLOW_BG}" "${COLOR_BLUE_CODE}")
+
+function set_git_info() {
+    if ! git rev-parse --git-dir >/dev/null 2>&1; then
+    	export GIT_STATUS_INFO=""
+    	return
+    fi
+
+    local branch=$(git branch --show-current 2>/dev/null)
+    
+    # Single git command for all local status
+    local status_output=$(git status --porcelain 2>/dev/null)
+    
+    # Parse status counts efficiently
+    local staged=0 unstaged=0 untracked=0 conflicted=0
+    while IFS= read -r line; do
+        [[ -z "$line" ]] && continue
+        local index_status="${line:0:1}"
+        local work_tree_status="${line:1:1}"
         
-        # Single git command for all local status
-        local status_output=$(git status --porcelain 2>/dev/null)
+        # Count status types
+        [[ "$index_status" != " " && "$index_status" != "?" ]] && ((staged++))
+        [[ "$work_tree_status" != " " && "$work_tree_status" != "?" ]] && ((unstaged++))
+        [[ "$index_status" == "?" ]] && ((untracked++))
+        [[ "$index_status" == "U" || "$work_tree_status" == "U" || "$index_status" == "A" && "$work_tree_status" == "A" ]] && ((conflicted++))
+    done <<< "$status_output"
+    
+    # Get ahead/behind counts (only if upstream exists)
+    local ahead=0 behind=0
+    if git rev-parse --verify @{upstream} >/dev/null 2>&1; then
+        local ahead_behind=$(git rev-list --count --left-right @{upstream}...HEAD 2>/dev/null)
+        behind=${ahead_behind%	*}
+        ahead=${ahead_behind#*	}
+    fi
+    
+    # Get stash count efficiently
+    local stashes=0
+    if git rev-parse --verify refs/stash >/dev/null 2>&1; then
+        stashes=$(git rev-list --walk-reflogs --count refs/stash 2>/dev/null || echo 0)
+    fi
+    
+    # Build status string
+    local status_indicators=""
+    [[ $staged -gt 0 ]] && status_indicators+=" +$staged"
+    [[ $unstaged -gt 0 ]] && status_indicators+=" !$unstaged"
+    [[ $untracked -gt 0 ]] && status_indicators+=" ?$untracked"
+    [[ $conflicted -gt 0 ]] && status_indicators+=" ~$conflicted"
+    [[ $ahead -gt 0 ]] && status_indicators+=" ⇡$ahead"
+    [[ $behind -gt 0 ]] && status_indicators+=" ⇣$behind"
+    [[ $stashes -gt 0 ]] && status_indicators+=" *$stashes"
+    
+    # Determine if repo is clean
+    if [[ $staged -eq 0 && $unstaged -eq 0 && $untracked -eq 0 && $conflicted -eq 0 ]]; then
+        # Clean
+        local clean_indicators=""
+        [[ $ahead -gt 0 ]] && clean_indicators+=" ⇡$ahead"
+        [[ $behind -gt 0 ]] && clean_indicators+=" ⇣$behind"
+        [[ $stashes -gt 0 ]] && clean_indicators+=" *$stashes"
         
-        # Parse status counts efficiently
-        local staged=0 unstaged=0 untracked=0 conflicted=0
-        while IFS= read -r line; do
-            [[ -z "$line" ]] && continue
-            local index_status="${line:0:1}"
-            local work_tree_status="${line:1:1}"
-            
-            # Count status types
-            [[ "$index_status" != " " && "$index_status" != "?" ]] && ((staged++))
-            [[ "$work_tree_status" != " " && "$work_tree_status" != "?" ]] && ((unstaged++))
-            [[ "$index_status" == "?" ]] && ((untracked++))
-            [[ "$index_status" == "U" || "$work_tree_status" == "U" || "$index_status" == "A" && "$work_tree_status" == "A" ]] && ((conflicted++))
-        done <<< "$status_output"
-        
-        # Get ahead/behind counts (only if upstream exists)
-        local ahead=0 behind=0
-        if git rev-parse --verify @{upstream} >/dev/null 2>&1; then
-            local ahead_behind=$(git rev-list --count --left-right @{upstream}...HEAD 2>/dev/null)
-            behind=${ahead_behind%	*}
-            ahead=${ahead_behind#*	}
-        fi
-        
-        # Get stash count efficiently
-        local stashes=0
-        if git rev-parse --verify refs/stash >/dev/null 2>&1; then
-            stashes=$(git rev-list --walk-reflogs --count refs/stash 2>/dev/null || echo 0)
-        fi
-        
-        # Build status string
-        local status_indicators=""
-        [[ $staged -gt 0 ]] && status_indicators+=" +$staged"
-        [[ $unstaged -gt 0 ]] && status_indicators+=" !$unstaged"
-        [[ $untracked -gt 0 ]] && status_indicators+=" ?$untracked"
-        [[ $conflicted -gt 0 ]] && status_indicators+=" ~$conflicted"
-        [[ $ahead -gt 0 ]] && status_indicators+=" ⇡$ahead"
-        [[ $behind -gt 0 ]] && status_indicators+=" ⇣$behind"
-        [[ $stashes -gt 0 ]] && status_indicators+=" *$stashes"
-        
-        local reset=$(printf '\033[0m')
-        local triangle=$(printf '\uE0B0')
-        
-        # Determine if repo is clean
-        if [[ $staged -eq 0 && $unstaged -eq 0 && $untracked -eq 0 && $conflicted -eq 0 ]]; then
-            # Clean - but show ahead/behind and stashes if they exist
-	        local green_fg=$(printf '\033[0;%sm' "${COLOR_GREEN_CODE}")
-	        local green_bg=$((COLOR_GREEN_CODE + 10))
-	        local black_on_green=$(printf '\033[0;%s;%sm' "${COLOR_BLACK_CODE}" "${green_bg}")
-            local clean_indicators=""
-            [[ $ahead -gt 0 ]] && clean_indicators+=" ⇡$ahead"
-            [[ $behind -gt 0 ]] && clean_indicators+=" ⇣$behind"
-            [[ $stashes -gt 0 ]] && clean_indicators+=" *$stashes"
-   	        if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]]; then
-	        	local initial_triangle_color=$(printf '\033[%s;%sm' "${green_bg}" "${COLOR_BLACK_CODE}")
-	        	local green_on_black=$(printf '\033[0;%s;40m' "${COLOR_GREEN_CODE}")
-	            export GIT_STATUS_INFO="${initial_triangle_color}${triangle}${black_on_green} ${branch}${clean_indicators} ${green_on_black}${triangle}${reset}"
-	        else
-	        	local initial_triangle_color=$(printf '\033[%s;%sm' "${green_bg}" "${COLOR_BLUE_CODE}")
-	            export GIT_STATUS_INFO="${initial_triangle_color}${triangle}${black_on_green} ${branch}${clean_indicators} ${green_fg}${triangle}${reset}"
-	        fi
+        if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]]; then
+            export GIT_STATUS_INFO="${PROMPT_GREEN_INITIAL_TRIANGLE}${PROMPT_TRIANGLE}${PROMPT_BLACK_ON_GREEN} ${branch}${clean_indicators} ${PROMPT_GREEN_ON_BLACK}${PROMPT_TRIANGLE}${PROMPT_RESET}"
         else
-            # Dirty
-	        local yellow_fg=$(printf '\033[0;%sm' "${COLOR_YELLOW_CODE}")
-	        local yellow_bg=$((COLOR_YELLOW_CODE + 10))
-	        local black_on_yellow=$(printf '\033[0;%s;%sm' "${COLOR_BLACK_CODE}" "${yellow_bg}")
-	        if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]]; then
-	        	local initial_triangle_color=$(printf '\033[%s;%sm' "${yellow_bg}" "${COLOR_BLACK_CODE}")
-	        	local yellow_on_black=$(printf '\033[0;%s;40m' "${COLOR_YELLOW_CODE}")
-	            export GIT_STATUS_INFO="${initial_triangle_color}${triangle}${black_on_yellow} ${branch}${status_indicators} ${yellow_on_black}${triangle}${reset}"
-	        else
-	        	local initial_triangle_color=$(printf '\033[%s;%sm' "${yellow_bg}" "${COLOR_BLUE_CODE}")
-	            export GIT_STATUS_INFO="${initial_triangle_color}${triangle}${black_on_yellow} ${branch}${status_indicators} ${yellow_fg}${triangle}${reset}"
-	        fi
+            export GIT_STATUS_INFO="${PROMPT_GREEN_INITIAL_TRIANGLE_BLUE}${PROMPT_TRIANGLE}${PROMPT_BLACK_ON_GREEN} ${branch}${clean_indicators} ${PROMPT_GREEN_FG}${PROMPT_TRIANGLE}${PROMPT_RESET}"
         fi
-	}
+    else
+        # Dirty
+        if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]]; then
+            export GIT_STATUS_INFO="${PROMPT_YELLOW_INITIAL_TRIANGLE}${PROMPT_TRIANGLE}${PROMPT_BLACK_ON_YELLOW} ${branch}${status_indicators} ${PROMPT_YELLOW_ON_BLACK}${PROMPT_TRIANGLE}${PROMPT_RESET}"
+        else
+            export GIT_STATUS_INFO="${PROMPT_YELLOW_INITIAL_TRIANGLE_BLUE}${PROMPT_TRIANGLE}${PROMPT_BLACK_ON_YELLOW} ${branch}${status_indicators} ${PROMPT_YELLOW_FG}${PROMPT_TRIANGLE}${PROMPT_RESET}"
+        fi
+    fi
+}
+
+set_terminal_title () {
+#	local display_path="${USER}@${HOST%%.*}"
+    local display_path="${PWD/$HOME/~}"
+    display_path="${display_path#${display_path%/*/*}/}"
+    echo -ne "\033]0;${display_path}\007"
+}
+
+if [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
+	PROMPT_LEFT_TRIANGLE=$(printf '\uE0B2')  # Left-pointing triangle
+	PROMPT_DEPTH_SYMBOL=$(printf '\uF160')
+
+	PROMPT_MAGENTA_BG=$((COLOR_MAGENTA_CODE + 10))
+	PROMPT_WHITE_BG=$((COLOR_WHITE_CODE + 10))
+
+	PROMPT_MAGENTA_ON_BLACK=$(printf '\033[%s;%sm' "${PROMPT_BLACK_BG}" "${COLOR_MAGENTA_CODE}")
+	PROMPT_BRYELLOW_ON_BLACK=$(printf '\033[%s;%sm' "${PROMPT_BLACK_BG}" "${COLOR_BRYELLOW_CODE}")
+
+	PROMPT_MAGENTA_ON_WHITE=$(printf '\033[%s;%sm' "${PROMPT_WHITE_BG}" "${COLOR_MAGENTA_CODE}")
+	PROMPT_BLACK_ON_MAGENTA=$(printf '\033[0;%s;%sm' "${COLOR_BLACK_CODE}" "${PROMPT_MAGENTA_BG}")
+	PROMPT_MAGENTA_FG=$(printf '\033[0;%sm' "${COLOR_MAGENTA_CODE}")
 
 	function set_status_info() {
 	    local last_exit=$?
-        local reset=$(printf '\033[0m')
-        local black_bg=$((COLOR_BLACK_CODE + 10))
 	    if [[ $last_exit -eq 0 ]]; then
-	        local magenta_on_black=$(printf '\033[%s;%sm' "${black_bg}" "${COLOR_MAGENTA_CODE}")
-	        export STATUS_INFO="${magenta_on_black} ✔ ${reset}"
+	        export STATUS_INFO="${PROMPT_MAGENTA_ON_BLACK} ✔ ${PROMPT_RESET}"
 	    else
-	        local bright_yellow_on_black=$(printf '\033[%s;%sm' "${black_bg}" "${COLOR_BRYELLOW_CODE}")
-	        export STATUS_INFO="${bright_yellow_on_black} ${last_exit} ❌ ${reset}"
+	        export STATUS_INFO="${PROMPT_BRYELLOW_ON_BLACK} ${last_exit} ❌ ${PROMPT_RESET}"
 	    fi
 	}
 
 	function set_dir_stack_info() {
 	    local depth=$(dirs -p | wc -l)
 	    if [[ $depth -lt 2 ]]; then
-	    	export DIR_STACK_INFO=""
-	    	return
+	        export DIR_STACK_INFO=""
+	        return
 	    fi
-	    # Calculate background colors
-	    local magenta_bg=$((COLOR_MAGENTA_CODE + 10))
-	    local white_bg=$((COLOR_WHITE_CODE + 10))
-	    
-	    # Construct ANSI codes with printf
-	    local magenta_on_white=$(printf '\033[%s;%sm' "${white_bg}" "${COLOR_MAGENTA_CODE}")
-	    local black_on_magenta=$(printf '\033[0;%s;%sm' "${COLOR_BLACK_CODE}" "${magenta_bg}")
-	    local magenta_fg=$(printf '\033[0;%sm' "${COLOR_MAGENTA_CODE}")
-	    local reset=$(printf '\033[0m')
-	    local triangle=$(printf '\uE0B2')  # Left-pointing triangle
-	    local depth_symbol=$(printf '\uF160')
 	    
 	    # Build the segment: triangle + content + end symbol
-	    export DIR_STACK_INFO="${magenta_on_white}${triangle}${black_on_magenta} ${depth} ${black_on_magenta}${depth_symbol} ${reset}"
+	    export DIR_STACK_INFO="${PROMPT_MAGENTA_ON_WHITE}${PROMPT_LEFT_TRIANGLE}${PROMPT_BLACK_ON_MAGENTA} ${depth} ${PROMPT_BLACK_ON_MAGENTA}${PROMPT_DEPTH_SYMBOL} ${PROMPT_RESET}"
 	}
 
-	precmd() {
-#		apply_scheme
-		set_status_info
-		set +F
-		set_git_info
-		set_dir_stack_info
-	}
+	if command -v starship >/dev/null 2>&1; then
+        if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]]; then
+            export STARSHIP_CONFIG="$HOME/.config/starship/starship-terminal.toml"
+        else
+            export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
+        fi
+	    precmd() {
+	    	# apply_scheme
+			set_terminal_title
+	        set_status_info
+	        set +F
+	        set_git_info
+	        set_dir_stack_info
+	    }
+	    eval "$(starship init zsh)"
+	else
+	    precmd() {
+	    	set_terminal_title
+	        set +F
+	    }
+	fi
+else
+	# bash
+    if [[ ! "$PROMPT_COMMAND" =~ store_history ]]; then
+        export PROMPT_COMMAND="set_terminal_title; store_history; set +f"
+    fi
+    
+    if command -v starship >/dev/null 2>&1; then
+        if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]]; then
+            export STARSHIP_CONFIG="$HOME/.config/starship/starship-terminal.toml"
+        elif [[ -n "$SSH_CONNECTION" || "$ROPERDOT_SHOW_HOSTNAME" = "true" ]]; then
+            export STARSHIP_CONFIG="$HOME/.config/starship/starship-bash-server.toml"
+        else
+            export STARSHIP_CONFIG="$HOME/.config/starship/starship-bash.toml"
+        fi
+        eval "$(starship init bash)"
+        export PROMPT_COMMAND="set_git_info; ${PROMPT_COMMAND}"
+    fi
 fi
 
 do_timing "phase 11"
@@ -762,6 +714,7 @@ for oracle_dir in /opt/oracle/instantclient_*; do
         break
     fi
 done
+unset oracle_dir
 
 # .NET environment
 if command -v dotnet >/dev/null 2>&1; then

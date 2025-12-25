@@ -72,12 +72,12 @@ ask_to_install_always () {
 		return 0
 	fi
 	if [[ "$app_name" = "Linuxbrew" ]]; then
-		ask_yn "Linuxbrew is a package manager required to install several applications. Install it"
+		ask_yn "Linuxbrew is a package manager required to install several applications. Install it [y/n]?"
 	elif [[ -n "$single_install" ]]; then
-		ask_yn "Install $app_name ($desc)"
+		ask_yn "Install $app_name ($desc) [y/n]?"
 	else
 		echo "$app_name: $desc"
-		ask_yn "Install $app_name"
+		ask_yn "Install $app_name [y/n]?"
 	fi
 	local return_code=$?
 	[[ $return_code -eq 0 ]] && echo "Installing $app_name"

@@ -78,14 +78,12 @@ gui_app_presence_and_path () {
 			
 			[[ -z "$app_dir" ]] && app_dir="$app"
 			if [[ "$app_dir" =~ [*] ]]; then
-				echo "In if"
 				app_path="$(find "$program_files_path" -maxdepth 1 -type d -iname "$app_dir" 2>/dev/null)"
 				if [[ -z "$app_path" ]]; then
 					app_path="$(find "$program_files_86_path" -maxdepth 1 -type d -iname "$app_dir" 2>/dev/null)"
 					[[ -z "$app_path" ]] && app_path="$(find "$app_local_path" -maxdepth 1 -type d -iname "$app_dir" 2>/dev/null)"
 				fi
 			else
-				echo "In else"
 				if [[ -d "${program_files_path}/$app_dir" ]]; then
 					app_path="${program_files_path}/$app_dir"
 				elif [[ -d "${program_files_86_path}/$app_dir" ]]; then
@@ -96,7 +94,6 @@ gui_app_presence_and_path () {
 					app_path="${app_local_path}/Programs/$app_dir"
 				fi
 			fi
-			echo "app_path: $app_path"
 		fi
 	else
 		case "$ROPERDOT_OS_ENV" in

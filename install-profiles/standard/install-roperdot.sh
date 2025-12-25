@@ -348,7 +348,7 @@ if [[ -z "$skip_to_installs" ]]; then
 
 	if [[ -n "$locale_needs_setup" ]]; then
 		if [[ -n "$has_sudo" ]]; then
-		    if ask_yn_y "Set up en_US.UTF-8 as the default locale?" y; then
+		    if ask_yn_y "Set up en_US.UTF-8 as the default locale" y; then
 		    	echo "Installing and configuring locale..."
 		        sudo apt install locales
 		        sudo locale-gen en_US.UTF-8

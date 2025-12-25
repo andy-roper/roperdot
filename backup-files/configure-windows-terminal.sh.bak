@@ -1,0 +1,209 @@
+#
+# Description: (Windows) Imports schemes into Windows Terminal settings and sets the current scheme
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
+    cat <<EOT
+configure-windows-terminal
+Usage: configure-windows-terminal
+
+This script imports the schemes in roperdot/config/color-schemes/windows_terminal into
+the Windows Terminal settings.json, and sets the scheme based on the value of
+ROPERDOT_COMMON_COLOR_SCHEME.
+EOT
+    exit 0
+fi
+
+. "${ROPERDOT_DIR}/source-scripts/windows-terminal-functions"
+
+echo "Importing Roperdot color schemes into Windows Terminal settings..."
+
+if ! terminal_settings_file="$(windows_terminal_settings_location)"; then
+    echo "Windows Terminal settings file not found"
+	exit 1
+fi
+
+color_schemes_dir="${ROPERDOT_DIR}/config/color-schemes/windows_terminal"
+
+temp_settings=$(mktemp)
+
+cleanup() {
+	[[ -f "$temp_settings" ]] && rm "$temp_settings"
+}
+
+trap "cleanup" EXIT
+
+# Start with the current settings, ensuring schemes array exists
+if ! /usr/bin/jq '.schemes //= []' "$terminal_settings_file" > "$temp_settings"; then
+    echo "Error: Failed to read Windows Terminal settings file"
+    exit 1
+fi
+
+# Process each color scheme file
+for scheme_file in "$color_schemes_dir"/*.json; do
+    if [[ -f "$scheme_file" ]]; then
+        scheme_name=$(basename "$scheme_file" .json)
+
+        # Read the scheme JSON
+        scheme_json=
+        if ! scheme_json=$(cat "$scheme_file"); then
+            echo "Warning: Failed to read $scheme_file, skipping..."
+            continue
+        fi
+
+        # Check if scheme already exists in settings
+        scheme_display_name=$(/usr/bin/jq -r '.name' "$scheme_file")
+		existing_scheme_index=$(/usr/bin/jq --arg name "$scheme_display_name" '.schemes | to_entries[] | select(.value.name == $name) | .key' "$temp_settings")
+        
+        if [[ -n "$existing_scheme_index" ]]; then
+            # Update existing scheme
+            if /usr/bin/jq --argjson scheme "$scheme_json" --argjson index "$existing_scheme_index" '.schemes[$index] = $scheme' "$temp_settings" > "${temp_settings}.tmp"; then
+                mv "${temp_settings}.tmp" "$temp_settings"
+                echo "Updated scheme $scheme_name"
+            fi
+        else
+            # Add new scheme
+            if /usr/bin/jq --argjson scheme "$scheme_json" '.schemes += [$scheme]' "$temp_settings" > "${temp_settings}.tmp"; then
+                mv "${temp_settings}.tmp" "$temp_settings"
+                echo "Added scheme $scheme_name"
+            fi
+        fi
+    fi
+done
+
+# Validate the final JSON
+if ! /usr/bin/jq empty "$temp_settings" 2>/dev/null; then
+    echo "Error: Generated settings file is not valid JSON"
+    exit 1
+fi
+
+# Create backup of original settings
+backup_file="${terminal_settings_file}.backup.$(date +%Y%m%d_%H%M%S)"
+cp "$terminal_settings_file" "$backup_file"
+
+# Replace the original settings file
+if mv "$temp_settings" "$terminal_settings_file"; then
+    echo "Successfully imported color schemes into Windows Terminal"
+else
+    echo "Error: Failed to update Windows Terminal settings file"
+    # Try to restore from backup if it exists
+    if [[ -f "$backup_file" ]]; then
+        cp "$backup_file" "$terminal_settings_file"
+        echo "Restored original settings from backup"
+    fi
+    exit 1
+fi
+
+# Step 1: Close Windows Terminal if running
+if tasklist.exe 2>/dev/null | grep -qi "WindowsTerminal.exe"; then
+	# echo -e "\nWindows Terminal needs to be closed before continuing the install. Please close the window and then press Enter."
+	# read input < /dev/tty
+	# if tasklist.exe 2>/dev/null | grep -qi "WindowsTerminal.exe"; then
+	# 	echo "Windows Terminal is still running; exiting configuration of Windows Terminal"
+	# 	exit 1
+	# fi
+	echo -e "\nWindows Terminal needs to be closed before continuing the install."
+	echo "Please close all Windows Terminal windows now."
+	echo "Waiting for Windows Terminal be closed..."
+	
+	# Poll until Windows Terminal is closed
+	while tasklist.exe 2>/dev/null | grep -qi "WindowsTerminal.exe"; do
+		sleep 1
+	done
+	
+	echo "Detected Windows Terminal was closed; continuing..."
+	sleep 1  # Brief pause to ensure process is fully terminated
+fi
+
+# Step 2: Delete state.json to force profile regeneration
+state_file="${terminal_settings_file%/*}/state.json"
+if [[ -f "$state_file" ]]; then
+    rm -f "$state_file"
+    echo "Deleted state.json to force profile regeneration"
+fi
+
+# Step 3: Remove all Ubuntu profiles from settings.json
+echo "Removing existing Ubuntu profiles..."
+if /usr/bin/jq '.profiles.list = [.profiles.list[] | select(.name != "Ubuntu")]' "$terminal_settings_file" > "${terminal_settings_file}.tmp"; then
+    mv "${terminal_settings_file}.tmp" "$terminal_settings_file"
+    echo "Removed all Ubuntu profiles"
+else
+    echo "Error: Failed to remove Ubuntu profiles"
+    exit 1
+fi
+
+# Step 4: Launch Windows Terminal to auto-generate Ubuntu profile
+cat <<EOT
+Launching Windows Terminal to generate Ubuntu profile...
+Please close the Terminal application after it opens.
+
+EOT
+powershell.exe -Command "Start-Process -FilePath 'wt.exe' -Wait"
+echo -e "Windows Terminal closed\n"
+
+# Step 5: Verify Ubuntu profile was auto-generated
+ubuntu_count=$(jq '[.profiles.list[] | select(.name == "Ubuntu")] | length' "$terminal_settings_file")
+if [[ "$ubuntu_count" -eq 0 ]]; then
+    echo "Error: No Ubuntu profile was auto-generated!"
+    exit 1
+fi
+echo "Ubuntu profile auto-generated successfully"
+
+# Step 6: Find the auto-generated Ubuntu profile GUID
+# Prefer Microsoft.WSL (what auto-generates on modern Windows), then fall back to Windows.Terminal.Wsl
+ubuntu_guid=$(jq -r '
+    [.profiles.list[] | select(.name == "Ubuntu")] |
+    (
+        map(select(.source == "Microsoft.WSL"))[0] //
+        map(select(.source == "Windows.Terminal.Wsl"))[0] //
+        .[0]
+    ) | .guid
+' "$terminal_settings_file")
+
+if [[ -z "$ubuntu_guid" ]] || [[ "$ubuntu_guid" == "null" ]]; then
+    echo "Error: Could not find auto-generated Ubuntu profile GUID"
+    exit 1
+fi
+
+echo "Found Ubuntu profile with GUID: $ubuntu_guid"
+
+if [[ "$ROPERDOT_COMMON_COLOR_SCHEME" == default ]]; then
+	target_scheme="Roperdot ${ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME}"
+else
+	target_scheme="Roperdot ${ROPERDOT_COMMON_COLOR_SCHEME}"
+fi
+
+# Step 7: Configure the auto-generated Ubuntu profile
+echo "Configuring Ubuntu profile..."
+
+#  |
+#    .defaultTerminal = "{2bde4a90-d05f-401c-9492-e40884ead1d8}"
+if /usr/bin/jq --arg guid "$ubuntu_guid" --arg scheme "$target_scheme" '
+    .profiles.list |= map(
+        if .guid == $guid then
+            .hidden = false |
+            .colorScheme = $scheme |
+            .font = {"face": "Hack Nerd Font", "size": 11}
+        else
+            .
+        end
+    ) |
+    .profiles.defaults.colorScheme = $scheme |
+    .defaultProfile = $guid
+' "$terminal_settings_file" > "${terminal_settings_file}.tmp"; then
+    mv "${terminal_settings_file}.tmp" "$terminal_settings_file"
+    cat <<EOT
+Successfully configured Ubuntu profile
+- Set font: Hack Nerd Font, size 11
+- Set color scheme: $target_scheme
+- Set as default profile
+- Set Windows Terminal as default terminal application
+EOT
+else
+    echo "Error: Failed to configure Ubuntu profile"
+    exit 1
+fi
+
+echo "Windows Terminal configuration complete"
