@@ -1,5 +1,7 @@
 export INSTALLING_ROPERDOT=true
 
+[[ "$ROPERDOT_CURRENT_SHELL" = zsh ]] && setopt KSH_ARRAYS
+
 [[ -z "$CALLED_FROM_INSTALL" ]] && echo "Setting up for the install..."
 
 . "${ROPERDOT_DIR}/source-scripts/input-functions"
@@ -210,6 +212,19 @@ if [[ "$ROPERDOT_OS_ENV" = darwin ]]; then
 		$install_shell "${ROPERDOT_DIR}/install-profiles/standard/installs/install-zsh" || exit 1
 		export zsh_newly_installed=true
 	fi
+elif ! command -v brew >/dev/null 2>&1; then
+	cat <<EOT
+Linuxbrew is needed by multiple installs to install applications.
+curl and ruby will also need to be installed if they are not present.
+
+EOT
+	if ask_yn_y "Install brew" y; then
+		command -v curl >/dev/null 2>&1 || sudo apt install curl
+		command -v ruby >/dev/null 2>&1 || sudo apt install ruby
+		$install_shell "${ROPERDOT_DIR}/install-profiles/standard/installs/install-linuxbrew"
+	else
+		echo "Some application installs will be skipped since Linuxbrew is not installed."
+	fi
 fi
 
 if command -v python3 >/dev/null 2>&1; then
@@ -253,11 +268,17 @@ EOT
 	
 	if ! command -v choco >/dev/null 2>&1 && ! command -v choco.exe >/dev/null 2>&1; then
 		cat <<EOT
-${warning_text}Chocolatey (https://chocolatey.org/) is used by the installer to install git,
-several shell applications and GUI applications. It's strongly advised that
-you install Chocolatey before continuing this install.${normal_text}
+${warning_text}Chocolatey (https://chocolatey.org/) is used by the installer to install git
+and GUI applications. It's strongly advised that you install Chocolatey before continuing
+this install.${normal_text}
 
 EOT
+	    if ask_yn_y "Install Chocolatey now" y; then
+	        powershell.exe -Command "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
+	        export PATH="$PATH:/mnt/c/ProgramData/chocolatey/bin"
+	    else
+	        echo "Continuing with the install, but GUI installations will be skipped."
+	    fi
 	fi
 fi
 
@@ -268,6 +289,26 @@ fi
 
 if [[ -d /home/linuxbrew/.linuxbrew/bin && ! "$PATH" =~ linuxbrew ]]; then
 	export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin"
+fi
+
+# Check for gum
+if ! command -v gum >/dev/null 2>&1; then
+	if ask_yn_y "The gum package is required for accepting user input and selections. Install it" y; then
+		if command -v brew >/dev/null 2>&1; then
+			brew install gum
+		elif [[ "$ROPERDOT_OS_NAME" = "ubuntu" || "$ROPERDOT_OS_NAME" = "debian" ]]; then
+			sudo mkdir -p /etc/apt/keyrings
+			curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+			echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
+			sudo apt update && sudo apt install gum
+		else
+			echo "Unable to install gum; exiting the install"
+			exit 0
+		fi
+	else
+		echo "Exiting the install"
+		exit 0
+	fi
 fi
 
 # Disregard sudo access unless the user has full access since it's almost certain if the
@@ -483,16 +524,16 @@ EOT
 
 	ask_yn_n "roperdot includes an ft script to search files for matching patterns. Do you want its search to include hidden files" y "$ROPERDOT_FT_ALL" && ROPERDOT_FT_ALL=true
 
-	if [[ ( -z "$resume_step" || "$resume_step" -le 4) && -n "$PROCESSING_BASH" ]]; then
-		if ask_yn_n "Override the default bash prompt" y "$ROPERDOT_OVERRIDE_PROMPT"; then
-			ROPERDOT_OVERRIDE_PROMPT=true
-			[[ -z "$ROPERDOT_PROMPT_LINES" ]] && ROPERDOT_PROMPT_LINES=1
-			ask_number "Do you want to have 1 or 2 lines in your bash prompt" 2 1 "$ROPERDOT_PROMPT_LINES"
-		else
-			ROPERDOT_OVERRIDE_PROMPT=false
-			unset ROPERDOT_PROMPT_LINES ROPERDOT_SHOW_GIT_PROMPT_INFO
-		fi
-	fi
+	# if [[ ( -z "$resume_step" || "$resume_step" -le 4) && -n "$PROCESSING_BASH" ]]; then
+	# 	if ask_yn_n "Override the default bash prompt" y "$ROPERDOT_OVERRIDE_PROMPT"; then
+	# 		ROPERDOT_OVERRIDE_PROMPT=true
+	# 		[[ -z "$ROPERDOT_PROMPT_LINES" ]] && ROPERDOT_PROMPT_LINES=1
+	# 		ask_number "Do you want to have 1 or 2 lines in your bash prompt" 2 1 "$ROPERDOT_PROMPT_LINES"
+	# 	else
+	# 		ROPERDOT_OVERRIDE_PROMPT=false
+	# 		unset ROPERDOT_PROMPT_LINES ROPERDOT_SHOW_GIT_PROMPT_INFO
+	# 	fi
+	# fi
 
 	unset nvim
 	if command -v nvim >/dev/null 2>&1; then
@@ -571,7 +612,7 @@ EOT
 		ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME=hybrid
 	else
 		declare -a schemes
-		schemes+=("default")
+		schemes+=("default (hybrid)")
 		pushd "${ROPERDOT_DIR}/config/color-schemes/source" >&/dev/null
 		PS3="Default color scheme? "
 		for scheme in *; do

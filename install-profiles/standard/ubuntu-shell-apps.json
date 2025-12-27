@@ -1,12 +1,5 @@
 [
 	{
-		"app": "cURL",
-		"binary": "curl",
-		"package": "curl",
-		"list_prerequisite": "apt-get",
-		"desc": "Tool for transferring data from/to a server"
-	},
-	{
 		"app": "lynx",
 		"binary": "lynx",
 		"package": "lynx",
@@ -34,20 +27,6 @@
 		"package": "git",
 		"list_prerequisite": "apt-get",
 		"desc": "Client for the Git distributed version control system"
-	},
-	{
-		"app": "ruby",
-		"binary": "ruby",
-		"package": "ruby",
-		"list_prerequisite": "apt-get",
-		"desc": "Compiler/interpreter for the Ruby programming language, required to use Linuxbrew"
-	},
-	{
-		"app": "Linuxbrew",
-		"binary": "brew",
-		"install_prerequisite": "ruby,curl",
-		"install_script": "install-linuxbrew",
-		"desc": "Homebrew package manager for Linux"
 	},
 	{
 		"app": "apt-file",

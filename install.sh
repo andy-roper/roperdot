@@ -115,6 +115,8 @@ fi
 source "${ROPERDOT_DIR}/source-scripts/detect-os"
 [[ -z "$ROPERDOT_OS_ENV" ]] && echo "Could not detect OS properly. Exiting the install." && exit 1
 
+[[ "$ROPERDOT_CURRENT_SHELL" = zsh ]] && setopt KSH_ARRAYS
+
 [[ -n "$installs_to_pause" ]] && export installs_to_pause
 
 command -v bash >/dev/null 2>&1 && export bash_present=true
@@ -212,6 +214,9 @@ fi
 #	exec /usr/local/bin/bash "$0" "$@"
 #	exit 1
 #fi
+
+export GUM_CHOOSE_CURSOR_FOREGROUND="#ab5"
+export GUM_CHOOSE_SELECTED_FOREGROUND="#ab5"
 
 if [[ "$install_shell" = bash ]]; then
 	# Initiate logging and strip out ANSI sequences from logging
