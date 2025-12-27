@@ -17,7 +17,7 @@ if [[ -e ~/.zshrc ]]; then
 else
 	askstarship=true
 fi
-if [[ -n $askstarship ]] && ask_yn_n "Install starship and use recommended prompt" y; then
+if [[ -n $askstarship ]] && ask_yn_y "Install starship and use recommended prompt" y; then
 	install_script="$(mktemp ${TMPDIR:-/tmp}/tempXXXXXX)"
 	mv "$install_script" "$install_script.sh"
 	install_script="$install_script.sh"

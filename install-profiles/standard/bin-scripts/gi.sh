@@ -1,4 +1,3 @@
-#!/usr/bin/env zsh
 #
 # Description: Git Information: interactive git information viewer
 #
@@ -16,9 +15,8 @@ EOT
 	exit 0
 fi
 
-# Check if fzf is available
-if ! command -v fzf &> /dev/null; then
-    echo "Error: fzf is required but not installed" >&2
+if ! command -v gum >/dev/null 2>&1 && ! command -v fzf >/dev/null 2>&1; then
+    echo "Error: either gum or fzf is required to use this script" >&2
     exit 1
 fi
 
@@ -30,14 +28,20 @@ fi
 
 local current_branch=$(git rev-parse --abbrev-ref HEAD)
 
-# Menu options
-local action=$(cat <<EOF | fzf --prompt="Git Information (on: $current_branch) > " --height=40% --reverse
-Status (git status)
-Diff (git diff)
-Log (git log --oneline --graph --decorate --all)
-Branches (git branch -a)
-EOF
+local menu_items=(
+    "Status (git status)"
+    "Diff (git diff)"
+    "Log (git log --oneline --graph --decorate --all)"
+    "Branches (git branch -a)"
 )
+
+local action
+if command -v gum &>/dev/null; then
+    local height=$(( LINES * 4 / 10 ))
+    action=$(gum choose --header="Git Information (on: $current_branch)" --height=$height "${menu_items[@]}")
+else
+    action=$(printf '%s\n' "${menu_items[@]}" | fzf --prompt="Git Information (on: $current_branch) > " --height=40% --reverse)
+fi
     
 case "$action" in
     "Status"*)

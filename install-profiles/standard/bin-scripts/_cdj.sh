@@ -55,9 +55,8 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Check if fzf is available
-if ! command -v fzf >/dev/null 2>&1; then
-    echo "Error: fzf is required but not installed" >&2
+if ! command -v gum >/dev/null 2>&1 && ! command -v fzf >/dev/null 2>&1; then
+    echo "Error: gum or fzf is required to run this script" >&2
     exit 1
 fi
 
@@ -236,17 +235,27 @@ while IFS= read -r dir; do
     ACTUAL_PATHS+=("$dir")
 done <<< "$JAVA_DIRS"
 
-# Get count for fzf height
+# Show in gum or fzf for selection (using cat -n for line numbers)
 COUNT=${#DISPLAY_PATHS[@]}
-HEIGHT=$((COUNT + 2))
-(( HEIGHT > LINES / 2 )) && HEIGHT=50%
-
-# Show in fzf for selection (using cat -n for line numbers)
-# --exact flag makes filtering consecutive/exact instead of fuzzy
-SELECTED_INDEX=$(printf "%s\n" "${DISPLAY_PATHS[@]}" | \
-    cat -n | \
-    fzf --exact --with-nth=2.. --prompt="Select Java directory: " --layout=reverse -0 --height="$HEIGHT" | \
-    awk '{print $1}')
+if command -v gum >/dev/null 2>&1; then
+    local gum_height=$((COUNT + 2))
+    (( gum_height > LINES / 2 )) && gum_height=$(( LINES / 2 ))
+    SELECTED_PATH=$(printf "%s\n" "${DISPLAY_PATHS[@]}" | \
+        gum filter --placeholder="Select Java directory: " --height="$gum_height")
+    # Find the index by searching for the selected value
+    SELECTED_INDEX=1
+    for path in "${DISPLAY_PATHS[@]}"; do
+        [[ "$path" == "$SELECTED_PATH" ]] && break
+        (( SELECTED_INDEX++ ))
+    done
+else
+	HEIGHT=$((COUNT + 2))
+	(( HEIGHT > LINES / 2 )) && HEIGHT=50%
+	SELECTED_INDEX=$(printf "%s\n" "${DISPLAY_PATHS[@]}" | \
+	    cat -n | \
+	    fzf --exact --with-nth=2.. --prompt="Select Java directory: " --layout=reverse -0 --height="$HEIGHT" | \
+	    awk '{print $1}')
+fi
 
 [[ -z "$SELECTED_INDEX" ]] && exit 0
 

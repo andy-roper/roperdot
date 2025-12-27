@@ -113,6 +113,7 @@
 		"binary": "sqldeveloper",
 		"install_script": "install-sql-developer",
 		"desc": "Oracle SQL Developer",
+		"always_include": true,
 		"groups": ["work"]
 	},
 	{

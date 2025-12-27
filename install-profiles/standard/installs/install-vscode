@@ -17,7 +17,7 @@ if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
 	# Check if NODE_EXTRA_CA_CERTS needs to be set for corporate environments
 	echo -e "\nIf you're in a corporate environment with custom SSL certificates,"
 	echo -e "VS Code extension installation may fail without setting NODE_EXTRA_CA_CERTS.\n"
-	if prompt_yes_no "Do you need to set a custom CA certificate for VS Code?"; then
+	if ask_yn_n "Do you need to set a custom CA certificate for VS Code" n; then
 		echo -e "\nOpening file picker dialog to select your certificate file..."
 		
 		cert_path=$(powershell.exe -Command "
@@ -93,12 +93,23 @@ else
 fi
 
 if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
-	selection="$(select_from_list_index "Apply updates to VS Code settings install recommended extensions for" 3 "VS Code for Windows" "VS Code for WSL" "Both")"
-	case "$selection" in
-		1) export regular_install=true ;;
-		2) export windows_install=true ;;
-		3) export regular_install=true windows_install=true ;;
-	esac
+	selected=$(gum choose --header="Apply updates to VS Code settings and install recommended extensions for:" \
+	    --no-limit --height=5 \
+	    "VS Code for Windows" \
+	    "VS Code for WSL")
+
+	unset regular_install windows_install
+	while IFS= read -r choice; do
+	    case "$choice" in
+	        "VS Code for Windows") windows_install=true ;;
+	        "VS Code for WSL") regular_install=true ;;
+	    esac
+	done <<< "$selected"
+
+	if [[ -z "$regular_install" && -z "$windows_install" ]]; then
+		echo "Nothing was chosen; defaulting to installing extensions for Windows"
+		windows_install=true
+	fi
 else
 	export regular_install=true
 fi

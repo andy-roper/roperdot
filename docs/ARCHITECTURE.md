@@ -94,9 +94,9 @@ I've made an effort to use consistent/similar color schemes throughout my dotfil
 
 Much of this is controlled by roperdot/source-scripts/initialize-colors which utilizes color schemes defined in roperdot/config/color-schemes.
 
-## fzf Integration
+## gum and fzf Integration
 
-fzf is used by multiple commands (cd, cdd, cds, e, nav, up and v) for selection of files and directories. The fzf plugin is also used in vim.
+[gum](https://github.com/charmbracelet/gum) and [fzf](https://github.com/junegunn/fzf) are used by multiple commands (cd, cdd, cdj, cds, e, gm, gi, gli, gt, je, nav, pushd, up and v) for selection of files, directories and options. The fzf plugin is also used in vim.
 
 ## Adding New Scripts
 

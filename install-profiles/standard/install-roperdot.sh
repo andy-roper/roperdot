@@ -1,5 +1,7 @@
 export INSTALLING_ROPERDOT=true
 
+[[ "$ROPERDOT_CURRENT_SHELL" = zsh ]] && setopt KSH_ARRAYS
+
 [[ -z "$CALLED_FROM_INSTALL" ]] && echo "Setting up for the install..."
 
 . "${ROPERDOT_DIR}/source-scripts/input-functions"
@@ -64,38 +66,6 @@ ask_number () {
 	fi
 }
 
-choose_number () {
-	local text="$1" max_num="$2" recommended="$3" default="$4" answer
-	if [[ -n "$accept_recommended" && -n "$recommended" ]]; then
-		echo "${text} [default is $default]: ${recommended}"
-		return "$recommended"
-	else
-		echo
-		while [[ -z "$answer" || "$answer" -gt "$max_num" ]]; do
-			read_input "${text} [default is $default]:"
-			answer="$REPLY"
-			[[ -z "$answer" ]] && answer="$default"
-		done
-		return "$answer"
-	fi
-}
-
-ask_number_or_text () {
-	local text="$1" max_num="$2" recommended="$3" default="$4"
-	if [[ -n "$accept_recommended" && -n "$recommended" ]]; then
-		echo "${text} [default is $default]: ${recommended}"
-		answer="$recommended"
-	else
-		echo
-		while [[ -z "$answer" || "$answer" -gt "$max_num" ]]; do
-			echo -n "${text} [default is $default]: "
-			read answer
-			# echo "$answer" >> "$logfile"
-			[[ -z "$answer" ]] && answer="$default"
-		done
-	fi
-}
-
 # Usage: symlink <original_path> <link_path>
 symlink () {
 	local overwritten=""
@@ -134,6 +104,18 @@ symlink_admin_only_on_win () {
 	fi
 }
 
+execute_with_retry () {
+	local message="$1"
+	local executing=true
+	while [[ -n "$executing" ]]; do
+		execute_command && unset executing
+		if [[ -n "$executing" ]]; then
+			read_input "$message (R)etry or (a)bort update?"
+			[[ "$REPLY" =~ ^[aA]$ ]] && unset executing
+		fi
+	done
+}
+
 [[ -z "$CALLED_FROM_INSTALL" && -n "$resuming" && -z "$resume_step" && -f ~/.roperdot-resume-step ]] && export resume_step="$(cat ~/.roperdot-resume-step)"
 
 cd "$ROPERDOT_DIR" || return 1
@@ -153,27 +135,57 @@ save_resume_point 1
 if [[ "$ROPERDOT_OS_ENV" = darwin ]]; then
 	if [[ -n "$zsh_present" ]]; then
 		if command -v bash >/dev/null 2>&1; then
-			selection="$(select_from_list "Choose your installation option" 1 "Upgrade zsh and install roperdot for bash and zsh" "Upgrade zsh and install roperdot for it" "Install roperdot for zsh" "Install roperdot for bash")"
-			if [[ "$selection" =~ "bash and zsh" ]]; then
-				upgrade_zsh=true
-				PROCESSING_BASH=true
-				PROCESSING_ZSH=true
-			elif [[ "$selection" =~ "Upgrade zsh" ]]; then
-				upgrade_zsh=true
-				PROCESSING_ZSH=true
-			elif [[ "$selection" =~ zsh ]]; then
-				PROCESSING_ZSH=true
-			elif [[ "$selection" =~ bash ]]; then
-				PROCESSING_BASH=true
-			fi
+		    options=(
+		        "Upgrade zsh and install roperdot for bash and zsh"
+		        "Upgrade zsh and install roperdot for it"
+		        "Install roperdot for zsh"
+		        "Install roperdot for bash"
+		    )
+		    
+		    selection=$(gum choose --header="Choose your installation option:" "${options[@]}")
+		    if [[ -z "$selection" ]]; then
+		    	echo "No choice was made; defaulting to upgrading zsh and installing roperdot for bash and zsh"
+		    	selection="bash and zsh"
+		    fi
+		    
+		    case "$selection" in
+		        *"bash and zsh"*)
+		            upgrade_zsh=true
+		            PROCESSING_BASH=true
+		            PROCESSING_ZSH=true
+		            ;;
+		        *"Upgrade zsh"*)
+		            upgrade_zsh=true
+		            PROCESSING_ZSH=true
+		            ;;
+		        *"zsh"*)
+		            PROCESSING_ZSH=true
+		            ;;
+		        *"bash"*)
+		            PROCESSING_BASH=true
+		            ;;
+		    esac
 		else
-			selection="$(select_from_list "Choose your installation option" 1 "Upgrade zsh and install roperdot for it" "Install roperdot for zsh")"
-			if [[ "$selection" =~ Upgrade ]]; then
-				upgrade_zsh=true
-				PROCESSING_ZSH=true
-			elif [[ "$selection" =~ Install ]]; then
-				PROCESSING_ZSH=true
-			fi
+		    options=(
+		        "Upgrade zsh and install roperdot for it"
+		        "Install roperdot for zsh"
+		    )
+		    
+		    selection=$(gum choose --header="Choose your installation option:" "${options[@]}")
+		    if [[ -z "$selection" ]]; then
+		    	echo "No choice was made; defaulting to upgrading zsh and installing roperdot for it"
+		    	selection="Upgrade"
+		    fi
+		    
+		    case "$selection" in
+		        *"Upgrade"*)
+		            upgrade_zsh=true
+		            PROCESSING_ZSH=true
+		            ;;
+		        *"Install"*)
+		            PROCESSING_ZSH=true
+		            ;;
+		    esac
 		fi
 	else
 		PROCESSING_BASH=true
@@ -210,6 +222,29 @@ if [[ "$ROPERDOT_OS_ENV" = darwin ]]; then
 		$install_shell "${ROPERDOT_DIR}/install-profiles/standard/installs/install-zsh" || exit 1
 		export zsh_newly_installed=true
 	fi
+elif ! command -v brew >/dev/null 2>&1; then
+	cat <<EOT
+Linuxbrew is needed by multiple installs to install applications.
+curl and ruby will also need to be installed if they are not present.
+EOT
+	if ask_yn_y "Install brew" y; then
+		if ! command -v curl >/dev/null 2>&1; then
+			execute_command () { sudo apt install curl; }
+			execute_with_retry "Install of curl failed."
+		fi
+		if ! command -v ruby >/dev/null 2>&1; then
+			execute_command () { sudo apt install ruby; }
+			execute_with_retry "Install of ruby failed."
+		fi
+		execute_command () { $install_shell "${ROPERDOT_DIR}/install-profiles/standard/installs/install-linuxbrew"; }
+		execute_with_retry "Install of Linuxbrew failed."
+	else
+		echo "Some application installs will be skipped since Linuxbrew is not installed."
+	fi
+fi
+
+if [[ -d /home/linuxbrew/.linuxbrew/bin && ! "$PATH" =~ linuxbrew ]]; then
+	export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin"
 fi
 
 if command -v python3 >/dev/null 2>&1; then
@@ -253,11 +288,17 @@ EOT
 	
 	if ! command -v choco >/dev/null 2>&1 && ! command -v choco.exe >/dev/null 2>&1; then
 		cat <<EOT
-${warning_text}Chocolatey (https://chocolatey.org/) is used by the installer to install git,
-several shell applications and GUI applications. It's strongly advised that
-you install Chocolatey before continuing this install.${normal_text}
+${warning_text}Chocolatey (https://chocolatey.org/) is used by the installer to install git
+and GUI applications. It's strongly advised that you install Chocolatey before continuing
+this install.${normal_text}
 
 EOT
+	    if ask_yn_y "Install Chocolatey now" y; then
+	        powershell.exe -Command "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
+	        export PATH="$PATH:/mnt/c/ProgramData/chocolatey/bin"
+	    else
+	        echo "Continuing with the install, but GUI installations will be skipped."
+	    fi
 	fi
 fi
 
@@ -268,6 +309,26 @@ fi
 
 if [[ -d /home/linuxbrew/.linuxbrew/bin && ! "$PATH" =~ linuxbrew ]]; then
 	export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin"
+fi
+
+# Check for gum
+if ! command -v gum >/dev/null 2>&1; then
+	if ask_yn_y "The gum package is required for accepting user input and selections. Install it" y; then
+		if command -v brew >/dev/null 2>&1; then
+			brew install gum
+		elif [[ "$ROPERDOT_OS_NAME" = "ubuntu" || "$ROPERDOT_OS_NAME" = "debian" ]]; then
+			sudo mkdir -p /etc/apt/keyrings
+			curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+			echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
+			sudo apt update && sudo apt install gum
+		else
+			echo "Unable to install gum; exiting the install"
+			exit 0
+		fi
+	else
+		echo "Exiting the install"
+		exit 0
+	fi
 fi
 
 # Disregard sudo access unless the user has full access since it's almost certain if the
@@ -483,82 +544,76 @@ EOT
 
 	ask_yn_n "roperdot includes an ft script to search files for matching patterns. Do you want its search to include hidden files" y "$ROPERDOT_FT_ALL" && ROPERDOT_FT_ALL=true
 
-	if [[ ( -z "$resume_step" || "$resume_step" -le 4) && -n "$PROCESSING_BASH" ]]; then
-		if ask_yn_n "Override the default bash prompt" y "$ROPERDOT_OVERRIDE_PROMPT"; then
-			ROPERDOT_OVERRIDE_PROMPT=true
-			[[ -z "$ROPERDOT_PROMPT_LINES" ]] && ROPERDOT_PROMPT_LINES=1
-			ask_number "Do you want to have 1 or 2 lines in your bash prompt" 2 1 "$ROPERDOT_PROMPT_LINES"
-		else
-			ROPERDOT_OVERRIDE_PROMPT=false
-			unset ROPERDOT_PROMPT_LINES ROPERDOT_SHOW_GIT_PROMPT_INFO
-		fi
-	fi
+	# if [[ ( -z "$resume_step" || "$resume_step" -le 4) && -n "$PROCESSING_BASH" ]]; then
+	# 	if ask_yn_n "Override the default bash prompt" y "$ROPERDOT_OVERRIDE_PROMPT"; then
+	# 		ROPERDOT_OVERRIDE_PROMPT=true
+	# 		[[ -z "$ROPERDOT_PROMPT_LINES" ]] && ROPERDOT_PROMPT_LINES=1
+	# 		ask_number "Do you want to have 1 or 2 lines in your bash prompt" 2 1 "$ROPERDOT_PROMPT_LINES"
+	# 	else
+	# 		ROPERDOT_OVERRIDE_PROMPT=false
+	# 		unset ROPERDOT_PROMPT_LINES ROPERDOT_SHOW_GIT_PROMPT_INFO
+	# 	fi
+	# fi
 
 	unset nvim
 	if command -v nvim >/dev/null 2>&1; then
-		nvim=nvim
+	    nvim=nvim
 	elif command -v nvim.appimage >/dev/null 2>&1; then
-		nvim=nvim.appimage
+	    nvim=nvim.appimage
 	fi
-	if [[ -n "$nvim" ]]; then
-		editor_prompt="Enter the number for your default shell text editor: 1. $nvim, 2. vi"
-		declare -a editor_options=("" "$nvim" "vi")
-		editor_count=2
-		if [[ "$EDITOR" = "$nvim" ]]; then
-			default_editor=1
-		elif [[ "$EDITOR" = "vi" ]]; then
-			default_editor=2
-		fi
+
+	editor_options=()
+	[[ -n "$nvim" ]] && editor_options+=("$nvim")
+	editor_options+=("vi")
+	command -v nano >/dev/null 2>&1 && editor_options+=("nano")
+	command -v pico >/dev/null 2>&1 && editor_options+=("pico")
+	editor_options+=("Other (enter editor name)")
+
+	# Build list so current $EDITOR is first if defined
+	editor_list=()
+	if [[ -n "$EDITOR" ]]; then
+	    for opt in "${editor_options[@]}"; do
+	        [[ "$opt" = "$EDITOR" ]] && editor_list+=("$opt") && break
+	    done
+	    for opt in "${editor_options[@]}"; do
+	        [[ "$opt" != "$EDITOR" ]] && editor_list+=("$opt")
+	    done
 	else
-		editor_prompt="Enter the number for your default text editor: 1. vi"
-		declare -a editor_options=("" "vi")
-		editor_count=1
-		[[ "$EDITOR" = "vi" ]] && default_editor=1
+	    editor_list=("${editor_options[@]}")
 	fi
 
-	if command -v nano >/dev/null 2>&1; then
-	    editor_options+=("nano")
-	    (( ++editor_count ))
-	    editor_prompt+=", $editor_count. nano"
-	    [[ -z "$default_editor" && "$EDITOR" = "nano" ]] && default_editor=$editor_count
-	fi
-	if command -v pico >/dev/null 2>&1; then
-	    editor_options+=("pico")
-	    (( ++editor_count ))
-	    editor_prompt+=", $editor_count. pico"
-	    [[ -z "$default_editor" && "$EDITOR" = "pico" ]] && default_editor=$editor_count
-	fi
-	editor_prompt+=", or enter the name of an editor"
-	[[ -z "$default_editor" ]] && default_editor=1
+	choice=$(gum choose --header="Choose your default shell text editor:" "${editor_list[@]}")
 
-	ask_number_or_text "$editor_prompt" $editor_count 1 $default_editor
-	editor="$answer"
-    if [[ -n "${editor_options[$editor]}" ]]; then
-        EDITOR="${editor_options[$editor]}"
-    elif command -v "$editor" >/dev/null 2>&1; then
-        EDITOR="$editor"
-    fi
+	if [[ "$choice" = "Other (enter editor name)" ]]; then
+	    EDITOR=$(gum input --placeholder="Enter editor command")
+	    if ! command -v "$EDITOR" >/dev/null 2>&1; then
+	        echo -e "Chosen editor not found in PATH; defaulting to vi\n"
+	        EDITOR=vi
+	    fi
+	else
+	    EDITOR="$choice"
+	    echo -e "EDITOR set to $choice\n"
+	fi
 
-	case "$ROPERDOT_ARC_TYPE" in
-		tgz)     default=1 ;;
-		zip)     default=2 ;;
-		7z)      default=3 ;;
-		tar.bz2) default=4 ;;
-		rar)     default=5 ;;
-		*)       default=1 ;;
-	esac
-	ROPERDOT_ARC_TYPE=
-	while [[ -z "$ROPERDOT_ARC_TYPE" ]]; do
-		choose_number "Choose your default archive type when creating new archives: 1. tgz, 2. zip, 3. 7z, 4. tar.bz2, 5. rar" 5 1 "$default"
-		case "$?" in
-			1 ) ROPERDOT_ARC_TYPE=tgz ;;
-			2 ) ROPERDOT_ARC_TYPE=zip ;;
-			3 ) ROPERDOT_ARC_TYPE=7z ;;
-			4 ) ROPERDOT_ARC_TYPE=tar.bz2 ;;
-			5 ) ROPERDOT_ARC_TYPE=rar ;;
-			* ) ROPERDOT_ARC_TYPE=tgz ;;
-		esac
-	done
+	arc_types=(tgz zip 7z tar.bz2 rar)
+	if [[ -n "$ROPERDOT_ARC_TYPE" ]]; then
+		arc_type_options=($ROPERDOT_ARC_TYPE)
+		for arc_type in "${arc_types[@]}"; do
+			[[ "$arc_type" = "$ROPERDOT_ARC_TYPE" ]] || arc_type_options+=($arc_type)
+		done
+	else
+		arc_type_options=("${arc_types[@]}")
+	fi
+	arc_type=$(gum choose --header="Choose your default archive type when creating new archives:" "${arc_type_options[@]}")
+	if [[ -n "arc_type" ]]; then
+		ROPERDOT_ARC_TYPE=$arc_type
+		echo -e "ROPERDOT_ARC_TYPE: $ROPERDOT_ARC_TYPE\n"
+	elif [[ -n "$ROPERDOT_ARC_TYPE" ]]; then
+		echo -e "ROPERDOT_ARC_TYPE: $ROPERDOT_ARC_TYPE\n"
+	else
+		ROPERDOT_ARC_TYPE=tgz
+		echo -e "No choice was made; defaulting ROPERDOT_ARC_TYPE to tgz\n"
+	fi
 
 	if ask_yn_n "Do you want to capture command history by individual terminal session instead of using a single history file" y "$ROPERDOT_HISTORY_BY_SESSION"; then
 		ROPERDOT_HISTORY_BY_SESSION=true
@@ -571,17 +626,23 @@ EOT
 		ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME=hybrid
 	else
 		declare -a schemes
-		schemes+=("default")
+		schemes+=("default (hybrid)")
 		pushd "${ROPERDOT_DIR}/config/color-schemes/source" >&/dev/null
-		PS3="Default color scheme? "
 		for scheme in *; do
-			[[ "$scheme" == "default" ]] || schemes+=("$scheme")
-		done
-		select scheme in "${schemes[@]}"; do
-			break
+		    [[ "$scheme" == "default" ]] || schemes+=("$scheme")
 		done
 		popd >&/dev/null
-		[[ -n "$scheme" ]] && ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME="$scheme"
+
+		scheme=$(gum choose --height 16 --header "Default color scheme?" "${schemes[@]}")
+
+		if [[ -n "$scheme" ]]; then
+		    if [[ "$scheme" == default* ]]; then
+		        ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME="hybrid"
+		    else
+		        ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME="$scheme"
+		    fi
+		    echo -e "Default color scheme: $ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME\n"
+		fi
 	fi
 
 	save_resume_point 5
@@ -631,6 +692,14 @@ export ROPERDOT_MC_SCHEME=${ROPERDOT_MC_SCHEME:-dark}
 # vi vars
 export ROPERDOT_VI_BACKGROUND=${ROPERDOT_VI_BACKGROUND:-dark}
 export ROPERDOT_VI_COLOR_SCHEME=${ROPERDOT_VI_COLOR_SCHEME:-hybrid}
+export GUM_CHOOSE_CURSOR_FOREGROUND=#ab5
+export GUM_CHOOSE_SELECTED_FOREGROUND=#ab5
+export GUM_CHOOSE_HEADER_FOREGROUND=#d74
+export GUM_CONFIRM_PROMPT_FOREGROUND=#d74
+export GUM_CONFIRM_SELECTED_BACKGROUND=#ab5
+export GUM_FILTER_INDICATOR_FOREGROUND=#d74
+export GUM_FILTER_MATCH_FOREGROUND=#d74
+export GUM_INPUT_CURSOR_FOREGROUND=#d74
 EOT
 		[[ -n "$ROPERDOT_COLOR_SCHEME" ]] && echo -e "export ROPERDOT_COLOR_SCHEME=$ROPERDOT_COLOR_SCHEME\n" >> ~/roperdot-loader
 		if [[ "${ROPERDOT_DIR}" = "$(realpath ~/roperdot)" ]]; then
@@ -732,9 +801,7 @@ else
 #		bash source-scripts/fix-bin-shebangs
 fi
 
-echo
-echo Processing shell and GUI apps to install...
-echo
+echo -e "\nProcessing shell and GUI apps to install...\n"
 
 while IFS= read -r -d '' d; do
 	[[ -d "$d/installs" ]] && chmod u+x "$d/installs/"*
@@ -825,10 +892,6 @@ else
 	fi
 fi
 
-# linuxbrew must be in the path before installing vim plugins for fzf
-if [[ -d /home/linuxbrew/.linuxbrew/bin && ! "$PATH" =~ linuxbrew ]]; then
-	export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin"
-fi
 if command -v nvim >/dev/null 2>&1; then
 	ask_yn_n "Install plugins for vim and Neovim" y && "${ROPERDOT_DIR}/install-profiles/standard/installs/install-vim-plugins"
 else

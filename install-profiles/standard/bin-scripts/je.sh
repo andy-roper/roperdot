@@ -162,7 +162,7 @@ if [[ "$MATCH_COUNT" -eq 1 ]]; then
     DISPLAY_NAME=$(format_display "$SELECTED_FILE")
     echo "Auto-selected: $DISPLAY_NAME"
 else
-    # Multiple matches - use fzf with formatted display
+    # Multiple matches - use gum or fzf
 	typeset -a JAVA_PATHS
 	DISPLAY_LIST=""
 	INDEX=0
@@ -198,12 +198,16 @@ else
 	# Preprocess to show only the display names (not the index)
 	DISPLAY_ONLY=$(echo "$DISPLAY_LIST" | cut -d'|' -f1)
 
-	# Use fzf to select
-	SELECTED_DISPLAY=$(echo "$DISPLAY_ONLY" | \
-	    fzf --prompt="Select Java class to edit: "
-	        --exact \
-	        --layout=reverse \
-	        --height=33%)
+	if command -v gum >/dev/null 2>&1; then
+		height=$(( LINES / 3 ))
+		SELECTED_DISPLAY=$(echo "$DISPLAY_ONLY" | gum filter --height=$height --placeholder="Select Java class to edit...")
+	else
+		SELECTED_DISPLAY=$(echo "$DISPLAY_ONLY" | \
+		    fzf --prompt="Select Java class to edit: " \
+		        --exact \
+		        --layout=reverse \
+		        --height=33%)
+	fi
 
 	if [[ -z "$SELECTED_DISPLAY" ]]; then
 	    echo "No file selected"

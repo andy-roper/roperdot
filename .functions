@@ -34,7 +34,7 @@ Usage: cd [target]
 If no arguments are passed and the clipboard contains a directory name,
 cd will change to that directory.
 
-If fzf is installed:
+If gum or fzf is installed:
 * If no target is given or if the target is ".", cd will prompt the user to
   select a subdirectory of the current directory to change to.
 * If the target is a pattern, cd will prompt the user to select a matching
@@ -82,7 +82,7 @@ EOT
 		fi
 
 		local p dir pattern
-		if command -v fzf >/dev/null 2>&1; then
+		if command -v gum >/dev/null 2>&1 || command -v fzf >/dev/null 2>&1; then
 			if [[ $# -eq 0 || "$1" = . ]]; then
 				dir=.
 				pattern=*
@@ -107,7 +107,12 @@ EOT
 						return 1
 					fi
 				else
-					p="$(fzf -0 --no-sort --height 33% --layout=reverse<<<"$p")"
+					if command -v gum &>/dev/null; then
+						local height=$(( LINES / 3 ))
+						p="$(gum choose --header="Select directory:" --height=$height <<<"$p")"
+					else
+						p="$(fzf -0 --no-sort --height 33% --layout=reverse<<<"$p")"
+					fi
 					if [[ -n "$p" ]]; then
 						if [[ -d "$dir/$p" ]]; then
 							\cd "$dir/$p"
@@ -396,17 +401,26 @@ cdd() {
 cdd: cd to subdirectory of the current directory or a target directory
 Usage: cdd [target-dir]
 
-cdd will use fzf to allow you to choose a directory to cd to which is a child
-directory of the target directory, or of the current directory if no target
-is specified.
+cdd will use gum or fzf to allow you to choose a directory to cd to which is
+a child directory of the target directory, or of the current directory if no
+target is specified.
 EOT
 		return
 	fi
 	local dir
-	if [[ $# -eq 0 ]]; then
-		dir="$(fd --max-depth 1 --type d | fzf --height 40% --layout=reverse)"
+	if command -v gum >/dev/null 2>&1; then
+		local height=$(( LINES * 4 / 10 ))
+		if [[ $# -eq 0 ]]; then
+			dir="$(fd --max-depth 1 --type d | gum filter --placeholder='Select directory...' --height=$height)"
+		else
+			dir="$(fd --max-depth 1 --type d . "$1" | gum filter --placeholder='Select directory...' --height=$height)"
+		fi
 	else
-		dir="$(fd --max-depth 1 --type d . "$1" | fzf --height 40% --layout=reverse)"
+		if [[ $# -eq 0 ]]; then
+			dir="$(fd --max-depth 1 --type d | fzf --height 40% --layout=reverse)"
+		else
+			dir="$(fd --max-depth 1 --type d . "$1" | fzf --height 40% --layout=reverse)"
+		fi
 	fi
 	if [[ -n "$dir" ]]; then
 		\cd "$dir" || return 1
@@ -419,17 +433,26 @@ cds() {
 cds: cd to deep subdirectory under the current directory or a target directory
 Usage: cds [target-dir]
 
-cds will use fzf to allow you to choose a directory to cd to which is a deep
-child directory of the target directory, or of the current directory if no
+cds will use gum or fzf to allow you to choose a directory to cd to which is a
+deep child directory of the target directory, or of the current directory if no
 target is specified.
 EOT
 		return
 	fi
 	local dir
-	if [[ $# -eq 0 ]]; then
-		dir="$(fd --type d | fzf --height 40% --layout=reverse)"
+	if command -v gum >/dev/null 2>&1; then
+		local height=$(( LINES * 4 / 10 ))
+		if [[ $# -eq 0 ]]; then
+			dir="$(fd --type d | gum filter --placeholder='Select directory...' --height=$height)"
+		else
+			dir="$(fd --type d . "$1" | gum filter --placeholder='Select directory...' --height=$height)"
+		fi
 	else
-		dir="$(fd --type d . "$1" | fzf --height 40% --layout=reverse)"
+		if [[ $# -eq 0 ]]; then
+			dir="$(fd --type d | fzf --height 40% --layout=reverse)"
+		else
+			dir="$(fd --type d . "$1" | fzf --height 40% --layout=reverse)"
+		fi
 	fi
 	if [[ -n "$dir" ]]; then
 		\cd "$dir" || return 1
@@ -562,7 +585,12 @@ pushd() {
 			elif [[ "$(wc -l<<<$p)" -eq 1 ]]; then
 				builtin pushd "$p" >/dev/null
 			else
-				p="$(fzf -0 --no-sort --height 33% --layout=reverse<<<"$p")"
+				if command -v gum >/dev/null 2>&1; then
+					local height=$(( LINES / 3 ))
+					p="$(gum choose --header="Select directory:" --height=$height <<<"$p")"
+				else
+					p="$(fzf -0 --no-sort --height 33% --layout=reverse<<<"$p")"
+				fi
 				[[ -n "$p" ]] && builtin pushd "$p" >/dev/null
 			fi
 			return
@@ -1622,14 +1650,14 @@ If a prefix string is provided, cd up to the first parent directory that begins
 with the prefix.
 
 If no arguments are provided, prompt the user to select the target directory
-from a list. fzf will be used for the selection if it's installed.
+from a list. Either gum or fzf will be used for the selection if they're installed.
 EOT
 		return
 	fi
 	local dest="$(_up "$@")"
 	if [[ $? -eq 1 ]]; then
 		echo "No matching parent directories"
-	else
+	elif [[ -n "$dest" ]]; then
 		cd "$dest" || return 1
 	fi
 }

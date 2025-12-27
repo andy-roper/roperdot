@@ -9,7 +9,7 @@
 
 # set -eu
 # exec ruby -e "$(print-web-file https://raw.githubusercontent.com/Linuxbrew/install/master/install)"
-echo -e "${warning_text}NOTE: you may need to press Enter twice when prompted by the Linuxbrew installation${normal_text}\n"
+# echo -e "${warning_text}NOTE: you may need to press Enter twice when prompted by the Linuxbrew installation${normal_text}\n"
 
 if [[ -n "$accept_recommended" ]]; then
 	sudo mkdir -p /home/linuxbrew/.linuxbrew

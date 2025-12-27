@@ -8,6 +8,8 @@
 #DEBUGGING=true
 #. "${ROPERDOT_DIR}/source-scripts/debug"
 
+[[ "$ROPERDOT_CURRENT_SHELL" = zsh ]] && setopt KSH_ARRAYS
+
 . "${ROPERDOT_DIR}/source-scripts/install-functions"
 . "${ROPERDOT_DIR}/source-scripts/nice-copy"
 . "${ROPERDOT_DIR}/source-scripts/input-functions"
@@ -228,13 +230,18 @@ main () {
 	install_vars=(app app_dir app_name binary bundle_name desc disabled disable_null_stdin full_app_path include_condition install_command install_prerequisite install_script install_options list_prerequisite package package_manager personal presence_command shortcut_name shortcut_path skip sudo_not_required groups exclusionGroups disabledByDefault)
 
 	install_shell_apps () {
-	    local app_file="$1" default_installer="$2" have_default_installer install_list=() install_desc_list=() app_count
+		# Skip if force_shell_app_installs is "none"
+		[[ "$force_shell_app_installs" = "none" ]] && return
+
+		local app_file="$1" default_installer="$2" have_default_installer 
+	    local install_list=() install_desc_list=() prereq_indices=() app_count
+	    local app_names=() should_install=() preselected_items=()
 	    command -v "$default_installer" >/dev/null 2>&1 && local have_default_installer=true
 	    
 	    # Get total number of apps from all profiles
 	    app_count=$(python3 "$ROPERDOT_DIR/bin/json-to-simple-vars" "$app_file" count "$base_profile" --optional "${extra_profiles[@]}")
 
-	    # First pass: determine which apps to install
+	    # First pass: determine which apps to install and build prereq mappings
 	    for ((i=0; i<app_count; i++)); do
 	        # Clear previous variables
 	        for var in "${install_vars[@]}"; do
@@ -274,24 +281,114 @@ main () {
 	                    fi
 	                fi
 	                if [[ -n "$prereq_met" ]]; then
-	                    install_list+=("$i")  # Store index
-	                    # Use original app name for display
-	                    [[ -z "$desc" ]] && install_desc_list+=("$app") || install_desc_list+=("$app: $desc")
+	                    install_list+=("$i")  # Store JSON index
+	                    app_names+=("$app")   # Store app name for prereq lookup
+	                    
+	                    # Build prereq index mapping and description text
+	                    local prereq_idx_list=""
+	                    local missing_prereqs=""
+	                    if [[ -n "$install_prerequisite" ]]; then
+	                        # Split on commas
+	                        if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
+	                            IFS=',' read -ra prereq_apps <<< "$install_prerequisite"
+	                        else
+	                            IFS=',' read -rA prereq_apps <<< "$install_prerequisite"
+	                        fi
+	                        
+	                        # Find each prereq in app_names list
+	                        local prereq_app
+	                        for prereq_app in "${prereq_apps[@]}"; do
+	                            for ((j=0; j<${#app_names[@]}; j++)); do
+	                                if [[ "${app_names[$j]}" = "$prereq_app" ]]; then
+	                                    # This prereq is in the install list (not already installed)
+	                                    [[ -n "$prereq_idx_list" ]] && prereq_idx_list+=","
+	                                    prereq_idx_list+="$j"
+	                                    [[ -n "$missing_prereqs" ]] && missing_prereqs+=", "
+	                                    missing_prereqs+="$prereq_app"
+	                                    break
+	                                fi
+	                            done
+	                        done
+	                    fi
+	                    prereq_indices+=("$prereq_idx_list")
+	                    
+	                    # Build description with only missing prereqs
+	                    local desc_text=""
+	                    if [[ -n "$missing_prereqs" ]]; then
+	                        desc_text=" (requires: ${missing_prereqs})"
+	                    fi
+	                    if [[ -z "$desc" ]]; then
+	                        install_desc_list+=("${app}${desc_text}")
+	                    else
+	                        install_desc_list+=("${app}${desc_text}: $desc")
+	                    fi
+	                    
+	                    # Check if this app should be pre-selected based on groups
+	                    if [[ -n "$groups" && -n "$install_groups" ]]; then
+	                        local app_groups_list="${groups//,/ }"
+	                        local selected_groups_list="${install_groups//,/ }"
+	                        for selected_group in $selected_groups_list; do
+	                            if [[ " $app_groups_list " =~ " $selected_group " ]]; then
+	                                # Get last added description
+	                                local last_idx=$((${#install_desc_list[@]} - 1))
+	                                preselected_items+=("${install_desc_list[$last_idx]}")
+	                                break
+	                            fi
+	                        done
+	                    fi
 	                fi
 	            fi
 	        fi
 	    done
 		
 		[[ "${#install_desc_list[@]}" -eq 0 ]] && return
-		echo
-		if [[ "$force_shell_app_installs" != "none" ]]; then
-			ask_to_install_app_set "Install commonly used shell applications" "$force_shell_app_installs" "${install_desc_list[@]}" || return
-		fi
+		
+		echo -e "\nSelect shell applications to install:\n"
+		
+		# Build gum command with pre-selections
+		local gum_args=("choose" "--no-limit" "--height=25")
+		for item in "${preselected_items[@]}"; do
+		    gum_args+=("--selected=$item")
+		done
+		
+		# Add all items
+		for item in "${install_desc_list[@]}"; do
+		    gum_args+=("$item")
+		done
+		
+		# Get user selections
+		local selected_items
+		selected_items=$(gum "${gum_args[@]}")
+
+		# If nothing selected, return
+		[[ -z "$selected_items" ]] && return
+		
+		# Initialize should_install array (all false)
+		for ((i=0; i<${#install_list[@]}; i++)); do
+		    should_install+=(false)
+		done
+		
+		# Process selections - mark selected items as true
+		while IFS= read -r selected_item; do
+		    for ((i=0; i<${#install_desc_list[@]}; i++)); do
+		        if [[ "${install_desc_list[$i]}" = "$selected_item" ]]; then
+		            should_install[$i]=true
+		            
+		            # Auto-add prereqs
+		            if [[ -n "${prereq_indices[$i]}" ]]; then
+		                IFS=',' read -ra prereq_idxs <<< "${prereq_indices[$i]}"
+		                for prereq_idx in "${prereq_idxs[@]}"; do
+		                    should_install[$prereq_idx]=true
+		                done
+		            fi
+		            break
+		        fi
+		    done
+		done <<< "$selected_items"
 
 		if [[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
-			echo "This warning can be ignored when applications are being installed by Linuxbrew:"
-			echo "nice: cannot set niceness: Permission denied"
-			echo
+			echo -e "\nThis warning can be ignored when applications are being installed by Linuxbrew:"
+			echo -e "nice: cannot set niceness: Permission denied\n"
 		fi
 
 		# Keep sudo access alive in the background during the installs
@@ -302,8 +399,13 @@ main () {
 	        local SUDO_KEEPALIVE_PID=$!
 	    fi
 
-		# Installation loop
-		for app_index in "${install_list[@]}"; do
+		# Installation loop - process in order, only installing where should_install is true
+		for ((i=0; i<${#install_list[@]}; i++)); do
+			# Skip if not marked for installation
+			[[ "${should_install[$i]}" != "true" ]] && continue
+			
+			local app_index="${install_list[$i]}"
+			
 			if [[ -d ~/.nvm ]] && ! command -v node >/dev/null 2>&1; then
 				if [[ $(ls ~/.nvm/versions/node 2>/dev/null | wc -l) -ne 0 ]]; then
 					export NVM_DIR="$HOME/.nvm"
@@ -327,59 +429,60 @@ main () {
 			export profile=${profile:-standard}
 
 			[[ -z "$binary" ]] && binary="$app"
-			# Use original app name ($app) for user prompts
-			if ! app_is_present "$app" "$binary" "$package" "$list_prerequisite" && ask_to_install "$app" "$desc"; then
-				if install_prereq_present "$install_prerequisite"; then
-					# Reset colors in case the previous install didn't clean up after itself
-					tput sgr0
-					# pause_specified_installations "$app"
-					if [[ -n "$install_script" ]]; then
-						eval "install_func() { $ROPERDOT_CURRENT_SHELL \"${ROPERDOT_DIR}/install-profiles/$profile/installs/$install_script\"; }"
-					elif [[ -n "$install_command" ]]; then
-						local re=";\$"
-						[[ "$install_command" =~ $re ]] || install_command="$install_command;"
-						eval "install_func() { $install_command }"
+			
+			# Install without prompting (already selected via gum)
+			if install_prereq_present "$install_prerequisite"; then
+				# Reset colors in case the previous install didn't clean up after itself
+				tput sgr0
+				echo
+				echo "Installing $app..."
+				
+				if [[ -n "$install_script" ]]; then
+					eval "install_func() { $ROPERDOT_CURRENT_SHELL \"${ROPERDOT_DIR}/install-profiles/$profile/installs/$install_script\"; }"
+				elif [[ -n "$install_command" ]]; then
+					local re=";\$"
+					[[ "$install_command" =~ $re ]] || install_command="$install_command;"
+					eval "install_func() { $install_command }"
+				else
+					[[ -z "$package" ]] && package="$binary"
+					if [[ "$ROPERDOT_DESKTOP_ENV" = windows && "$list_prerequisite" = choco ]]; then
+						install_func() { if [[ -n "$has_sudo" ]]; then choco install -y --ignore-pending-reboot --force $package; else install_windows_binary; fi }
+					elif [[ "$ROPERDOT_OS_FAMILY" = debian && "$install_prerequisite" = brew ]]; then
+						install_func() { brew install $package; }
+					elif [[ "$install_prerequisite" = pip3 ]]; then
+						install_func() { pip3 install $package; }
 					else
-						[[ -z "$package" ]] && package="$binary"
-						if [[ "$ROPERDOT_DESKTOP_ENV" = windows && "$list_prerequisite" = choco ]]; then
-							install_func() { if [[ -n "$has_sudo" ]]; then choco install -y --ignore-pending-reboot --force $package; else install_windows_binary; fi }
-						elif [[ "$ROPERDOT_OS_FAMILY" = debian && "$install_prerequisite" = brew ]]; then
-							install_func() { brew install $package; }
-						elif [[ "$install_prerequisite" = pip3 ]]; then
-							install_func() { pip3 install $package; }
-						else
-							install_func() { standard_install; }
-						fi
+						install_func() { standard_install; }
 					fi
-					[[ -n "$show_start_times" ]] && echo "Start time: $(date +"%r")"
+				fi
+				[[ -n "$show_start_times" ]] && echo "Start time: $(date +"%r")"
 
-					install_app || return
-					if [[ "$app" = "Linuxbrew" ]]; then
-						export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin"
-						hash -r
-					elif [[ "$app" = "Python" && -z "$python_bin" ]]; then
-						if command -v python >/dev/null 2>&1; then
-							export python_bin=python
-							export python_version=$(python -c 'import sys; print("{}.{}").format(sys.version_info.major, sys.version_info.minor))')
-							if [[ -n "$PYTHONPATH" ]]; then
-								export PYTHONPATH="${PYTHONPATH}:${LOCALUSR}/lib/python${python_version}"
-							else
-								export PYTHONPATH="${LOCALUSR}/lib/python${python_version}"
-							fi
+				install_app || return
+				if [[ "$app" = "Linuxbrew" ]]; then
+					export PATH="$PATH:/home/linuxbrew/.linuxbrew/bin"
+					hash -r
+				elif [[ "$app" = "Python" && -z "$python_bin" ]]; then
+					if command -v python >/dev/null 2>&1; then
+						export python_bin=python
+						export python_version=$(python -c 'import sys; print("{}.{}").format(sys.version_info.major, sys.version_info.minor))')
+						if [[ -n "$PYTHONPATH" ]]; then
+							export PYTHONPATH="${PYTHONPATH}:${LOCALUSR}/lib/python${python_version}"
+						else
+							export PYTHONPATH="${LOCALUSR}/lib/python${python_version}"
 						fi
-					elif [[ "$app" = "Python 3" && "$python_bin" != "python3" ]]; then
-						if command -v python3 >/dev/null 2>&1; then
-							export python_bin=python3
-							export python_version=$(python3 -c 'import sys; print("{}.{}").format(sys.version_info.major, sys.version_info.minor))')
-							if [[ -n "$PYTHONPATH" ]]; then
-								export PYTHONPATH="${PYTHONPATH}:${LOCALUSR}/lib/python${python_version}"
-							else
-								export PYTHONPATH="${LOCALUSR}/lib/python${python_version}"
-							fi
-						fi
-					elif [[ "$app" = "Node.js" ]]; then
-						[[ "$ROPERDOT_DESKTOP_ENV" = "windows" && -d "${rd_program_files}/nodejs" ]] && export PATH="$PATH:${rd_program_files}/nodejs"
 					fi
+				elif [[ "$app" = "Python 3" && "$python_bin" != "python3" ]]; then
+					if command -v python3 >/dev/null 2>&1; then
+						export python_bin=python3
+						export python_version=$(python3 -c 'import sys; print("{}.{}").format(sys.version_info.major, sys.version_info.minor))')
+						if [[ -n "$PYTHONPATH" ]]; then
+							export PYTHONPATH="${PYTHONPATH}:${LOCALUSR}/lib/python${python_version}"
+						else
+							export PYTHONPATH="${LOCALUSR}/lib/python${python_version}"
+						fi
+					fi
+				elif [[ "$app" = "Node.js" ]]; then
+					[[ "$ROPERDOT_DESKTOP_ENV" = "windows" && -d "${rd_program_files}/nodejs" ]] && export PATH="$PATH:${rd_program_files}/nodejs"
 				fi
 			fi
 		done
@@ -388,7 +491,12 @@ main () {
 	}
 
 	install_gui_apps () {
-	    local app_file="$1" install_list=() install_desc_list=() app_count
+		# Skip if force_gui_app_installs is "none"
+		[[ "$force_gui_app_installs" = "none" ]] && return
+
+		local app_file="$1"
+	    local install_list=() install_desc_list=() prereq_indices=() app_count
+	    local app_names=() should_install=() preselected_items=()
 
 	    # default profile to standard if not defined
 	    export profile=${profile:-standard}
@@ -396,7 +504,7 @@ main () {
 	    # Get total number of apps from all profiles
 	    app_count=$(python3 "$ROPERDOT_DIR/bin/json-to-simple-vars" "$app_file" count "$base_profile" --optional "${extra_profiles[@]}")
 
-	    # First pass: determine which apps to install
+	    # First pass: determine which apps to install and build prereq mappings
 	    for ((i=0; i<app_count; i++)); do
 	        # Clear previous variables
 	        for var in "${install_vars[@]}"; do
@@ -410,21 +518,125 @@ main () {
 
 	        should_install_app "$app" "$groups" "$exclusionGroups" "$disabledByDefault" "$install_groups" || continue
 
-			[[ -n "$app" ]] || continue
-	        if [[ -n "$always_prompt" ]] || ! gui_app_is_present "$app" "$app_dir" "$bundle_name" "$full_app_path" "$binary" "$package" "$package_manager"; then
-	            install_list+=("$i")  # Store index
-	            [[ -n "$app_name" ]] && name="$app_name" || name="$app"
-	            [[ -z "$desc" ]] && install_desc_list+=("$name") || install_desc_list+=("$name: $desc")
+	        if [[ -n "$always_include" ]] || ! gui_app_is_present "$app" "$app_dir" "$bundle_name" "$full_app_path" "$binary" "$package" "$package_manager"; then
+	            # Check if prerequisites are met
+	            local prereq_met=true
+	            if [[ -n "$list_prerequisite" ]]; then
+	                command -v "$list_prerequisite" >/dev/null 2>&1 || prereq_met=
+	            fi
+	            
+	            if [[ -n "$prereq_met" ]]; then
+	                install_list+=("$i")  # Store JSON index
+	                app_names+=("$app")   # Store app name for prereq lookup
+	                
+	                # Build prereq index mapping and description text
+	                local prereq_idx_list=""
+	                local missing_prereqs=""
+	                if [[ -n "$install_prerequisite" ]]; then
+	                    # Split on commas
+	                    if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
+	                        IFS=',' read -ra prereq_apps <<< "$install_prerequisite"
+	                    else
+	                        IFS=',' read -rA prereq_apps <<< "$install_prerequisite"
+	                    fi
+	                    
+	                    # Find each prereq in app_names list
+	                    local prereq_app
+	                    for prereq_app in "${prereq_apps[@]}"; do
+	                        for ((j=0; j<${#app_names[@]}; j++)); do
+	                            if [[ "${app_names[$j]}" = "$prereq_app" ]]; then
+	                                # This prereq is in the install list (not already installed)
+	                                [[ -n "$prereq_idx_list" ]] && prereq_idx_list+=","
+	                                prereq_idx_list+="$j"
+	                                [[ -n "$missing_prereqs" ]] && missing_prereqs+=", "
+	                                missing_prereqs+="$prereq_app"
+	                                break
+	                            fi
+	                        done
+	                    done
+	                fi
+	                prereq_indices+=("$prereq_idx_list")
+	                
+	                # Build description with only missing prereqs
+	                [[ -n "$app_name" ]] && name="$app_name" || name="$app"
+	                local desc_text=""
+	                if [[ -n "$missing_prereqs" ]]; then
+	                    desc_text=" (requires: ${missing_prereqs})"
+	                fi
+	                if [[ -z "$desc" ]]; then
+	                    install_desc_list+=("${name}${desc_text}")
+	                else
+	                    install_desc_list+=("${name}${desc_text}: $desc")
+	                fi
+	                
+	                # Check if this app should be pre-selected based on groups
+	                if [[ -n "$groups" && -n "$install_groups" ]]; then
+	                    local app_groups_list="${groups//,/ }"
+	                    local selected_groups_list="${install_groups//,/ }"
+	                    for selected_group in $selected_groups_list; do
+	                        if [[ " $app_groups_list " =~ " $selected_group " ]]; then
+	                            # Get last added description
+	                            local last_idx=$((${#install_desc_list[@]} - 1))
+	                            preselected_items+=("${install_desc_list[$last_idx]}")
+	                            break
+	                        fi
+	                    done
+	                fi
+	            fi
 	        fi
 	    done
 
-		[[ -z "$install_desc_list" ]] && return
-		if [[ "$force_gui_app_installs" != "none" ]]; then
-			ask_to_install_app_set "Install commonly used GUI applications" "$force_gui_app_installs" "${install_desc_list[@]}" || return
-		fi
+		[[ "${#install_desc_list[@]}" -eq 0 ]] && return
+		
+		echo -e "\nSelect GUI applications to install:\n"
+		
+		# Build gum command with pre-selections
+		local gum_args=("choose" "--no-limit" "--height=25")
+		for item in "${preselected_items[@]}"; do
+		    gum_args+=("--selected=$item")
+		done
+		
+		# Add all items
+		for item in "${install_desc_list[@]}"; do
+		    gum_args+=("$item")
+		done
+		
+		# Get user selections
+		local selected_items
+		selected_items=$(gum "${gum_args[@]}")
 
-		# Installation loop
-		for app_index in "${install_list[@]}"; do
+		# If nothing selected, return
+		[[ -z "$selected_items" ]] && return
+		
+		# Initialize should_install array (all false)
+		for ((i=0; i<${#install_list[@]}; i++)); do
+		    should_install+=(false)
+		done
+		
+		# Process selections - mark selected items as true
+		while IFS= read -r selected_item; do
+		    for ((i=0; i<${#install_desc_list[@]}; i++)); do
+		        if [[ "${install_desc_list[$i]}" = "$selected_item" ]]; then
+		            should_install[$i]=true
+		            
+		            # Auto-add prereqs
+		            if [[ -n "${prereq_indices[$i]}" ]]; then
+		                IFS=',' read -ra prereq_idxs <<< "${prereq_indices[$i]}"
+		                for prereq_idx in "${prereq_idxs[@]}"; do
+		                    should_install[$prereq_idx]=true
+		                done
+		            fi
+		            break
+		        fi
+		    done
+		done <<< "$selected_items"
+
+		# Installation loop - process in order, only installing where should_install is true
+		for ((i=0; i<${#install_list[@]}; i++)); do
+			# Skip if not marked for installation
+			[[ "${should_install[$i]}" != "true" ]] && continue
+			
+			local app_index="${install_list[$i]}"
 
 			# Clear variables and reload app data
 			for var in "${install_vars[@]}"; do
@@ -433,55 +645,53 @@ main () {
 
 			eval "$(python3 "$ROPERDOT_DIR/bin/json-to-simple-vars" "$app_file" "$app_index" "$base_profile" --optional "${extra_profiles[@]}")"
 			[[ -n "$app_name" ]] && name="$app_name" || name="$app"
-			# Use original app name for prompting
-			if [[ -n "$always_prompt" ]]; then
-				ask_to_install_always "$name" "$desc"
-			else
-				ask_to_install "$name" "$desc"
-			fi
-			if [[ $? = 0 ]]; then
-				# pause_specified_installations "$app"
-				if [[ -n "$install_script" ]]; then
-					if [[ -n "$install_options" ]]; then
-						eval "install_func() { $ROPERDOT_CURRENT_SHELL \"${ROPERDOT_DIR}/install-profiles/$profile/installs/$install_script\" $install_options; }"
-					else
-						eval "install_func() { $ROPERDOT_CURRENT_SHELL \"${ROPERDOT_DIR}/install-profiles/$profile/installs/$install_script\"; }"
-					fi
-				elif [[ -n "$install_command" ]]; then
-					local re=";\$"
-					[[ "$install_command" =~ $re ]] || install_command="$install_command;"
-					eval "install_func() { $install_command }"
+			
+			# Install without prompting (already selected via gum)
+			# Reset colors in case the previous install didn't clean up after itself
+			tput sgr0
+			echo -e "\nInstalling $name..."
+			
+			# pause_specified_installations "$app"
+			if [[ -n "$install_script" ]]; then
+				if [[ -n "$install_options" ]]; then
+					eval "install_func() { $ROPERDOT_CURRENT_SHELL \"${ROPERDOT_DIR}/install-profiles/$profile/installs/$install_script\" $install_options; }"
 				else
-					case "$ROPERDOT_OS_ENV" in
-						darwin)
-							if [[ -n "$has_sudo" ]]; then
-								install_func() { brew install "$package"; }
-							else
-								install_func() { brew install "$package" --appdir=~/Applications; }
-							fi
-							;;
-						ubuntu|mint|debian)
-							if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
-								# WSL
-								install_func() { choco.exe install -y --ignore-pending-reboot "$package"; }
-							else
-								if [[ "$package_manager" = apt || "$package_manager" = "apt-get" ]]; then
-									install_func() { sudo apt install "$package" -y; }
-								elif [[ "$package_manager" = snap ]]; then
-									install_func() { sudo snap install "$package"; }
-								fi
-							fi
-							;;
-					esac
+					eval "install_func() { $ROPERDOT_CURRENT_SHELL \"${ROPERDOT_DIR}/install-profiles/$profile/installs/$install_script\"; }"
 				fi
-				[[ -n "$show_start_times" ]] && echo "Start time: $(date +"%r")"
-				install_app || return
-				if [[ -n "$shortcut_path" ]]; then
-					if [[ -n "$shortcut_name" ]]; then
-						[[ "$(desktop_shortcut_exists "${shortcut_name}")" ]] || create-windows-shortcut "${shortcut_name}" "${shortcut_path}"
-					else
-						[[ "$(desktop_shortcut_exists "${app}")" ]] || create-windows-shortcut "${app}" "${shortcut_path}"
-					fi
+			elif [[ -n "$install_command" ]]; then
+				local re=";\$"
+				[[ "$install_command" =~ $re ]] || install_command="$install_command;"
+				eval "install_func() { $install_command }"
+			else
+				case "$ROPERDOT_OS_ENV" in
+					darwin)
+						if [[ -n "$has_sudo" ]]; then
+							install_func() { brew install "$package"; }
+						else
+							install_func() { brew install "$package" --appdir=~/Applications; }
+						fi
+						;;
+					ubuntu|mint|debian)
+						if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
+							# WSL
+							install_func() { choco.exe install -y --ignore-pending-reboot "$package"; }
+						else
+							if [[ "$package_manager" = apt || "$package_manager" = "apt-get" ]]; then
+								install_func() { sudo apt install "$package" -y; }
+							elif [[ "$package_manager" = snap ]]; then
+								install_func() { sudo snap install "$package"; }
+							fi
+						fi
+						;;
+				esac
+			fi
+			[[ -n "$show_start_times" ]] && echo "Start time: $(date +"%r")"
+			install_app || return
+			if [[ -n "$shortcut_path" ]]; then
+				if [[ -n "$shortcut_name" ]]; then
+					[[ "$(desktop_shortcut_exists "${shortcut_name}")" ]] || create-windows-shortcut "${shortcut_name}" "${shortcut_path}"
+				else
+					[[ "$(desktop_shortcut_exists "${app}")" ]] || create-windows-shortcut "${app}" "${shortcut_path}"
 				fi
 			fi
 		done
@@ -636,7 +846,7 @@ EOT
 				# execute_with_retry "Install of libgconf-2-4 failed."
 				
 				echo
-				if ask_yn_n "build-essential is required for building the installs of several applications; install it" y; then
+				if ask_yn_y "build-essential is required for building the installs of several applications; install it" y; then
 					execute_command () { sudo apt-get -y install build-essential; }
 					execute_with_retry "Install of build-essential failed."
 				fi

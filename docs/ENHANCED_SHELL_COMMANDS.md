@@ -78,7 +78,7 @@ cd              # Changes to $HOME
 
 **Enhanced behavior:**
 ```bash
-cd              # Opens fzf to select from subdirectories
+cd              # Opens gum or fzf to select from subdirectories
 ```
 
 #### 2. Interactive Directory Selection (`.` Argument)
@@ -86,7 +86,7 @@ When `cd .` is called, it prompts you to select a subdirectory.
 
 **Example:**
 ```bash
-cd .            # Opens fzf to select from subdirectories
+cd .            # Opens gum or fzf to select from subdirectories
 ```
 
 #### 3. Glob Expansion Selection
@@ -94,7 +94,7 @@ When using globs that match multiple directories, you'll be prompted to select w
 
 **Example:**
 ```bash
-cd proj*        # If multiple matches, opens fzf to select
+cd proj*        # If multiple matches, opens gum or fzf to select
 ```
 
 #### 4. Archive Auto-Extraction

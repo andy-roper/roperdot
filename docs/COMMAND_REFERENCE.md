@@ -34,9 +34,9 @@ help <text>        # Find commands whose name/description matches the text
 ## File Management and Navigation
 
 ### Navigation
-- **`cd` (enhanced)** - Smart directory navigation with [fzf](https://github.com/junegunn/fzf) fuzzy finding and archive extraction; also handles `cd ...` etc.
+- **`cd` (enhanced)** - Smart directory navigation with [gum](https://github.com/charmbracelet/gum)/[fzf](https://github.com/junegunn/fzf) fuzzy finding and archive extraction; also handles `cd ...` etc.
 - **`cdclip`** - cd to the directory contained in the clipboard
-- **`cdd`** - Fuzzy select and navigate to subdirectory using [fzf](https://github.com/junegunn/fzf)
+- **`cdd`** - Fuzzy select and navigate to subdirectory using [gum](https://github.com/charmbracelet/gum)/[fzf](https://github.com/junegunn/fzf)
 - **`cdf` (Mac)** - cd into the folder being viewed in the forefront Finder window
 - **`cdp`** - cd to the previous directory
 - **`cds`** - Deep subdirectory selection with recursive search
@@ -143,7 +143,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`git-blame-colored`** - Enhanced git blame with syntax highlighting
 - **`git-lfs`** - Used to work with large files in Git repositories (https://git-lfs.github.com)
 - **`git-overwritten`** - Show files that have been overwritten in commits
-- **`gli`** - Interactive git commit browser using fzf
+- **`gli`** - Interactive git commit browser using [fzf](https://github.com/junegunn/fzf)
 - **`gi`** - Git Information: interactive git information viewer
 - **`gm`** - Git Manager: interactive git workflow helper
 - **`gr`** - Navigate to git repository root directory

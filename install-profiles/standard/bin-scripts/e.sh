@@ -16,12 +16,12 @@ is determined by the file's extension and the editors defined in
 If no arguments are provided and a filename that's present in the current
 directory is present in the clipboard, that file will be edited.
 
-If fzf is installed and no arguments are provided and the clipboard is empty
-or if its contents don't match a filename, fzf will be used to allow the user
-to select a file in the current directory.
+If gum or fzf is installed and no arguments are provided and the clipboard is
+empty or if its contents don't match a filename, gum/fzf will be used to allow
+the user to select a file in the current directory.
 
-If fzf is installed and the argument is a directory, fzf will be used for
-selecting a file in that directory.
+If gum or fzf is installed and the argument is a directory, gum/fzf will be
+used for selecting a file in that directory.
 
 If you're working in a graphical environment and the target file specified by
 the argument doesn't exist, a new file will be created using touch before
@@ -71,16 +71,28 @@ if [[ $# -eq 0 ]]; then
 		fi
 	fi
 	if [[ -z "$found_clip_file" ]]; then
-		command -v fzf >/dev/null 2>&1 || help
-		f="$(find . -maxdepth 1 -type f -printf '%f\n' | sort | fzf --no-sort -0 --height 33% --layout=reverse)"
-		[[ -n "$f" ]] && files+=("$f") || exit 0
+	    if command -v gum >/dev/null 2>&1; then
+	    	height=$(( LINES / 3 ))
+	        f="$(find . -maxdepth 1 -type f -printf '%f\n' | sort | gum filter --placeholder='Select file...' --height=$height)"
+	    elif command -v fzf >/dev/null 2>&1; then
+	        f="$(find . -maxdepth 1 -type f -printf '%f\n' | sort | fzf --no-sort --exact -0 --height 33% --layout=reverse)"
+	    else
+	        help
+	    fi
+	    [[ -n "$f" ]] && files+=("$f") || exit 0
 	fi
 elif [[ -d "$1" ]]; then
-	command -v fzf >/dev/null 2>&1 || help
-	d="$1"
-	[[ "$d" =~ /$ ]] || d="$d/"
-	f="$(find "$d" -maxdepth 1 -type f | sort | fzf -0 --no-sort --height 33% --layout=reverse)"
-	[[ -n "$f" ]] && files+=("$f") || exit 0
+    d="$1"
+    [[ "$d" =~ /$ ]] || d="$d/"
+    if command -v gum >/dev/null 2>&1; then
+    	height=$(( LINES / 3 ))
+        f="$(find "$d" -maxdepth 1 -type f | sort | gum filter --placeholder='Select file...' --height=$height)"
+    elif command -v fzf >/dev/null 2>&1; then
+        f="$(find "$d" -maxdepth 1 -type f | sort | fzf -0 --exact --no-sort --height 33% --layout=reverse)"
+    else
+        help
+    fi
+    [[ -n "$f" ]] && files+=("$f") || exit 0
 else
 	for f; do
 		files+=("$f")

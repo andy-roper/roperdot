@@ -17,7 +17,7 @@ If a prefix string is provided, cd up to the first parent directory that begins
 with the prefix.
 
 If no arguments are provided, prompt the user to select the target directory
-from a list. fzf will be used for the selection if it's installed.
+from a list. Either gum or fzf will be used for the selection if they're installed.
 EOT
 	exit 0
 fi
@@ -37,7 +37,28 @@ if [[ $# -eq 0 ]]; then
 	if [[ ${#parts[@]} -eq 1 ]]; then
 		dest=..
 	else
-		if command -v fzf >/dev/null 2>&1; then
+		if command -v gum >/dev/null 2>&1; then
+		    height=${#parts[@]}
+		    (( height > LINES / 2 )) && height=$(( LINES / 2 ))
+		    selected=$(printf "%s\n" "${parts[@]}" | tac | gum choose --height $height --header "Destination directory?")
+		    [[ -z "$selected" ]] && exit 0
+
+		    # Find the index by searching for the selected value
+		    if [[ $ROPERDOT_CURRENT_SHELL = zsh ]]; then
+		        index=1
+		        for part in "${parts[@]}"; do
+		            [[ "$part" == "$selected" ]] && break
+		            (( index++ ))
+		        done
+		    else
+		        for i in "${!parts[@]}"; do
+		            if [[ "${parts[$i]}" == "$selected" ]]; then
+		                index=$((i+1))
+		                break
+		            fi
+		        done
+		    fi
+		elif command -v fzf >/dev/null 2>&1; then
 			height=$(( ${#parts[@]} + 2 ))
 			(( height > LINES / 2 )) && height=50%
 			index=$(printf "%s\n" "${parts[@]}" | cat -n | fzf -0 --tac --no-sort --height $height --layout=reverse --with-nth 2.. | awk '{print $1}')

@@ -99,8 +99,14 @@ if [[ "$LOCAL_MODE" == true ]]; then
         echo "Auto-selected: $TEST_FILE"
     else
         # Multiple classes - let user choose
-        TEST_FILE=$(echo "$LOCAL_TEST_FILES" | \
-            fzf --prompt="Select test class: " --layout=reverse -0 --height=33%)
+        if command -v gum >/dev/null 2>&1; then
+            local height=$(( LINES / 3 ))
+            TEST_FILE=$(echo "$LOCAL_TEST_FILES" | \
+                gum filter --placeholder="Select test class: " --height=$height)
+        else
+	        TEST_FILE=$(echo "$LOCAL_TEST_FILES" | \
+	            fzf --prompt="Select test class: " --layout=reverse -0 --height=33%)
+	    fi
         
         if [[ -z "$TEST_FILE" ]]; then
             echo "No test selected"
@@ -114,11 +120,19 @@ if [[ "$LOCAL_MODE" == true ]]; then
 else
     # Recursive mode: search from base directory
     echo "Finding test classes under $TEST_DIR..."
-    TEST_FILE=$(find "$TEST_DIR" -type f \( -name "*Test.java" -o -name "*Tests.java" \) | \
-        sort | \
-        sed "s|^$TEST_DIR/||" | \
-        fzf --prompt="Select test class: " --layout=reverse -0 --height=33%)
-    
+    if command -v gum >/dev/null 2>&1; then
+        local height=$(( LINES / 3 ))
+	    TEST_FILE=$(find "$TEST_DIR" -type f \( -name "*Test.java" -o -name "*Tests.java" \) | \
+	        sort | \
+	        sed "s|^$TEST_DIR/||" | \
+	        gum filter --placeholder="Select test class: " --height=$height)
+    else
+	    TEST_FILE=$(find "$TEST_DIR" -type f \( -name "*Test.java" -o -name "*Tests.java" \) | \
+	        sort | \
+	        sed "s|^$TEST_DIR/||" | \
+	        fzf --prompt="Select test class: " --layout=reverse -0 --height=33%)
+	fi
+
     if [[ -z "$TEST_FILE" ]]; then
         echo "No test selected"
         exit 0
@@ -167,8 +181,14 @@ if [[ -z "$TEST_METHODS" ]]; then
     TEST_TARGET="$CLASS_NAME"
 else
     # Add "Run all tests in class" option
-    SELECTED=$(echo -e "<< Run all tests in class >>\n$(echo "$TEST_METHODS" | sort)" | \
-        fzf --prompt="Select test method: " --layout=reverse --exact -0 --height=33%)
+    if command -v gum >/dev/null 2>&1; then
+		local height=$(( LINES / 3 ))
+	    SELECTED=$(echo -e "<< Run all tests in class >>\n$(echo "$TEST_METHODS" | sort)" | \
+	        gum filter --placeholder="Select test method: " --height=$height)
+	else
+	    SELECTED=$(echo -e "<< Run all tests in class >>\n$(echo "$TEST_METHODS" | sort)" | \
+	        fzf --prompt="Select test method: " --layout=reverse --exact -0 --height=33%)
+    fi
     
     if [[ "$SELECTED" == "<< Run all tests in class >>" ]] || [[ -z "$SELECTED" ]]; then
         TEST_TARGET="$CLASS_NAME"

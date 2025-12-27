@@ -13,12 +13,17 @@ EOT
 fi
 
 default_region=$(aws configure get region)
-echo "Select a region"
 
 regions_list=$(aws ec2 describe-regions --query 'Regions[].RegionName' --output text | tr '\t' '\n' | sort)
 region_options="default ($default_region)"$'\n'"$regions_list"
 
-region="$(echo "$region_options" | fzf --no-sort -0 --height 33% --layout=reverse)"
+if command -v gum >/dev/null 2>&1; then
+	height=$(( LINES / 3 ))
+	region="$(echo "$region_options" | gum choose --height=$height --header="Select a region:")"
+else
+	echo "Select a region"
+	region="$(echo "$region_options" | fzf --no-sort -0 --height 33% --layout=reverse)"
+fi
 
 [[ -z "$region" ]] && exit 0
 

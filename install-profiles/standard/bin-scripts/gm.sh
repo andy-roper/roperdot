@@ -32,14 +32,14 @@ get_clipboard_command() {
     fi
 }
 
-# Select a file with fzf (sorted: files before directories, case-insensitive)
+# Select a file with gum or fzf (sorted: files before directories, case-insensitive)
 # Scoped to current directory and subdirectories
 select_file() {
     local prompt="${1:-Select file > }"
     
     # git ls-files already returns paths relative to current directory
     # No need to filter - just use it directly
-    git ls-files | awk -F/ '{
+    local file_list=$(git ls-files | awk -F/ '{
         if (NF == 1) {
             # Top-level files: prefix with "0" for sorting first
             print "0|" tolower($0) "|" $0
@@ -47,7 +47,14 @@ select_file() {
             # Files in subdirs: prefix with "1" and directory depth
             print "1|" tolower($0) "|" $0
         }
-    }' | sort -t'|' -k1,1 -k2,2 | cut -d'|' -f3 | fzf --exact --prompt="$prompt" --height=55% --reverse
+    }' | sort -t'|' -k1,1 -k2,2 | cut -d'|' -f3)
+    
+    if command -v gum &>/dev/null; then
+        local height=$(( LINES * 55 / 100 ))
+        echo "$file_list" | gum filter --placeholder="$prompt" --height=$height
+    else
+        echo "$file_list" | fzf --exact --prompt="$prompt" --height=55% --reverse
+    fi
 }
 
 # Get current branch name
@@ -72,8 +79,19 @@ get_main_branch() {
 # Prompt for commit message
 get_commit_message() {
     local branch="$1"
-    echo "Enter commit message (branch is automatically prepended):" >&2
-    read -r message
+    local message
+    if command -v gum &>/dev/null; then
+        if ! message=$(gum input --placeholder="Enter commit message (branch is automatically prepended)"); then
+            echo "Commit cancelled" >&2
+            return 1
+        fi
+    else
+        echo "Enter commit message (branch is automatically prepended):" >&2
+        if ! read -r message; then
+            echo "Commit cancelled" >&2
+            return 1
+        fi
+    fi
     echo "${branch}: ${message}"
 }
 
@@ -133,7 +151,13 @@ action_fetch_file() {
         return 1
     fi
     
-    local file=$(echo "$diff_files" | fzf --exact --prompt="Select file to fetch from origin/$main_branch > " --height=55% --reverse)
+    local file
+    if command -v gum &>/dev/null; then
+        local height=$(( LINES * 55 / 100 ))
+        file=$(echo "$diff_files" | gum filter --placeholder="Select file to fetch from origin/$main_branch > " --height=$height)
+    else
+        file=$(echo "$diff_files" | fzf --exact --prompt="Select file to fetch from origin/$main_branch > " --height=55% --reverse)
+    fi
     
     if [[ -z "$file" ]]; then
         echo "No file selected" >&2
@@ -141,12 +165,21 @@ action_fetch_file() {
     fi
     
     # Prompt for backup/stash/overwrite
-    local choice=$(cat <<EOF | fzf --prompt="How to handle local file? > " --height=55% --reverse
+    local choice
+    if command -v gum &>/dev/null; then
+        local height=$(( LINES * 55 / 100 ))
+        choice=$(gum choose --header="How to handle local file?" --height=$height \
+            "Backup (create timestamped backup)" \
+            "Stash (stash local changes)" \
+            "Overwrite (replace without backup)")
+    else
+        choice=$(cat <<EOF | fzf --prompt="How to handle local file? > " --height=55% --reverse
 Backup (create timestamped backup)
 Stash (stash local changes)
 Overwrite (replace without backup)
 EOF
 )
+    fi
     
     if [[ -z "$choice" ]]; then
         echo "No option selected" >&2
@@ -173,7 +206,13 @@ action_switch_branch() {
         return 1
     fi
     
-    local selected_branch=$(echo "$branches" | fzf --exact --prompt="Switch to branch > " --height=55% --reverse)
+    local selected_branch
+    if command -v gum &>/dev/null; then
+        local height=$(( LINES * 55 / 100 ))
+        selected_branch=$(echo "$branches" | gum filter --placeholder="Switch to branch > " --height=$height)
+    else
+        selected_branch=$(echo "$branches" | fzf --exact --prompt="Switch to branch > " --height=55% --reverse)
+    fi
     
     if [[ -z "$selected_branch" ]]; then
         echo "No branch selected" >&2
@@ -192,11 +231,19 @@ action_amend_commit() {
     fi
     
     # Prompt for amend type
-    local choice=$(cat <<EOF | fzf --prompt="How to amend? > " --height=55% --reverse
+    local choice
+    if command -v gum &>/dev/null; then
+        local height=$(( LINES * 55 / 100 ))
+        choice=$(gum choose --header="How to amend?" --height=$height \
+            "Keep message (amend without editing)" \
+            "Edit message (amend and change message)")
+    else
+        choice=$(cat <<EOF | fzf --prompt="How to amend? > " --height=55% --reverse
 Keep message (amend without editing)
 Edit message (amend and change message)
 EOF
 )
+    fi
     
     if [[ -z "$choice" ]]; then
         echo "No option selected" >&2
@@ -210,13 +257,19 @@ EOF
         "Edit message"*) 
             # Get current commit message and allow editing
             local current_msg=$(git log -1 --pretty=%B)
-            echo "Edit commit message:" >&2
+            local new_message
             
-            # Use vared for zsh, read -e -i for bash
-            if [[ -n "$ZSH_VERSION" ]]; then
-                local new_message="$current_msg"
+            if command -v gum &>/dev/null; then
+                if ! new_message=$(gum input --value="$current_msg" --placeholder="Edit commit message"); then
+                    echo "Amend cancelled" >&2
+                    return 1
+                fi
+            elif [[ -n "$ZSH_VERSION" ]]; then
+                echo "Edit commit message:" >&2
+                new_message="$current_msg"
                 vared new_message
             else
+                echo "Edit commit message:" >&2
                 read -e -i "$current_msg" -r new_message
             fi
             
@@ -238,8 +291,19 @@ action_stash_changes() {
         return 1
     fi
     
-    echo "Enter stash message (optional, press Enter to skip):" >&2
-    read -r stash_message
+    local stash_message
+    if command -v gum &>/dev/null; then
+        if ! stash_message=$(gum input --placeholder="Enter stash message (optional, press Esc to skip)"); then
+            echo "Stash cancelled" >&2
+            return 1
+        fi
+    else
+        echo "Enter stash message (optional, press Enter to skip):" >&2
+        if ! read -r stash_message; then
+            echo "Stash cancelled" >&2
+            return 1
+        fi
+    fi
     
     if [[ -n "$stash_message" ]]; then
         echo "git stash push -u -m \"$stash_message\""
@@ -268,11 +332,19 @@ action_apply_stash() {
     local stash_ref=$(echo "$stash" | cut -d: -f1)
     
     # Prompt for apply or pop
-    local choice=$(cat <<EOF | fzf --prompt="How to restore? > " --height=55% --reverse
+    local choice
+    if command -v gum &>/dev/null; then
+        local height=$(( LINES * 55 / 100 ))
+        choice=$(gum choose --header="How to restore?" --height=$height \
+            "Apply (keep stash in list)" \
+            "Pop (remove from list)")
+    else
+        choice=$(cat <<EOF | fzf --prompt="How to restore? > " --height=55% --reverse
 Apply (keep stash in list)
 Pop (remove from list)
 EOF
 )
+    fi
     
     if [[ -z "$choice" ]]; then
         echo "No option selected" >&2
@@ -294,11 +366,19 @@ action_clear_stashes() {
     fi
     
     # Prompt for clear type
-    local choice=$(cat <<EOF | fzf --prompt="Clear stashes > " --height=55% --reverse
+    local choice
+    if command -v gum &>/dev/null; then
+        local height=$(( LINES * 55 / 100 ))
+        choice=$(gum choose --header="Clear stashes" --height=$height \
+            "Drop specific stash" \
+            "Clear all stashes")
+    else
+        choice=$(cat <<EOF | fzf --prompt="Clear stashes > " --height=55% --reverse
 Drop specific stash
 Clear all stashes
 EOF
 )
+    fi
     
     if [[ -z "$choice" ]]; then
         echo "No option selected" >&2
@@ -307,7 +387,13 @@ EOF
     
     case "$choice" in
         "Drop specific"*)
-            local stash=$(git stash list | fzf --exact --prompt="Select stash to drop > " --height=55% --reverse)
+            local stash
+            if command -v gum &>/dev/null; then
+                local height=$(( LINES * 55 / 100 ))
+                stash=$(git stash list | gum filter --placeholder="Select stash to drop > " --height=$height)
+            else
+                stash=$(git stash list | fzf --exact --prompt="Select stash to drop > " --height=55% --reverse)
+            fi
             if [[ -z "$stash" ]]; then
                 echo "No stash selected" >&2
                 return 1
@@ -438,12 +524,21 @@ action_diff_vs_main() {
     fi
     
     # Prompt for diff type
-    local choice=$(cat <<EOF | fzf --prompt="Diff vs $main_branch > " --height=55% --reverse
+    local choice
+    if command -v gum &>/dev/null; then
+        local height=$(( LINES * 55 / 100 ))
+        choice=$(gum choose --header="Diff vs $main_branch" --height=$height \
+            "Show full diff" \
+            "Show file list only" \
+            "Show diff stats")
+    else
+        choice=$(cat <<EOF | fzf --prompt="Diff vs $main_branch > " --height=55% --reverse
 Show full diff
 Show file list only
 Show diff stats
 EOF
 )
+    fi
     
     if [[ -z "$choice" ]]; then
         echo "No option selected" >&2
@@ -463,9 +558,9 @@ EOF
     esac
 }
 
-# Check if fzf is available
-if ! command -v fzf &> /dev/null; then
-    echo "Error: fzf is required but not installed" >&2
+# Check if gum or fzf is available
+if ! command -v gum &> /dev/null && ! command -v fzf &> /dev/null; then
+    echo "Error: gum or fzf is required but neither is installed" >&2
 	exit 1
 fi
 
@@ -479,7 +574,27 @@ current_branch=$(get_current_branch)
 main_branch=$(get_main_branch)
 
 # Menu options
-action=$(cat <<EOF | fzf --prompt="Git Manager (on: $current_branch) > " --height=55% --reverse
+if command -v gum &>/dev/null; then
+    local height=$(( LINES * 55 / 100 ))
+    action=$(gum choose --header="Git Manager (on: $current_branch)" --height=$height \
+        "Push to branch (add, commit, push)" \
+        "Commit and push (commit, push)" \
+        "Switch branches" \
+        "Amend last commit" \
+        "Stash changes" \
+        "Apply/pop stash" \
+        "Clear stashes" \
+        "View commit history" \
+        "Show file history" \
+        "Git blame" \
+        "Diff vs $main_branch" \
+        "Merge from $main_branch (fetch, merge origin/$main_branch)" \
+        "Merge to $main_branch (checkout $main_branch, merge current)" \
+        "Fetch file from $main_branch" \
+        "Squash commits" \
+        "Force sync with remote")
+else
+    action=$(cat <<EOF | fzf --prompt="Git Manager (on: $current_branch) > " --height=55% --reverse
 Push to branch (add, commit, push)
 Commit and push (commit, push)
 Switch branches
@@ -498,6 +613,7 @@ Squash commits
 Force sync with remote
 EOF
 )
+fi
     
 command=""
 case "$action" in

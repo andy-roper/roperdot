@@ -152,8 +152,9 @@ roperdot makes use of a number of excellent third party terminal applications.
 - **`ag`** - [The Silver Searcher](https://github.com/ggreer/the_silver_searcher) - Fast code search
 - **[`dos2unix`](https://dos2unix.sourceforge.io/)** - Convert line endings between formats
 - **[`fd`](https://github.com/sharkdp/fd)** - Modern, fast alternative to find command
-- **[`fzf`](https://github.com/junegunn/fzf)** - Fuzzy finder integration throughout the system
+- **[`fzf`](https://github.com/junegunn/fzf)** - Fuzzy finder for interactive filtering and selection
 - **[`gawk`](https://www.gnu.org/software/gawk/)** - GNU awk for advanced text processing
+- **[`gum`](https://github.com/charmbracelet/gum)** - Interactive prompt/menu library for shell scripts
 - **[`VBinDiff`](https://www.cjmweb.net/vbindiff/)** - Binary file comparison
 
 ### Frequently Already Installed
