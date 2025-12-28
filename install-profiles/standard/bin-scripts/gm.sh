@@ -558,6 +558,63 @@ EOF
     esac
 }
 
+# Action: Delete branch
+action_delete_branch() {
+    local current_branch=$(get_current_branch)
+    local main_branch=$(get_main_branch)
+    
+    # Get list of branches excluding current and main
+    local branches=$(git branch --format='%(refname:short)' | grep -v "^${current_branch}$" | grep -v "^${main_branch}$")
+    
+    if [[ -z "$branches" ]]; then
+        echo "No branches available to delete" >&2
+        return 1
+    fi
+    
+    local selected_branch
+    if command -v gum &>/dev/null; then
+        local height=$(( LINES * 55 / 100 ))
+        selected_branch=$(echo "$branches" | gum filter --placeholder="Select branch to delete > " --height=$height)
+    else
+        selected_branch=$(echo "$branches" | fzf --exact --prompt="Select branch to delete > " --height=55% --reverse)
+    fi
+    
+    if [[ -z "$selected_branch" ]]; then
+        echo "No branch selected" >&2
+        return 1
+    fi
+    
+    # Check if branch is merged
+    local is_merged=$(git branch --merged | grep "^[* ]*${selected_branch}$")
+    
+    if [[ -z "$is_merged" ]]; then
+        # Branch not merged - warn user
+        if command -v gum &>/dev/null; then
+            local height=$(( LINES * 55 / 100 ))
+            local force_delete=$(gum choose --header="WARNING: Branch '$selected_branch' is not merged!" --height=$height \
+                "Force delete anyway" \
+                "Cancel")
+        else
+            local force_delete=$(cat <<EOF | fzf --prompt="WARNING: Branch '$selected_branch' is not merged! > " --height=55% --reverse
+Force delete anyway
+Cancel
+EOF
+)
+        fi
+        
+        if [[ "$force_delete" == "Force"* ]]; then
+            echo "git branch -D $selected_branch"
+        else
+            echo "Delete cancelled" >&2
+            return 1
+        fi
+    else
+        # Branch is merged - safe delete
+        ask_yn_n "Confirm deletion of branch" || return 1
+        echo "git branch -d $selected_branch"
+    fi
+}
+
 # Check if gum or fzf is available
 if ! command -v gum &> /dev/null && ! command -v fzf &> /dev/null; then
     echo "Error: gum or fzf is required but neither is installed" >&2
@@ -591,6 +648,7 @@ if command -v gum &>/dev/null; then
         "Merge from $main_branch (fetch, merge origin/$main_branch)" \
         "Merge to $main_branch (checkout $main_branch, merge current)" \
         "Fetch file from $main_branch" \
+		"Delete branch" \
         "Squash commits" \
         "Force sync with remote")
 else
@@ -609,6 +667,7 @@ Diff vs $main_branch
 Merge from $main_branch (fetch, merge origin/$main_branch)
 Merge to $main_branch (checkout $main_branch, merge current)
 Fetch file from $main_branch
+Delete branch
 Squash commits
 Force sync with remote
 EOF
@@ -658,6 +717,9 @@ case "$action" in
         ;;
     "Fetch file"*)
         command=$(action_fetch_file)
+        ;;
+    "Delete branch"*)
+        command=$(action_delete_branch)
         ;;
     "Force sync with remote")
         if ask_yn_n "Discard local changes and replace with remote"; then

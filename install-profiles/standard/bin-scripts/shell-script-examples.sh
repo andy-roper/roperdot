@@ -15,6 +15,9 @@ elif [[ "$0" == *"bash"* ]]; then
     shell=bash
 fi
 
+# Create a directory symlink
+ln -s /physical/directory /symlink/directory
+
 # Use a default value in an expression with "-"
 export color_scheme=${color_scheme:-hybrid}  # export value of color_scheme, or "hybrid" if it's not defined
 f=${1:-$VALUE}  # set f to $1, or to $VALUE if $1 isn't defined
@@ -429,3 +432,11 @@ perl -p -i -e 'BEGIN{undef $/;} s/("installed_packages":[^\]]*),(\s*\])/\1\2/s' 
 # Find recently modified files
 find . -type f -mtime -7  # Last 7 days
 find . -type f -mmin -60  # Last 60 minutes
+
+# Echo output directly to the terminal
+# Useful in scripts/functions that echo a value to return it
+echo "Some test" >&2
+
+# Echoing output to a debug log
+exec 19>"$DEBUG_LOG"
+echo "debugging info" >&19

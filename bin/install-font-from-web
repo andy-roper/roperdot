@@ -9,16 +9,18 @@
 # set -e
 
 usage() {
-    echo "Usage: $0 <font_display_name> <font_family> <download_url> <check_filename>"
-    echo ""
-    echo "Arguments:"
-    echo "  font_display_name  - Human readable name (e.g. 'Hack Nerd Font')"
-    echo "  font_family        - Font family name for grep/dirs (e.g. 'Hack')"
-    echo "  download_url       - Direct download URL for the font archive"
-    echo "  check_filename     - Filename to check if installed (e.g. 'HackNerdFont-Regular.ttf')"
-    echo ""
-    echo "Example:"
-    echo "  $0 'Hack Nerd Font' 'Hack' 'https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.tar.xz' 'HackNerdFontMono-Regular.ttf'"
+	cat <<EOT
+Usage: $0 <font_display_name> <font_family> <download_url> <check_filename>
+
+Arguments:
+  font_display_name  - Human readable name (e.g. 'Hack Nerd Font')
+  font_family        - Font family name for grep/dirs (e.g. 'Hack')
+  download_url       - Direct download URL for the font archive
+  check_filename     - Filename to check if installed (e.g. 'HackNerdFont-Regular.ttf')
+
+Example:
+  $0 'Hack Nerd Font' 'Hack' 'https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.tar.xz' 'HackNerdFontMono-Regular.ttf'
+EOT
     exit 1
 }
 
@@ -35,6 +37,12 @@ TEMP_DIR="$(mktemp -d)"
 
 NC='\033[0m' # No Color
 
+if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
+	. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
+	localappdata=$(win_env_linux_path LOCALAPPDATA)
+	userprofile=$(win_env_linux_path USERPROFILE)
+fi
+
 log_info() { echo -e "${COLOR_BLUE}[INFO]${NC} $1"; }
 log_success() { echo -e "${COLOR_GREEN}[SUCCESS]${NC} $1"; }
 log_warning() { echo -e "${COLOR_YELLOW}[WARNING]${NC} $1"; }
@@ -44,8 +52,8 @@ is_font_installed() {
     case "$ROPERDOT_DESKTOP_ENV" in
         "windows")
             # Check Windows per-user font directories first, then system
-            [[ -f "$LOCALAPPDATA/Microsoft/Windows/Fonts/$CHECK_FILENAME" ]] && return 0
-            [[ -f "$USERPROFILE/AppData/Local/Microsoft/Windows/Fonts/$CHECK_FILENAME" ]] && return 0
+            [[ -f "${localappdata}/Microsoft/Windows/Fonts/$CHECK_FILENAME" ]] && return 0
+            [[ -f "${userprofile}/AppData/Local/Microsoft/Windows/Fonts/$CHECK_FILENAME" ]] && return 0
             [[ -f "/c/Windows/Fonts/$CHECK_FILENAME" ]] && return 0
             ;;
         "mac")
@@ -72,21 +80,7 @@ get_font_dir() {
     case "$ROPERDOT_DESKTOP_ENV" in
         "windows")
             # Always use per-user font directory (no admin required)
-            # Source Windows environment functions if needed
-            if ! command -v win_env_linux_path >/dev/null 2>&1; then
-                if [[ -f "${ROPERDOT_DIR}/source-scripts/win-env-functions" ]]; then
-                    . "${ROPERDOT_DIR}/source-scripts/win-env-functions"
-                fi
-            fi
-            
-            # Use Windows LOCALAPPDATA environment variable
-            if command -v win_env_linux_path >/dev/null 2>&1; then
-                local localappdata=$(win_env_linux_path LOCALAPPDATA)
-                echo "$localappdata/Microsoft/Windows/Fonts"
-            else
-                # Fallback to constructed path
-                echo "/mnt/c/Users/$(whoami)/AppData/Local/Microsoft/Windows/Fonts"
-            fi
+            echo "${localappdata}/Microsoft/Windows/Fonts"
             ;;
         "mac")
             echo "$HOME/Library/Fonts"
@@ -299,6 +293,15 @@ register_windows_fonts() {
             log_warning "PowerShell not available - may need to log out/in to see fonts"
         fi
     fi
+
+    if [[ ! -d ~/.local/share/fonts ]]; then
+    	echo "Creating symlink to Fonts directory"
+    	[[ -d ~/.local/share ]] || mkdir ~/.local/share
+    	ln -s "${localappdata}/Microsoft/Windows/Fonts" ~/.local/share/fonts
+    fi
+    log_info "Updating font cache..."
+    fc-cache -fv
+    log_success "Font cache updated"
 }
 
 # Function to extract and install fonts
