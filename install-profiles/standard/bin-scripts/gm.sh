@@ -102,18 +102,34 @@ execute_command() {
     eval "$command"
 }
 
-# Action: Push to branch (add, commit, push)
-action_push_to_branch() {
+# Action: Push current directory (add, commit, push)
+action_push_current_dir() {
     local branch=$(get_current_branch)
     local message=$(get_commit_message "$branch")
     echo "git add . && git commit -m \"$message\" && git push"
 }
 
-# Action: Commit and push (no add)
-action_commit_and_push() {
+# Action: Commit current directory and push (commit, push)
+action_commit_current_dir_and_push() {
     local branch=$(get_current_branch)
     local message=$(get_commit_message "$branch")
     echo "git commit -m \"$message\" && git push"
+}
+
+# Action: Push all changes (add, commit, push)
+action_push_all_changes() {
+    local branch=$(get_current_branch)
+    local message=$(get_commit_message "$branch")
+    local repo_root=$(git rev-parse --show-toplevel)
+    echo "cd '$repo_root' && git add . && git commit -m \"$message\" && git push"
+}
+
+# Action: Commit all changes and push (commit, push)
+action_commit_all_and_push() {
+    local branch=$(get_current_branch)
+    local message=$(get_commit_message "$branch")
+    local repo_root=$(git rev-parse --show-toplevel)
+    echo "cd '$repo_root' && git add . -m \"$message\" && git push"
 }
 
 # Action: Merge from main/master branch
@@ -634,8 +650,10 @@ main_branch=$(get_main_branch)
 if command -v gum &>/dev/null; then
     local height=$(( LINES * 55 / 100 ))
     action=$(gum choose --header="Git Manager (on: $current_branch)" --height=$height \
-        "Push to branch (add, commit, push)" \
-        "Commit and push (commit, push)" \
+		"Push current directory (add, commit, push)" \
+		"Commit current directory and push (commit, push)" \
+		"Push all changes (add, commit, push)" \
+		"Commit all changes and push (commit, push)" \
         "Switch branches" \
         "Amend last commit" \
         "Stash changes" \
@@ -653,8 +671,10 @@ if command -v gum &>/dev/null; then
         "Force sync with remote")
 else
     action=$(cat <<EOF | fzf --prompt="Git Manager (on: $current_branch) > " --height=55% --reverse
-Push to branch (add, commit, push)
-Commit and push (commit, push)
+Push current directory (add, commit, push)
+Commit current directory and push (commit, push)
+Push all changes (add, commit, push)
+Commit all changes and push (commit, push)
 Switch branches
 Amend last commit
 Stash changes
@@ -676,11 +696,17 @@ fi
     
 command=""
 case "$action" in
-    "Push to branch"*)
-        command=$(action_push_to_branch)
+    "Push current"*)
+        command=$(action_push_current_dir)
         ;;
-    "Commit and push"*)
-        command=$(action_commit_and_push)
+    "Commit current"*)
+        command=$(action_commit_current_dir_and_push)
+        ;;
+    "Push all"*)
+        command=$(action_push_all_changes)
+        ;;
+    "Commit all"*)
+        command=$(action_commit_all_and_push)
         ;;
     "Switch branches"*)
         command=$(action_switch_branch)

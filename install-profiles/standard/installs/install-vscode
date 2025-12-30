@@ -205,6 +205,7 @@ if [[ -z $skipping_extension_installs ]]; then
 		install_ext redhat.vscode-community-server-connector
 		install_ext amazonwebservices.aws-toolkit-vscode
 		install_ext aws-scripting-guy.cform
+		install_ext ms-dotnettools.csharp
 	fi
 	install_ext albymor.increment-selection
 	install_ext redhat.vscode-yaml
