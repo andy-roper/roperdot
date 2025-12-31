@@ -47,53 +47,36 @@ EOT
 }
 
 # Use the first procedure if in Linux or in WSL
-if [[ "$ROPERDOT_OS_TYPE" = "linux" ]]; then
-	if [[ -n "$has_sudo" ]] && command -v brew >/dev/null 2>&1; then
-#		if [[ -n "$accept_recommended" ]]; then
-#			brew install fzf </dev/null
-#		else
-#			brew install fzf
-#		fi
-# Added export of HOMEBREW_CURLRC on 14 Sep 21 due to self-signed cert in chain at client
-		export HOMEBREW_CURLRC=1
-		brew install fzf
-		if [[ $? -eq 0 ]]; then
-			install_path="$(brew --prefix)/opt/fzf/install"
-			[[ -f "$install_path" ]] && bash "$install_path"
-			exit_code=0
-		else
-			exit_code=$?
-		fi
-	else
-		[[ -d "${ROPERDOT_DIR}/extra-bin" ]] || mkdir "${ROPERDOT_DIR}/extra-bin"
-		cd "${ROPERDOT_DIR}/extra-bin" || return 1
-		# fzf binaries are here: https://github.com/junegunn/fzf-bin/releases
-		archive="$(find "$INSTALLSOURCE" -maxdepth 1 -type f -name "fzf*")"
-		if [[ -n "$archive" ]]; then
-			unpack "$archive"
-#			path="${ROPERDOT_DIR}/extra-bin/fzf"
-			manual_setup
-			exit_code=0
-		else
-			echo "binary not found in INSTALLSOURCE; aborting fzf install"
-			exit_code=1
-		fi
-	fi
+if [[ -n "$accept_recommended" ]]; then
+	yes | brew install fzf
 else
-	if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
-#		if [[ -n "$accept_recommended" ]]; then
-#			brew install fzf </dev/null
-#		else
-#			brew install fzf
-#		fi
-		brew install fzf
-		if [[ $? -eq 0 ]]; then
-			[[ -f /usr/local/opt/fzf/install ]] && bash /usr/local/opt/fzf/install
-			# Added to avoid spurious error thrown when installing key bindings and fuzzy completion
-			exit_code=0
-		fi
-	fi
-#	path="/usr/local/opt/fzf"
+	brew install fzf
 fi
+# if [[ "$ROPERDOT_OS_TYPE" = "linux" ]]; then
+# 	if command -v brew >/dev/null 2>&1; then
+# 		export HOMEBREW_CURLRC=1
+# 		brew install fzf
+# 		if [[ $? -eq 0 ]]; then
+# 			install_path="$(brew --prefix)/opt/fzf/install"
+# 			[[ -f "$install_path" ]] && bash "$install_path"
+# 			exit_code=0
+# 		else
+# 			exit_code=$?
+# 		fi
+# 	fi
+# else
+# 	if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
+# 		if [[ -n "$accept_recommended" ]]; then
+# 			$(brew --prefix)/opt/fzf/install --all
+# 		else
+# 			brew install fzf
+# 		fi
+# 		if [[ $? -eq 0 ]]; then
+# 			[[ -f /usr/local/opt/fzf/install ]] && bash /usr/local/opt/fzf/install
+# 			# Added to avoid spurious error thrown when installing key bindings and fuzzy completion
+# 			exit_code=0
+# 		fi
+# 	fi
+# fi
 
 [[ -n "$exit_code" ]] && exit $exit_code

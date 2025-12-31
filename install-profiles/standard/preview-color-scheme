@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+
+scheme="$1"
+
+[ "$scheme" = "default (hybrid)" ] && scheme="hybrid"
+
+preview_file="${ROPERDOT_DIR}/config/color-schemes/source/${scheme}/preview.txt"
+
+if [ -f "$preview_file" ]; then
+    cat "$preview_file"
+else
+    echo "No preview available for: $scheme"
+fi

@@ -1,0 +1,117 @@
+#!/usr/bin/env python3
+"""
+Description: Generates gum-color-env-vars files for color schemes
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+"""
+
+import sys
+import os
+import re
+
+def print_help():
+    """Print help text and return success code."""
+    help_text = """
+generate-gum-colors: Generates gum-color-env-vars files for color schemes
+
+Usage: generate-gum-colors
+
+This script generates a gum-color-env-vars file for each color scheme in
+roperdot/config/color-schemes/source. Env vars containing 3-byte colors will
+be created based on the colors defined in the common-color-env-vars file.
+"""
+    print(help_text.strip())
+    return 0
+
+def hex_to_3byte(hex_color):
+    """Convert 6-digit hex color to 3-byte by rounding each byte to nearest 16"""
+    hex_color = hex_color.lstrip('#')
+    
+    result = []
+    for i in range(0, 6, 2):
+        byte_hex = hex_color[i:i+2]
+        byte_val = int(byte_hex, 16)
+        rounded = round(byte_val / 16)
+        rounded = max(0, min(15, rounded))
+        result.append(format(rounded, 'X'))
+    
+    return '#' + ''.join(result)
+
+# Determine base directory
+if 'ROPERDOT_DIR' in os.environ:
+    base_path = os.path.join(os.environ['ROPERDOT_DIR'], 'config', 'color-schemes', 'source')
+else:
+    base_path = os.path.join(os.path.expanduser('~'), 'roperdot', 'config', 'color-schemes', 'source')
+
+# Manual overrides for hybrid scheme
+hybrid_overrides = {
+    'COLOR_BRGREEN_3BYTE': '#AB5',
+    'COLOR_YELLOW_3BYTE': '#D74'
+}
+
+def process_scheme(scheme_name):
+    """Process a single color scheme"""
+    if scheme_name == 'default':
+        print(f"Skipping {scheme_name}")
+        return
+    
+    scheme_path = os.path.join(base_path, scheme_name)
+    common_file = os.path.join(scheme_path, 'common-color-env-vars')
+    gum_color_file = os.path.join(scheme_path, 'gum-color-env-vars')
+    
+    if not os.path.exists(common_file):
+        print(f"[WARN] {scheme_name}: common-color-env-vars not found")
+        return
+    
+    # Read common-color-env-vars
+    with open(common_file, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+    
+    # Parse RGB colors (excluding CURSORCOLOR)
+    color_lines = []
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        if 'CURSORCOLOR' in line:
+            continue
+        
+        match = re.match(r'export\s+(COLOR_\w+_RGB)="([0-9a-fA-F]{6})"', line)
+        if match:
+            color_lines.append((match.group(1), match.group(2)))
+    
+    # Generate 3-byte color content for gum
+    gum_lines = ['# Env vars for 3-byte colors (gum)\n']
+    
+    for var_name, rgb_value in color_lines:
+        base_var_name = var_name.replace('_RGB', '_3BYTE')
+        
+        # Check for manual override (hybrid scheme only)
+        if scheme_name == 'hybrid' and base_var_name in hybrid_overrides:
+            three_byte_color = hybrid_overrides[base_var_name]
+        else:
+            three_byte_color = hex_to_3byte(rgb_value)
+        
+        gum_lines.append(f'export {base_var_name}="{three_byte_color}"\n')
+    
+    # Write to gum-color-env-vars
+    with open(gum_color_file, 'w', encoding='utf-8') as f:
+        f.writelines(gum_lines)
+    
+    print(f"[OK] {scheme_name}: Created gum-color-env-vars with {len(color_lines)} colors")
+
+if __name__ == '__main__':
+    if '--help' in sys.argv or '-h' in sys.argv or '-?' in sys.argv:
+        print_help()
+        sys.exit(0)
+
+    # Get all schemes
+    schemes = [d for d in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, d))]
+    schemes.sort()
+    
+    print(f"Creating gum-color-env-vars files for {len(schemes)} color schemes...\n")
+    for scheme in schemes:
+        process_scheme(scheme)
+    
+    print("\nDone!")

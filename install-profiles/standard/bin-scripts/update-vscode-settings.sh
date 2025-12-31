@@ -32,6 +32,7 @@ update_setting () {
 
 update_settings () {
 	local vs_code_settings_path="$1"
+
 	if [[ ! -d "$vs_code_settings_path" ]] && ! mkdir -p "$vs_code_settings_path"; then
 		echo "Error creating directory $vs_code_settings_path"
 		exit 1
@@ -51,6 +52,8 @@ update_settings () {
 	update_setting "workbench.colorTheme" "Default Dark+"
 	update_setting "terminal.integrated.scrollback" 10000
 	update_setting "terminal.integrated.copyOnSelection" true
+	update_setting "terminal.integrated.minimumContrastRatio" 1
+	update_setting "markdown.extension.preview.autoShowPreviewToSide" true
 
 	if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
 		if [[ -n "$PROCESSING_ZSH" ]]; then

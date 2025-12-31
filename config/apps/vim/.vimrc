@@ -5,7 +5,7 @@ set backupdir=~/.vim/backup//
 set directory=~/.vim/swap//
 set undodir=~/.vim/undo//
 
-if $ROPERDOT_VI_COLOR_SCHEME == 'gruvbox' || $ROPERDOT_VI_COLOR_SCHEME =~ '^solarized light'
+if $ROPERDOT_VI_COLOR_SCHEME == 'gruvbox light' || $ROPERDOT_VI_COLOR_SCHEME =~ '^solarized light'
 	set background=light
 else
 	set background=dark

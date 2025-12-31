@@ -135,6 +135,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`json-to-string-clip`** - Convert JSON to a quotes string and write the output to the clipboard; accepts file input, piped input or clipboard input
 - **`json-to-tsv`** - Convert JSON data to tab-separated values
 - **`spacetab`** - Convert between leading tabs and spaces in text; accepts file input, piped input or clipboard input
+- **`update-markdown`** - Convert [TOC] to link table and normalize in-document links in a markdown file
 - **`x2j`** - Convert XML to JSON format
 
 ### Git Enhancements
@@ -198,6 +199,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`mount-drive` (Windows)** - Mount a drive
 - **`mount-iso-readonly` (Ubuntu and Mint)** - Mount an ISO image for reading
 - **`mount-iso-writable` (Ubuntu and Mint)** - Mount an ISO image for writing
+- **`set-ini-file`** - Set a value in an INI file
 - **`shell-switch` (Mac)** - Switch to the designated shell
 - **`show-desktop` (Mac)** - Restore normal desktop icon display
 - **`show-files` (Mac)** - Cause Finder to display hidden files (can also do with Cmd + Shift + .)
@@ -283,6 +285,8 @@ help <text>        # Find commands whose name/description matches the text
 - **`gen-all-color-schemes`** - Call gen-color-files for each available color scheme
 - **`gen-color-files`** - Generate color files for a color scheme
 - **`generate-dircolors`** - Generate .dircolors from a source file
+- **`generate-gum-colors`** - Generate gum-color-env-vars for each available color scheme
+- **`generate-color-previews`** - Generate a color preview file for each color scheme
 - **`rgb2xterm256`** - Convert an RGB color to an xterm-256 color
 - **`show-colormap`** - Display a map of terminal colors
 - **`test-dircolors`** - Creates sample files for testing .dircolors
@@ -291,7 +295,7 @@ help <text>        # Find commands whose name/description matches the text
 ### Configuration
 - **`configure-windows-console` (Windows)** - Set colors and font for Ubuntu in Windows console
 - **`configure-windows-terminal` (Windows)** - Import color schemes into Windows Terminal settings and set the font to use
-- **`set-windows-terminal-default-profile` (Window)** - Set default profile for Windows Terminal
+- **`set-windows-terminal-default-profile` (Windows)** - Set default profile for Windows Terminal
 - **`unload-roperdot`** - Resets ~/.dircolors and ~/.vimrc to their contents before roperdot was started
 - **`update-app-binaries`** - Updates ~/.roperdot-os-functions and app binaries for the current OS
 - **`update-vscode-settings`** - Updates Visual Studio Code settings.json for the color scheme

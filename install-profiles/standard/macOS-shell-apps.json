@@ -56,14 +56,6 @@
 		"desc": "GNU implementation of awk"
 	},
 	{
-		"app": "fzf",
-		"binary": "fzf",
-		"package": "fzf",
-		"list_prerequisite": "brew",
-		"install_script": "install-fzf",
-		"desc": "Command-line fuzzy finder; extensively used by roperdot"
-	},
-	{
 		"app": "fd",
 		"binary": "fd",
 		"package": "fd",

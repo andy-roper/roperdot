@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+"""
+Description: Convert [TOC] to link table and normalize in-document links in a markdown file
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+"""
+
+import re
+import sys
+from pathlib import Path
+
+
+def generate_anchor(heading_text):
+    """Generate anchor from heading text following VS Code markdown rules."""
+    # Lowercase
+    anchor = heading_text.lower()
+    # Replace spaces with hyphens
+    anchor = anchor.replace(' ', '-')
+    # Strip special characters (keep only alphanumeric and hyphens)
+    anchor = re.sub(r'[^a-z0-9-]', '', anchor)
+    # Clean up multiple hyphens
+    anchor = re.sub(r'-+', '-', anchor)
+    # Strip leading/trailing hyphens
+    anchor = anchor.strip('-')
+    return anchor
+
+
+def extract_headings(content):
+    """Extract all headings and return list of (level, text, anchor) tuples."""
+    headings = []
+    # Match markdown headings: one or more # followed by space and text
+    heading_pattern = re.compile(r'^(#{1,6})\s+(.+?)$', re.MULTILINE)
+    
+    for match in heading_pattern.finditer(content):
+        level = len(match.group(1))  # Count the # characters
+        text = match.group(2).strip()
+        anchor = generate_anchor(text)
+        headings.append((level, text, anchor))
+    
+    return headings
+
+
+def generate_toc(headings):
+    """Generate table of contents markdown from headings (excluding level 1)."""
+    toc_lines = ['<div id="toc">', '']
+    
+    for level, text, anchor in headings:
+        if level == 1:
+            # Skip level 1 headings
+            continue
+        
+        # Calculate indentation: (level - 2) * 4 spaces
+        indent = ' ' * ((level - 2) * 4)
+        toc_line = f'{indent}- [{text}](#{anchor})'
+        toc_lines.append(toc_line)
+    
+    toc_lines.extend(['', '</div>'])
+    return '\n'.join(toc_lines)
+
+
+def fix_in_document_links(content, headings):
+    """Fix all in-document links to use correct anchor format."""
+    # Build mapping of possible link targets to correct anchors
+    # We'll try to match both the original text and partially-correct anchors
+    anchor_map = {}
+    for level, text, anchor in headings:
+        # Map from heading text (case-insensitive)
+        anchor_map[text.lower()] = anchor
+        # Also map from any existing anchor variations
+        anchor_map[anchor] = anchor
+    
+    # Find all markdown links with anchors
+    link_pattern = re.compile(r'\[([^\]]+)\]\(#([^)]+)\)')
+    
+    def replace_link(match):
+        link_text = match.group(1)
+        old_anchor = match.group(2)
+        
+        # Try to find a matching heading
+        # First try exact anchor match
+        if old_anchor in anchor_map:
+            new_anchor = anchor_map[old_anchor]
+            return f'[{link_text}](#{new_anchor})'
+        
+        # Try to match against heading text (convert anchor back to text-like form)
+        # Replace hyphens with spaces for comparison
+        anchor_as_text = old_anchor.replace('-', ' ').lower()
+        if anchor_as_text in anchor_map:
+            new_anchor = anchor_map[anchor_as_text]
+            return f'[{link_text}](#{new_anchor})'
+        
+        # No match found - leave unchanged
+        return match.group(0)
+    
+    return link_pattern.sub(replace_link, content)
+
+
+def update_toc_in_content(content, toc):
+    """Replace [TOC] or <div id="toc">...</div> with generated TOC."""
+    # Try to replace [TOC] marker first
+    if '[TOC]' in content:
+        return content.replace('[TOC]', toc)
+    
+    # Try to replace existing <div id="toc">...</div>
+    toc_div_pattern = re.compile(
+        r'<div\s+id=["\']toc["\']\s*>.*?</div>',
+        re.DOTALL | re.IGNORECASE
+    )
+    
+    if toc_div_pattern.search(content):
+        return toc_div_pattern.sub(toc, content)
+    
+    # No TOC marker found - return content unchanged
+    return content
+
+def print_help():
+    """Print help text and return success code."""
+    help_text = """
+update-markdown: Convert [TOC] to link table and normalize in-document links in a markdown file
+
+Usage:
+    update-markdown <markdown-file>
+"""
+    print(help_text.strip())
+    return 0
+
+def main():
+    if len(sys.argv) != 2 or '--help' in sys.argv or '-h' in sys.argv or '-?' in sys.argv:
+        return print_help()
+    
+    file_path = Path(sys.argv[1])
+    
+    if not file_path.exists():
+        print(f"Error: File not found: {file_path}")
+        sys.exit(1)
+    
+    # Read the file
+    print(f"Reading {file_path}...")
+    content = file_path.read_text(encoding='utf-8')
+    
+    # Extract headings
+    print("Extracting headings...")
+    headings = extract_headings(content)
+    print(f"  Found {len(headings)} headings")
+    
+    # Generate TOC
+    print("Generating table of contents...")
+    toc = generate_toc(headings)
+    toc_count = len([h for h in headings if h[0] > 1])
+    print(f"  TOC contains {toc_count} entries (excluding level 1 headings)")
+    
+    # Fix in-document links
+    print("Fixing in-document links...")
+    content = fix_in_document_links(content, headings)
+    
+    # Update TOC in content
+    print("Updating TOC...")
+    original_content = content
+    content = update_toc_in_content(content, toc)
+    
+    if content == original_content:
+        print("  Warning: No [TOC] marker or <div id='toc'></div> found!")
+        print("  File not modified.")
+        sys.exit(1)
+    
+    # Write back to file
+    print(f"Writing updated content to {file_path}...")
+    file_path.write_text(content, encoding='utf-8')
+    
+    print("Done!")
+
+
+if __name__ == '__main__':
+    main()

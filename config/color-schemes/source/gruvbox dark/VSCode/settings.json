@@ -1,0 +1,24 @@
+{
+	"workbench.colorCustomizations": {
+		"terminal.background": "#",
+		"terminal.foreground": "#",
+		"terminal.ansiBlack": "#",
+		"terminal.ansiRed": "#",
+		"terminal.ansiGreen": "#",
+		"terminal.ansiYellow": "#",
+		"terminal.ansiBlue": "#",
+		"terminal.ansiMagenta": "#",
+		"terminal.ansiCyan": "#",
+		"terminal.ansiWhite": "#",
+		"terminal.ansiBrightBlack": "#",
+		"terminal.ansiBrightRed": "#",
+		"terminal.ansiBrightGreen": "#",
+		"terminal.ansiBrightYellow": "#",
+		"terminal.ansiBrightBlue": "#",
+		"terminal.ansiBrightMagenta": "#",
+		"terminal.ansiBrightCyan": "#",
+		"terminal.ansiBrightWhite": "#"
+	},
+	"terminal.integrated.fontFamily": "Hack Nerd Font",
+	"terminal.integrated.fontSize": 13
+}

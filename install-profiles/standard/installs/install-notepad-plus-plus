@@ -11,7 +11,12 @@ dark_npp_version="0.5.0.0"
 hexeditor_version="0.9.14"
 jstool_version="25.11.16"
 nppexec_version="0810"
+nppmarkdownpanel_version_1="0.9.0"
+nppmarkdownpanel_version_2="0.9.0.0"
 xmltools_version="3.1.1.13"
+
+export warning_text=$(echo -e '\x1B[0;91m')
+export normal_text=$(echo -e '\x1B[0m')
 
 # Only install on Windows
 if [[ "$ROPERDOT_DESKTOP_ENV" != windows ]]; then
@@ -24,8 +29,6 @@ plugin_src_dir="$(mktemp -d)"
 mkdir -p "$plugin_extract_dir" "$plugin_src_dir"
 pushd "$plugin_extract_dir" >/dev/null
 
-trap cleanup EXIT
-
 cleanup() {
 	[[ -d "$plugin_extract_dir" ]] && rm -rf "$plugin_extract_dir" >/dev/null
 	[[ -d "$plugin_src_dir" ]] && rm -rf "$plugin_src_dir" >/dev/null
@@ -36,6 +39,8 @@ cleanup() {
 . "${ROPERDOT_DIR}/source-scripts/win-path-functions"
 . "${ROPERDOT_DIR}/source-scripts/win-env-functions"
 . "${ROPERDOT_DIR}/source-scripts/find-pip"
+
+trap 'cleanup; cleanup_temp_dirs' EXIT
 
 # Install Notepad++ via Chocolatey
 choco install -y --ignore-pending-reboot notepadplusplus || exit $?
@@ -50,61 +55,17 @@ config_files="${ROPERDOT_DIR}/install-profiles/standard/config-files/notepad-plu
 
 [[ -d "$plugins_dir" ]] || mkdir -p "$plugins_dir"
 
-# Launch Notepad++ to generate config files if needed
-if [[ ! -f "$notepadpp_dir/config.xml" ]]; then
-	echo -e "\nLaunching Notepad++ to generate initial configuration files..."
-	echo "Notepad++ will open automatically. Close the application to continue the installation."
-	powershell.exe -Command "Start-Process -FilePath '$notepadpp_exe' -Wait"
-fi
-
-# Configure other settings in config.xml
-echo -e "Configuring Notepad++ settings...\n"
-if [[ -f "$notepadpp_dir/config.xml" ]]; then
-	cp "$notepadpp_dir/config.xml" "$notepadpp_dir/config.xml.bak"
-	
-	$python_bin "$ROPERDOT_DIR/bin/set-attributes-in-xml" "$notepadpp_dir/config.xml" \
-		GUIConfig "name:DarkMode" \
-		smoothFont "yes"
-
-	$python_bin "$ROPERDOT_DIR/bin/set-attributes-in-xml" "$notepadpp_dir/config.xml" \
-		GUIConfig "name:DarkMode" \
-		enable "yes"
-	
-	$python_bin "$ROPERDOT_DIR/bin/set-attributes-in-xml" "$notepadpp_dir/config.xml" \
-	    GUIConfig "name:DarkMode" \
-	    darkThemeName "Fluent.xml"
-fi
-
-# Install and configure Fluent theme
-echo -e "Installing Fluent theme...\n"
-
-if get-web-file "https://raw.githubusercontent.com/ikoshura/Fluent-Npp/main/Fluent.xml"; then
-	[[ -d "$notepadpp_dir/themes" ]] || mkdir -p "$notepadpp_dir/themes"
-	mv Fluent.xml "$notepadpp_dir/themes" >/dev/null 2>&1
-	theme_file="$notepadpp_dir/themes/Fluent.xml"
-
-	$python_bin "$ROPERDOT_DIR/bin/set-attributes-in-xml" "$theme_file" \
-		WidgetStyle "name:Global override" \
-		fontName "Hack Nerd Font" \
-		fontSize "11"
-
-	$python_bin "$ROPERDOT_DIR/bin/add-element-to-xml" "$theme_file" \
-		GlobalStyles WidgetStyle \
-		name "Bookmark margin" styleID "0" bgColor "000000"
-
-	$python_bin "$ROPERDOT_DIR/bin/add-element-to-xml" "$theme_file" \
-		GlobalStyles WidgetStyle \
-		name "Change History margin" styleID "0" bgColor "000000"
+if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+    unzip_file() {
+    	plugin_zip_win="$(wslpath -w plugin.zip)"
+		extract_dir_win="$(wslpath -w .)"
+		powershell.exe -Command "Expand-Archive -Path '$plugin_zip_win' -DestinationPath '$extract_dir_win' -Force"
+    }
 else
-	echo "Warning: Could not download Fluent style"
+	unzip_file() {
+		unzip -q "$1"
+	}
 fi
-
-echo -e "Creating DarkNpp configuration file\n"
-cat << EOT > "$notepadpp_dir/plugins/config/DarkNpp.ini"
-[DarkNpp]
-useDark=1
-micaType=2
-EOT
 
 echo "Installing Notepad++ plugins..."
 
@@ -121,19 +82,28 @@ download_and_extract_plugin() {
 	successful_download=true
 	if [[ "$github_url" =~ .zip$ ]]; then
 		if get-web-file "$github_url" plugin.zip; then
-			if unzip -q plugin.zip 2>/dev/null; then
-				for f in "$@"; do
-					if [[ -d "$f" ]]; then
-						cp -r "$f" "$plugin_dir"
-					elif [[ -f "$f" ]]; then
-						cp "$f" "$plugin_dir"
-					else
-						echo "Could not find $f"
-						successful_download=
-						break
-					fi
-				done
-				rm -rf "$plugin_extract_dir"/* >/dev/null 2>&1
+			if unzip_file plugin.zip >/dev/null 2>&1; then
+				if [[ $# -eq 0 ]]; then
+					rm plugin.zip
+					ls
+					mv * "$plugin_dir"/
+					ls
+				else
+					ls
+					for f in "$@"; do
+						if [[ -d "$f" ]]; then
+							cp -r "$f" "$plugin_dir"
+						elif [[ -f "$f" ]]; then
+							cp "$f" "$plugin_dir"
+						else
+							echo "Could not find $f"
+							successful_download=
+							break
+						fi
+					done
+					rm -rf "$plugin_extract_dir"/* >/dev/null 2>&1
+					ls
+				fi
 			fi
 		fi
 	else
@@ -190,7 +160,72 @@ download_and_extract_plugin "NppAstyle" \
 	"https://github.com/JetNpp/NppAstyle/archive/refs/heads/master.zip" \
 	"NppAstyle-master/bin/NppAstyle(x64).dll"
 
+download_and_extract_plugin "NppMarkdownPanel" \
+	"https://github.com/mohzy83/NppMarkdownPanel/releases/download/${nppmarkdownpanel_version_1}/NppMarkdownPanel-${nppmarkdownpanel_version_2}-x64.zip"
+
 src_dir="$(wslpath -w "$plugin_src_dir")"
 powershell.exe -Command "Copy-Item -Path '$src_dir\\*' -Destination '$notepadpp_plugin_dir' -Recurse -Force"
+
+# Launch Notepad++ to generate config files if needed
+if [[ ! -f "$notepadpp_dir/config.xml" ]]; then
+	echo -e "\nLaunching Notepad++ to generate initial configuration files..."
+	echo "${warning_text}Notepad++ will open automatically. Close the application to continue the installation.${normal_text}"
+	powershell.exe -Command "Start-Process -FilePath '$notepadpp_exe' -Wait"
+fi
+
+echo "Waiting for Notepad++ to finish writing configuration files..."
+sleep 3
+
+# Configure other settings in config.xml
+echo -e "Configuring Notepad++ settings...\n"
+if [[ -f "$notepadpp_dir/config.xml" ]]; then
+	cp "$notepadpp_dir/config.xml" "$notepadpp_dir/config.xml.bak"
+	
+	$python_bin "$ROPERDOT_DIR/bin/set-attributes-in-xml" "$notepadpp_dir/config.xml" \
+		GUIConfig "name:DarkMode" \
+		smoothFont "yes"
+
+	$python_bin "$ROPERDOT_DIR/bin/set-attributes-in-xml" "$notepadpp_dir/config.xml" \
+		GUIConfig "name:DarkMode" \
+		enable "yes"
+	
+	$python_bin "$ROPERDOT_DIR/bin/set-attributes-in-xml" "$notepadpp_dir/config.xml" \
+	    GUIConfig "name:DarkMode" \
+	    darkThemeName "Fluent.xml"
+fi
+
+# Install and configure Fluent theme
+echo -e "Installing Fluent theme...\n"
+
+if get-web-file "https://raw.githubusercontent.com/ikoshura/Fluent-Npp/main/Fluent.xml"; then
+	[[ -d "$notepadpp_dir/themes" ]] || mkdir -p "$notepadpp_dir/themes"
+	mv Fluent.xml "$notepadpp_dir/themes" >/dev/null 2>&1
+	theme_file="$notepadpp_dir/themes/Fluent.xml"
+
+	$python_bin "$ROPERDOT_DIR/bin/set-attributes-in-xml" "$theme_file" \
+		WidgetStyle "name:Global override" \
+		fontName "Hack Nerd Font" \
+		fontSize "11"
+
+	$python_bin "$ROPERDOT_DIR/bin/add-element-to-xml" "$theme_file" \
+		GlobalStyles WidgetStyle \
+		name "Bookmark margin" styleID "0" bgColor "000000"
+
+	$python_bin "$ROPERDOT_DIR/bin/add-element-to-xml" "$theme_file" \
+		GlobalStyles WidgetStyle \
+		name "Change History margin" styleID "0" bgColor "000000"
+else
+	echo "Warning: Could not download Fluent style"
+fi
+
+echo -e "Creating DarkNpp configuration file\n"
+cat << EOT > "$notepadpp_dir/plugins/config/DarkNpp.ini"
+[DarkNpp]
+useDark=1
+micaType=2
+EOT
+
+echo -e "Updating NppMarkdownPanel configuration file\n"
+set-ini-value "$notepadpp_dir/plugins/config/NppMarkdownPanel.ini" Options AutoShowPanel True
 
 echo -e "\nNotepad++ installation complete!"

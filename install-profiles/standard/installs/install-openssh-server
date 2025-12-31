@@ -8,9 +8,16 @@
 if [[ "$ROPERDOT_OS_FAMILY" = debian ]]; then
 	sudo apt-get update
 	sudo apt install openssh-server -y
-	sudo ufw allow ssh
-	sudo systemctl enable ssh
-	sudo systemctl start ssh
+
+	if [[ -f /proc/sys/fs/binfmt_misc/WSLInterop ]]; then
+		echo "WSL detected: skipping SSH server installation (not needed)"
+	else
+		sudo apt-get update
+		sudo apt install openssh-server -y
+		sudo ufw allow ssh
+		sudo systemctl enable ssh
+		sudo systemctl start ssh
+	fi
 elif [[ "$ROPERDOT_OS_FAMILY" = darwin ]]; then
 	# Enable Remote Login (SSH server)
 	sudo systemsetup -setremotelogin on

@@ -1,0 +1,44 @@
+# IP4
+regexp=\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}
+colours="\033[01;38;5;172m"
+-
+
+# IP6
+regexp=[0-9a-fA-F]{0,4}(\:\:?[0-9a-fA-F]{0,4})+?(\/\d{1,3})
+colours="\033[38;5;172m"
+-
+
+# MAC
+regexp=(\d|[a-f]){2}(\:(\d|[a-f]){2}){5}
+colours="\033[38;5;132m"
+-
+
+# parenthesis
+regexp=\(|\)
+colours="\033[38;5;172m"
+-
+
+# dev wlan0 etc
+regexp=dev \w+
+colours="\033[38;5;172m"
+-
+
+# "default"
+regexp=default
+colours="\033[38;5;;48;5;66m"
+-
+
+# ip range size
+regexp=/\d{1,2}
+colours="\033[38;5;160m"
+-
+
+# "linkdown"
+regexp=linkdown
+colours="\033[01;38;5;160m"
+-
+
+# "src"
+regexp=src \S+
+colours="\033[38;5;;48;5;132m"
+

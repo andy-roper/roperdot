@@ -1,0 +1,23 @@
+{
+    "name": "Roperdot gruvbox light",
+    "background": "#FCF3D1",
+    "foreground": "#4D4846",
+    "selectionBackground": "#4D4846",
+    "cursorColor": "#4D4846",
+    "black": "#FCF3D1",
+    "blue": "#54969A",
+    "cyan": "#7AAB7D",
+    "green": "#A8A521",
+    "purple": "#C07998",
+    "red": "#D83925",
+    "white": "#8F8277",
+    "yellow": "#E0A82A",
+    "brightBlack": "#A39587",
+    "brightBlue": "#00798B",
+    "brightCyan": "#518C6B",
+    "brightGreen": "#8C850F",
+    "brightPurple": "#A25584",
+    "brightRed": "#AF1602",
+    "brightWhite": "#FFFFFF",
+    "brightYellow": "#C38818"
+}

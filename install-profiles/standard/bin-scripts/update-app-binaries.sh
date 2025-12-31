@@ -400,7 +400,7 @@ EOT
     create_app_script presentation-app powerpoint
     default_app=list-archive
     create_app_script comic-viewer-app cdisplayex winrar winzip
-    create_app_script markdown-app typora ghostwriter
+    create_text_editor_script markdown-app typora ghostwriter npp
 
 elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
 
@@ -634,7 +634,7 @@ EOT
     create_app_script word-processor-app opendoc
     create_app_script spreadsheet-app opendoc
     create_app_script presentation-app opendoc
-    create_app_script markdown-app macdown
+    create_text_editor_script markdown-app macdown
     default_app=list-archive
     create_app_script comic-viewer-app simplecomic betterzip archiveutility
 
@@ -727,7 +727,7 @@ EOT
     create_app_script word-processor-app opendoc
     create_app_script spreadsheet-app opendoc
     create_app_script presentation-app opendoc
-    create_app_script markdown-app ghostwriter
+    create_text_editor_script markdown-app ghostwriter
     default_app=list-archive
     create_app_script comic-viewer-app calibre
     if command -v spacefm >/dev/null 2>&1; then
@@ -793,7 +793,7 @@ EOT
     create_app_script word-processor-app opendoc
     create_app_script spreadsheet-app opendoc
     create_app_script presentation-app opendoc
-    create_app_script markdown-app ghostwriter
+    create_text_editor_script markdown-app ghostwriter
     default_app=list-archive
     create_app_script comic-viewer-app peruse ark
 elif [[ "$ROPERDOT_OS_ENV" = "mint" ]]; then
@@ -885,7 +885,7 @@ EOT
     create_app_script word-processor-app opendoc
     create_app_script spreadsheet-app opendoc
     create_app_script presentation-app opendoc
-    create_app_script markdown-app ghostwriter
+    create_text_editor_script markdown-app ghostwriter
     default_app=list-archive
     create_app_script comic-viewer-app peazip
     if command -v spacefm >/dev/null 2>&1; then

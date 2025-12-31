@@ -185,6 +185,8 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" to pro
 
 ## To Do/Future Plans
 
+- Consider integrating LazyVim
+
 - Update install-claude to add configuration
 
 - Revisit issue where the prompt hangs if there's no internet connection

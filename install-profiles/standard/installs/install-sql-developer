@@ -13,6 +13,9 @@ mac_download_url="https://download.oracle.com/otn_software/java/sqldeveloper/sql
 windows_download_url="https://download.oracle.com/otn_software/java/sqldeveloper/sqldeveloper-${APP_VERSION}-x64.zip"
 linux_download_url="https://download.oracle.com/otn_software/java/sqldeveloper/sqldeveloper-${APP_VERSION_LINUX}.noarch.rpm"
 
+export warning_text=$(echo -e '\x1B[0;91m')
+export normal_text=$(echo -e '\x1B[0m')
+
 cleanup() {
     [[ -d "$temp_dir" ]] && rm -rf "$temp_dir"
 }
@@ -76,7 +79,7 @@ install_sql_developer_for_windows() {
     
     # SQL Developer for Windows typically extracts to a "sqldeveloper" folder
     if [[ -d "sqldeveloper" ]]; then
-    	echo "Installation will continue after a parent folder is selected"
+    	echo "${warning_text}Installation will continue after a parent folder is selected for SQL Developer${normal_text}"
     	if ! parent_dir="$(directory_selection_dialog 'Select Parent Folder for Installation' sqldeveloper)"; then
     		return 1
     	fi

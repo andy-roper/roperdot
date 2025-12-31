@@ -1,82 +1,90 @@
 if [[ -n "$1" ]]; then
 	color_scheme="$1"
 else
-	schemes=()
-	schemes+=("default")
-	pushd "${ROPERDOT_DIR}/config/color-schemes/source" >&/dev/null || exit
+	declare -a schemes
+	schemes+=("default (hybrid)")
+	pushd "${ROPERDOT_DIR}/config/color-schemes/source" >&/dev/null
 	for scheme in *; do
-		[[ "$scheme" == "default" ]] || schemes+=("$scheme")
+	    [[ "$scheme" == "default" ]] || schemes+=("$scheme")
 	done
-	popd >&/dev/null || exit
-	PS3="Scheme? "
-	select color_scheme in "${schemes[@]}"; do
-		break
-	done
+	popd >&/dev/null
+
+	color_scheme=$(printf '%s\n' "${schemes[@]}" | fzf \
+	    --height=20 \
+	    --layout=reverse \
+	    --header="Choose a color scheme:" \
+	    --preview="${ROPERDOT_DIR}/install-profiles/standard/preview-color-scheme {}" \
+	    --preview-window=right:60%:wrap \
+	    --ansi)
+	[[ -n "$scheme" ]] || exit
 fi
-scheme_dir="${ROPERDOT_DIR}/config/color-schemes/source/${color_scheme}"
-if [[ ! -d "$scheme_dir" ]]; then
-	echo "Error applying new color scheme: directory $scheme_dir not found"
-	exit 1
-fi
-source "${scheme_dir}/initialize"
-if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
-	if [[ -n $SSH_CLIENT ]]; then
-		sed -i '' 's/^export ROPERDOT_COLOR_SCHEME=.*/export ROPERDOT_COLOR_SCHEME='$color_scheme'/' ~/roperdot-loader
-		export ROPERDOT_COLOR_SCHEME=$color_scheme
-	fi
-	sed -i '' 's/^export ROPERDOT_COMMON_COLOR_SCHEME=.*/export ROPERDOT_COMMON_COLOR_SCHEME='$color_scheme'/' ~/roperdot-loader
-	sed -i '' 's/ROPERDOT_VI_BACKGROUND=.*/ROPERDOT_VI_BACKGROUND='$ROPERDOT_VI_BACKGROUND'/' ~/roperdot-loader
-else
-	if [[ -n $SSH_CLIENT ]]; then
-		sed -i 's/^export ROPERDOT_COLOR_SCHEME=.*/export ROPERDOT_COLOR_SCHEME='$color_scheme'/' ~/roperdot-loader
-		export ROPERDOT_COLOR_SCHEME=$color_scheme
-	fi
-	sed -i 's/^export ROPERDOT_COMMON_COLOR_SCHEME=.*/export ROPERDOT_COMMON_COLOR_SCHEME='$color_scheme'/' ~/roperdot-loader
-	sed -i 's/ROPERDOT_VI_BACKGROUND=.*/ROPERDOT_VI_BACKGROUND='$ROPERDOT_VI_BACKGROUND'/' ~/roperdot-loader
-fi
-export ROPERDOT_COMMON_COLOR_SCHEME="$color_scheme"
-if [[ -n $SSH_CLIENT ]]; then
-	[[ -L ~/.grc && -d ~/.grc ]] && \rm ~/.grc
-	[[ -d ~/.grc ]] || ln -s "${scheme_dir}/grc" ~/.grc
-	source "${scheme_dir}/.git-colors"
-	echo "Set your terminal foreground color and cursor color to #${FOREGROUND_COLOR} and background color to #${BACKGROUND_COLOR}."
-	initialize_colors
-else
-	if [[ "$ROPERDOT_COMMON_COLOR_SCHEME" = "default" ]]; then
-		source "${ROPERDOT_DIR}/config/color-schemes/source/${ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME}/common-color-env-vars"
+if [[ -n "$color_scheme" ]]; then
+	[[ "$color_scheme" =~ ^default ]] && color_scheme=hybrid
+	scheme_dir="${ROPERDOT_DIR}/config/color-schemes/source/${color_scheme}"
+	if [[ ! -d "$scheme_dir" ]]; then
+		echo "Error applying new color scheme: directory $scheme_dir not found"
 	else
-		source "${ROPERDOT_DIR}/config/color-schemes/source/${ROPERDOT_COMMON_COLOR_SCHEME}/common-color-env-vars"
+		source "${scheme_dir}/initialize"
+		if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
+			if [[ -n $SSH_CLIENT ]]; then
+				sed -i '' 's/^export ROPERDOT_COLOR_SCHEME=.*/export ROPERDOT_COLOR_SCHEME='$color_scheme'/' ~/roperdot-loader
+				export ROPERDOT_COLOR_SCHEME=$color_scheme
+			fi
+			sed -i '' 's/^export ROPERDOT_COMMON_COLOR_SCHEME=.*/export ROPERDOT_COMMON_COLOR_SCHEME='$color_scheme'/' ~/roperdot-loader
+			sed -i '' 's/ROPERDOT_VI_BACKGROUND=.*/ROPERDOT_VI_BACKGROUND='$ROPERDOT_VI_BACKGROUND'/' ~/roperdot-loader
+		else
+			if [[ -n $SSH_CLIENT ]]; then
+				sed -i 's/^export ROPERDOT_COLOR_SCHEME=.*/export ROPERDOT_COLOR_SCHEME='$color_scheme'/' ~/roperdot-loader
+				export ROPERDOT_COLOR_SCHEME=$color_scheme
+			fi
+			sed -i 's/^export ROPERDOT_COMMON_COLOR_SCHEME=.*/export ROPERDOT_COMMON_COLOR_SCHEME='$color_scheme'/' ~/roperdot-loader
+			sed -i 's/ROPERDOT_VI_BACKGROUND=.*/ROPERDOT_VI_BACKGROUND='$ROPERDOT_VI_BACKGROUND'/' ~/roperdot-loader
+		fi
+		export ROPERDOT_COMMON_COLOR_SCHEME="$color_scheme"
+		if [[ -n $SSH_CLIENT ]]; then
+			[[ -L ~/.grc && -d ~/.grc ]] && \rm ~/.grc
+			[[ -d ~/.grc ]] || ln -s "${scheme_dir}/grc" ~/.grc
+			source "${scheme_dir}/.git-colors"
+			echo "Set your terminal foreground color and cursor color to #${FOREGROUND_COLOR} and background color to #${BACKGROUND_COLOR}."
+			initialize_colors
+		else
+			if [[ "$ROPERDOT_COMMON_COLOR_SCHEME" = "default" ]]; then
+				source "${ROPERDOT_DIR}/config/color-schemes/source/${ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME}/common-color-env-vars"
+			else
+				source "${ROPERDOT_DIR}/config/color-schemes/source/${ROPERDOT_COMMON_COLOR_SCHEME}/common-color-env-vars"
+			fi
+		fi
+
+		if command -v code >/dev/null 2>&1; then
+			export color_scheme
+			update-vscode-settings
+		fi
+
+		if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
+		    echo "Updating Windows Terminal colors..."
+		    
+		    . "${ROPERDOT_DIR}/source-scripts/windows-terminal-functions"
+
+		    if terminal_settings_file="$(windows_terminal_settings_location)"; then
+		        if [[ "$color_scheme" == "default" ]]; then
+		            target_scheme="Roperdot ${ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME}"
+		        else
+		            target_scheme="Roperdot ${color_scheme}"
+		        fi
+		        
+		        # Update both defaults AND all Ubuntu profiles
+		        if /usr/bin/jq --arg scheme "$target_scheme" '
+		            .profiles.defaults.colorScheme = $scheme |
+		            .profiles.list[] |= if .name == "Ubuntu" and .hidden != true then 
+		                .colorScheme = $scheme 
+		            else . end
+		        ' "$terminal_settings_file" > /tmp/wt_settings.json; then
+		            mv -f /tmp/wt_settings.json "$terminal_settings_file" >/dev/null 2>&1
+		            echo "Updated Windows Terminal to scheme: $target_scheme"
+		        else
+		            echo "Warning: Failed to update Windows Terminal scheme"
+		        fi
+		    fi
+		fi
 	fi
-fi
-
-if command -v code >/dev/null 2>&1; then
-	export color_scheme
-	update-vscode-settings
-fi
-
-if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
-    echo "Updating Windows Terminal colors..."
-    
-    . "${ROPERDOT_DIR}/source-scripts/windows-terminal-functions"
-
-    if terminal_settings_file="$(windows_terminal_settings_location)"; then
-        if [[ "$color_scheme" == "default" ]]; then
-            target_scheme="Roperdot ${ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME}"
-        else
-            target_scheme="Roperdot ${color_scheme}"
-        fi
-        
-        # Update both defaults AND all Ubuntu profiles
-        if /usr/bin/jq --arg scheme "$target_scheme" '
-            .profiles.defaults.colorScheme = $scheme |
-            .profiles.list[] |= if .name == "Ubuntu" and .hidden != true then 
-                .colorScheme = $scheme 
-            else . end
-        ' "$terminal_settings_file" > /tmp/wt_settings.json; then
-            mv /tmp/wt_settings.json "$terminal_settings_file"
-            echo "Updated Windows Terminal to scheme: $target_scheme"
-        else
-            echo "Warning: Failed to update Windows Terminal scheme"
-        fi
-    fi
 fi

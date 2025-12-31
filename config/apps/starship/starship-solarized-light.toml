@@ -1,0 +1,78 @@
+# Terminal.app compatible version - uses ANSI colors instead of 24-bit
+add_newline = false
+command_timeout = 2000
+# NO custom palette - use ANSI colors only
+
+format = """
+[$directory](bg:blue fg:white)\
+${custom.end_triangle}\
+${env_var.GIT_STATUS_INFO} \
+"""
+
+right_format = """${custom.status_triangle}${env_var.STATUS_INFO}${custom.context_triangle}$username$hostname${custom.time_triangle}$time${custom.stack_triangle}${env_var.DIR_STACK_INFO}"""
+
+[directory]
+truncation_length = 5
+truncate_to_repo = true
+fish_style_pwd_dir_length = 1
+format = "[ $path ]($style)"
+style = "bg:blue fg:#ffffff"  # Use ANSI colors
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+
+[env_var.GIT_STATUS_INFO]
+format = "[$env_value](fg:none)"
+variable = "GIT_STATUS_INFO"
+
+[username]
+show_always = true
+format = "[$user]($style)"
+style_user = "fg:blue bg:#f5eedb"
+
+[hostname]
+ssh_only = false
+format = "[@$hostname ](fg:blue bg:#f5eedb)"
+disabled = false
+
+[time]
+disabled = false
+format = "[ $time ]($style)"
+time_format = "%H:%M:%S"
+style = "fg:black bg:white"
+
+# Using ANSI colors for triangles
+[custom.status_triangle]
+when = true
+command = "echo ''"
+format = "[\uE0B2](fg:#f5eedb)"
+
+[custom.context_triangle]  
+when = true
+command = "echo ''"
+format = "[\uE0B3 ](fg:blue bg:#f5eedb)"
+
+[custom.time_triangle]
+when = true
+command = "echo ''"
+format = "[\uE0B2](fg:white bg:#f5eedb)"
+
+[custom.stack_triangle]
+when = "test $(dirs -p | wc -l) -ge 2"
+command = "echo ''"  
+format = "[\uE0B2](fg:magenta bg:#f5eedb)"
+
+[env_var.DIR_STACK_INFO]
+format = "[$env_value](fg:none)"
+variable = "DIR_STACK_INFO"
+
+[env_var.STATUS_INFO]
+format = "[$env_value](fg:none)"
+variable = "STATUS_INFO"
+
+[custom.end_triangle]
+description = "Blue triangle for non-git directories"
+command = "echo ''"  
+when = "! git rev-parse --git-dir > /dev/null 2>&1"
+format = "[\uE0B0](fg:blue)"
