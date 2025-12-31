@@ -342,26 +342,31 @@ main () {
 	    done
 		
 		[[ "${#install_desc_list[@]}" -eq 0 ]] && return
-		
-		echo -e "\nSelect shell applications to install:\n"
-		
-		# Build gum command with pre-selections
-		local gum_args=("choose" "--no-limit" "--height=25")
-		for item in "${preselected_items[@]}"; do
-		    gum_args+=("--selected=$item")
-		done
-		
-		# Add all items
-		for item in "${install_desc_list[@]}"; do
-		    gum_args+=("$item")
-		done
-		
-		# Get user selections
-		local selected_items
-		selected_items=$(gum "${gum_args[@]}")
 
-		# If nothing selected, return
-		[[ -z "$selected_items" ]] && return
+		if [[ "$force_shell_app_installs" = all ]]; then
+			selected_items=$(printf '%s\n' "${install_desc_list[@]}")
+			echo -e "\nInstalling all relevant shell apps\n"
+		else
+			echo -e "\nSelect shell applications to install:\n"
+			
+			# Build gum command with pre-selections
+			local gum_args=("choose" "--no-limit" "--height=25")
+			for item in "${preselected_items[@]}"; do
+			    gum_args+=("--selected=$item")
+			done
+			
+			# Add all items
+			for item in "${install_desc_list[@]}"; do
+			    gum_args+=("$item")
+			done
+			
+			# Get user selections
+			local selected_items
+			selected_items=$(gum "${gum_args[@]}")
+
+			# If nothing selected, return
+			[[ -z "$selected_items" ]] && return
+		fi
 		
 		# Initialize should_install array (all false)
 		for ((i=0; i<${#install_list[@]}; i++)); do
@@ -587,26 +592,31 @@ main () {
 	    done
 
 		[[ "${#install_desc_list[@]}" -eq 0 ]] && return
-		
-		echo -e "\nSelect GUI applications to install:\n"
-		
-		# Build gum command with pre-selections
-		local gum_args=("choose" "--no-limit" "--height=25")
-		for item in "${preselected_items[@]}"; do
-		    gum_args+=("--selected=$item")
-		done
-		
-		# Add all items
-		for item in "${install_desc_list[@]}"; do
-		    gum_args+=("$item")
-		done
-		
-		# Get user selections
-		local selected_items
-		selected_items=$(gum "${gum_args[@]}")
 
-		# If nothing selected, return
-		[[ -z "$selected_items" ]] && return
+		if [[ "$force_gui_app_installs" = all ]]; then
+			selected_items=$(printf '%s\n' "${install_desc_list[@]}")
+			echo -e "\nInstalling all relevant GUI apps\n"
+		else
+			echo -e "\nSelect GUI applications to install:\n"
+			
+			# Build gum command with pre-selections
+			local gum_args=("choose" "--no-limit" "--height=25")
+			for item in "${preselected_items[@]}"; do
+			    gum_args+=("--selected=$item")
+			done
+			
+			# Add all items
+			for item in "${install_desc_list[@]}"; do
+			    gum_args+=("$item")
+			done
+			
+			# Get user selections
+			local selected_items
+			selected_items=$(gum "${gum_args[@]}")
+
+			# If nothing selected, return
+			[[ -z "$selected_items" ]] && return
+		fi
 		
 		# Initialize should_install array (all false)
 		for ((i=0; i<${#install_list[@]}; i++)); do

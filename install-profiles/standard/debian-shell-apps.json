@@ -99,13 +99,6 @@
 		"desc": "Tool that wraps git to extend it with extra features and commands"
 	},
 	{
-		"app": "fzf",
-		"binary": "fzf",
-		"install_script": "install-fzf",
-		"sudo_not_required": true,
-		"desc": "Command-line fuzzy finder; extensively used by roperdot"
-	},
-	{
 		"app": "fd-find",
 		"binary": "fdfind",
 		"install_script": "install-fd",

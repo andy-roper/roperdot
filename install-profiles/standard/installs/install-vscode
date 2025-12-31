@@ -101,14 +101,14 @@ if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
 	unset regular_install windows_install
 	while IFS= read -r choice; do
 	    case "$choice" in
-	        "VS Code for Windows") windows_install=true ;;
-	        "VS Code for WSL") regular_install=true ;;
+	        "VS Code for Windows") export windows_install=true ;;
+	        "VS Code for WSL") export regular_install=true ;;
 	    esac
 	done <<< "$selected"
 
 	if [[ -z "$regular_install" && -z "$windows_install" ]]; then
 		echo "Nothing was chosen; defaulting to installing extensions for Windows"
-		windows_install=true
+		export windows_install=true
 	fi
 else
 	export regular_install=true
@@ -220,6 +220,7 @@ if [[ -z $skipping_extension_installs ]]; then
 	install_ext ms-azuretools.vscode-containers
 	install_ext yzhang.markdown-all-in-one
 	install_ext ms-vscode.hexeditor
+	install_ext sainnhe.gruvbox-material
 
 	# install_ext oracle.sql-developer
 	# install_ext mycelo.oracle-plsql

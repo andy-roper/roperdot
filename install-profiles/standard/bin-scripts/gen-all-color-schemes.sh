@@ -17,7 +17,8 @@ fi
 
 gen-color-files chalkboard
 gen-color-files flat
-gen-color-files gruvbox light
+gen-color-files "gruvbox dark"
+gen-color-files "gruvbox light" light
 gen-color-files hybrid
 gen-color-files jellybeans
 gen-color-files monokai
@@ -30,6 +31,9 @@ gen-color-files "solarized light alternate" light
 gen-color-files "spacegray eighties"
 gen-color-files "spacegray eighties dull"
 gen-color-files srcery
+generate-gum-colors
+generate-color-previews
+
 # \cd "${ROPERDOT_DIR}/config/color-schemes/source"
 # rm -rf default
 # mkdir default

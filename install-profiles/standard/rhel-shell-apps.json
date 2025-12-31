@@ -14,13 +14,6 @@
 		"desc": "File archiving utility, aport of 7z and 7za for Unix"
 	},
 	{
-		"app": "fzf",
-		"binary": "fzf",
-		"install_script": "install-fzf",
-		"sudo_not_required": true,
-		"desc": "Command-line fuzzy finder; extensively used by roperdot"
-	},
-	{
 		"app": "fd",
 		"binary": "fd",
 		"install_script": "install-fd",

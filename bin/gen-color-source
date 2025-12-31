@@ -13,7 +13,7 @@ my %ansiColorValue;
 open hFile, $schemeFile;
 while (<hFile>) {
 	chomp;
-	next if ($_ !~ /^\*\.(.*):\s*#(.{6})/);
+	next if ($_ !~ /^\*\.?(.*):\s*#(.{6})/);
 	my $name = $1;
 	my $color = $2;
 	if ($name =~ /^color(\d+)/) {

@@ -23,17 +23,9 @@ fish_style_pwd_dir_length = 1
 format = "[ $path ]($style)"
 style = "bg:blue fg:#ffffff"  # Use ANSI colors
 
-[character]
-success_symbol = "[❯](bold green)"
-error_symbol = "[❯](bold red)"
-
 [env_var.GIT_STATUS_INFO]
 format = "[$env_value](fg:none)"
 variable = "GIT_STATUS_INFO"
-
-[env_var.STATUS_INFO]
-format = "[$env_value](fg:none)"
-variable = "STATUS_INFO"
 
 [custom.end_triangle]
 description = "Blue triangle for non-git directories"

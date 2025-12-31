@@ -12,8 +12,10 @@ initialize_colors () {
 	source "${ROPERDOT_DIR}/config/color-schemes/source/${ROPERDOT_COLOR_SCHEME}/color-env-vars"
 	if [[ "$ROPERDOT_COMMON_COLOR_SCHEME" = "default" ]]; then
 		source "${ROPERDOT_DIR}/config/color-schemes/source/${ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME}/common-color-env-vars"
+		source "${ROPERDOT_DIR}/config/color-schemes/source/${ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME}/gum-color-env-vars"
 	elif [[ -n "$ROPERDOT_COMMON_COLOR_SCHEME" ]]; then
 		source "${ROPERDOT_DIR}/config/color-schemes/source/${ROPERDOT_COMMON_COLOR_SCHEME}/common-color-env-vars"
+		source "${ROPERDOT_DIR}/config/color-schemes/source/${ROPERDOT_COMMON_COLOR_SCHEME}/gum-color-env-vars"
 	else
 		echo "Neither ROPERDOT_COMMON_COLOR_SCHEME nor ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME are defined; skipping loading of common-color-env-vars."
 	fi

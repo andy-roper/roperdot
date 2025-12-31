@@ -261,6 +261,13 @@ EOT
 grep "pattern" <<< "$variable"
 wc -w <<< "count these words"
 
+# Output multiple commands to a file
+{
+	echo alpha
+	echo beta
+	echo gamma
+} > someFile.txt
+
 # Process substitution for commands that need files
 diff <(sort file1) <(sort file2)
 while read -r line; do echo "Line: $line"; done < <(find . -name "*.txt")

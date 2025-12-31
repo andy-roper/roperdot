@@ -7,8 +7,6 @@
 
 XSDECAF_VERSION=1.2.0
 
-source "${ROPERDOT_DIR}/source-scripts/install-script-functions"
-
 cleanup() {
 	if [[ -n "$temp_dir" ]]; then
 		cd - > /dev/null
@@ -16,7 +14,9 @@ cleanup() {
 	fi
 }
 
-trap cleanup EXIT
+source "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
+trap 'cleanup; cleanup_temp_dirs' EXIT
 
 # Check if already installed
 if command -v xsdecaf >/dev/null 2>&1; then

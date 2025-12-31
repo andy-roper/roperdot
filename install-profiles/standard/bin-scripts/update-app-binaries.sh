@@ -400,7 +400,7 @@ EOT
     create_app_script presentation-app powerpoint
     default_app=list-archive
     create_app_script comic-viewer-app cdisplayex winrar winzip
-    create_app_script markdown-app typora ghostwriter
+    create_app_script markdown-app typora ghostwriter npp
 
 elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
 

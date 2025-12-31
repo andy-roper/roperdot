@@ -1,0 +1,19 @@
+# Name
+regexp=^\S+
+colours="\033[38;5;138m"
+-
+# State
+regexp=\s\((off)
+colours=default,"\033[38;5;203m"
+-
+# State
+regexp=\s\((on)
+colours=default,"\033[38;5;142m"
+-
+# State
+regexp=\,\s+(off)\)
+colours=default,"\033[38;5;160m"
+-
+# State
+regexp=\,\s+(on)\)
+colours=default,"\033[38;5;100m"
