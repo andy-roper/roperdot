@@ -62,18 +62,22 @@ get_current_branch() {
     git rev-parse --abbrev-ref HEAD
 }
 
-# Get default/main branch name (typically 'main' or 'master')
-get_main_branch() {
-    # Try to get the default branch from remote
-    git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || \
-    # Fallback: check common names
-    if git show-ref --verify --quiet refs/heads/main; then
-        echo "main"
-    elif git show-ref --verify --quiet refs/heads/master; then
-        echo "master"
-    else
-        echo "main"  # default fallback
-    fi
+# Get parent branch (the branch this branch was created from)
+get_parent_branch() {
+    local current_branch=${1:-$(git rev-parse --abbrev-ref HEAD)}
+    
+    # Get all local branches except current, sorted by commit distance
+    local candidates=$(git branch --format='%(refname:short)' | grep -v "^${current_branch}$" | while read branch; do
+        local merge_base=$(git merge-base HEAD "$branch" 2>/dev/null || echo "")
+        if [ -n "$merge_base" ]; then
+            # Count commits from merge-base to current HEAD (how far ahead you are)
+            local distance=$(git rev-list --count "$merge_base..HEAD" 2>/dev/null || echo "999999")
+            echo "$distance $branch"
+        fi
+    done | sort -n)
+    
+    # Strip distances and pass to gum
+    echo "$candidates" | awk '{print $2}' | gum choose --header "Select parent branch:"
 }
 
 # Prompt for commit message
@@ -132,47 +136,63 @@ action_commit_all_and_push() {
     echo "cd '$repo_root' && git add . -m \"$message\" && git push"
 }
 
-# Action: Merge from main/master branch
-action_merge_from_main() {
-    local main_branch=$(get_main_branch)
-    echo "git fetch && git merge origin/$main_branch"
-}
-
-# Action: Merge current branch to main/master
-action_merge_to_main() {
-    local main_branch=$(get_main_branch)
-    local current_branch=$(get_current_branch)
+# Action: Merge from parent branch
+action_merge_from_parent() {
+    local parent_branch=$(get_parent_branch)
     
-    if [[ "$current_branch" = "$main_branch" ]]; then
-        echo "Error: Already on $main_branch branch" >&2
+    if [[ -z "$parent_branch" ]]; then
+        echo "No parent branch selected" >&2
         return 1
     fi
     
-    echo "git checkout $main_branch && git merge $current_branch"
+    echo "git fetch && git merge origin/$parent_branch"
 }
 
-# Action: Fetch file from main branch
+# Action: Merge current branch to parent
+action_merge_to_parent() {
+    local current_branch=$(get_current_branch)
+    local parent_branch=$(get_parent_branch)
+    
+    if [[ -z "$parent_branch" ]]; then
+        echo "No parent branch selected" >&2
+        return 1
+    fi
+    
+    if [[ "$current_branch" = "$parent_branch" ]]; then
+        echo "Error: Cannot merge to same branch" >&2
+        return 1
+    fi
+    
+    echo "git checkout $parent_branch && git merge $current_branch"
+}
+
+# Action: Fetch file from parent branch
 action_fetch_file() {
-    local main_branch=$(get_main_branch)
+    local parent_branch=$(get_parent_branch)
+    
+    if [[ -z "$parent_branch" ]]; then
+        echo "No parent branch selected" >&2
+        return 1
+    fi
     
     # Fetch latest from remote
     echo "Fetching from origin..."
     git fetch origin
     
-    # Get list of files that differ from origin/main
-    local diff_files=$(git diff --name-only origin/$main_branch)
+    # Get list of files that differ from origin/parent
+    local diff_files=$(git diff --name-only origin/$parent_branch)
     
     if [[ -z "$diff_files" ]]; then
-        echo "No files differ from origin/$main_branch - everything is in sync" >&2
+        echo "No files differ from origin/$parent_branch - everything is in sync" >&2
         return 1
     fi
     
     local file
     if command -v gum &>/dev/null; then
         local height=$(( LINES * 55 / 100 ))
-        file=$(echo "$diff_files" | gum filter --placeholder="Select file to fetch from origin/$main_branch > " --height=$height)
+        file=$(echo "$diff_files" | gum filter --placeholder="Select file to fetch from origin/$parent_branch > " --height=$height)
     else
-        file=$(echo "$diff_files" | fzf --exact --prompt="Select file to fetch from origin/$main_branch > " --height=55% --reverse)
+        file=$(echo "$diff_files" | fzf --exact --prompt="Select file to fetch from origin/$parent_branch > " --height=55% --reverse)
     fi
     
     if [[ -z "$file" ]]; then
@@ -529,13 +549,18 @@ action_git_blame() {
     echo "git blame --color-lines --color-by-age $file | less -R"
 }
 
-# Action: Diff vs main
-action_diff_vs_main() {
-    local main_branch=$(get_main_branch)
+# Action: Diff vs parent
+action_diff_vs_parent() {
     local current_branch=$(get_current_branch)
+    local parent_branch=$(get_parent_branch)
     
-    if [[ "$current_branch" = "$main_branch" ]]; then
-        echo "Error: Already on $main_branch branch" >&2
+    if [[ -z "$parent_branch" ]]; then
+        echo "No parent branch selected" >&2
+        return 1
+    fi
+    
+    if [[ "$current_branch" = "$parent_branch" ]]; then
+        echo "Error: Cannot diff against same branch" >&2
         return 1
     fi
     
@@ -543,12 +568,12 @@ action_diff_vs_main() {
     local choice
     if command -v gum &>/dev/null; then
         local height=$(( LINES * 55 / 100 ))
-        choice=$(gum choose --header="Diff vs $main_branch" --height=$height \
+        choice=$(gum choose --header="Diff vs $parent_branch" --height=$height \
             "Show full diff" \
             "Show file list only" \
             "Show diff stats")
     else
-        choice=$(cat <<EOF | fzf --prompt="Diff vs $main_branch > " --height=55% --reverse
+        choice=$(cat <<EOF | fzf --prompt="Diff vs $parent_branch > " --height=55% --reverse
 Show full diff
 Show file list only
 Show diff stats
@@ -563,13 +588,13 @@ EOF
     
     case "$choice" in
         "Show full diff")
-            echo "git diff --color origin/$main_branch | less -R"
+            echo "git diff --color origin/$parent_branch | less -R"
             ;;
         "Show file list only")
-            echo "git diff --name-only origin/$main_branch"
+            echo "git diff --name-only origin/$parent_branch"
             ;;
         "Show diff stats")
-            echo "git diff --stat origin/$main_branch"
+            echo "git diff --stat origin/$parent_branch"
             ;;
     esac
 }
@@ -577,10 +602,9 @@ EOF
 # Action: Delete branch
 action_delete_branch() {
     local current_branch=$(get_current_branch)
-    local main_branch=$(get_main_branch)
     
-    # Get list of branches excluding current and main
-    local branches=$(git branch --format='%(refname:short)' | grep -v "^${current_branch}$" | grep -v "^${main_branch}$")
+    # Get list of branches excluding current
+    local branches=$(git branch --format='%(refname:short)' | grep -v "^${current_branch}$")
     
     if [[ -z "$branches" ]]; then
         echo "No branches available to delete" >&2
@@ -644,7 +668,6 @@ if ! git rev-parse --git-dir > /dev/null 2>&1; then
 fi
 
 current_branch=$(get_current_branch)
-main_branch=$(get_main_branch)
 
 # Menu options
 if command -v gum &>/dev/null; then
@@ -662,10 +685,10 @@ if command -v gum &>/dev/null; then
         "View commit history" \
         "Show file history" \
         "Git blame" \
-        "Diff vs $main_branch" \
-        "Merge from $main_branch (fetch, merge origin/$main_branch)" \
-        "Merge to $main_branch (checkout $main_branch, merge current)" \
-        "Fetch file from $main_branch" \
+        "Diff vs parent branch" \
+        "Merge from parent branch (fetch, merge)" \
+        "Merge to parent branch (checkout parent, merge current)" \
+        "Fetch file from parent branch" \
 		"Delete branch" \
         "Squash commits" \
         "Force sync with remote")
@@ -683,10 +706,10 @@ Clear stashes
 View commit history
 Show file history
 Git blame
-Diff vs $main_branch
-Merge from $main_branch (fetch, merge origin/$main_branch)
-Merge to $main_branch (checkout $main_branch, merge current)
-Fetch file from $main_branch
+Diff vs parent branch
+Merge from parent branch (fetch, merge)
+Merge to parent branch (checkout parent, merge current)
+Fetch file from parent branch
 Delete branch
 Squash commits
 Force sync with remote
@@ -733,13 +756,13 @@ case "$action" in
         command=$(action_git_blame)
         ;;
     "Diff vs"*)
-        command=$(action_diff_vs_main)
+        command=$(action_diff_vs_parent)
         ;;
     "Merge from"*)
-        command=$(action_merge_from_main)
+        command=$(action_merge_from_parent)
         ;;
     "Merge to"*)
-        command=$(action_merge_to_main)
+        command=$(action_merge_to_parent)
         ;;
     "Fetch file"*)
         command=$(action_fetch_file)
