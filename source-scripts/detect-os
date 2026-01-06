@@ -28,101 +28,130 @@ fi
 # This won't work with the built-in sed on Macs because it's crap
 # ROPERDOT_CURRENT_SHELL=$(ps -p $$ | tail -1 | sed -r -e 's/^.*:[0-9]{2}[^ ]* //;s/ .*//;s/^.*\///')
 
-# Derive ROPERDOT_OS_NAME from /etc/os-release, XDG_CURRENT_DESKTOP, or uname
-if [[ -f /etc/os-release ]]; then
-	ROPERDOT_OS_TYPE=linux
-	osname=$(grep '^ID=' /etc/os-release | cut -c 4- | tr -d '"')
-	ROPERDOT_OS_VERSION=$(grep '^VERSION_ID=' /etc/os-release | cut -c 13- | head -c -2)
-	ROPERDOT_OS_CODENAME=$(grep '^UBUNTU_CODENAME=' /etc/os-release | cut -c 17-)
-	if [[ -f /proc/version ]] && grep -iq Microsoft /proc/version; then
-		# Windows Subsystem for Linux (WSL)
-		ROPERDOT_DESKTOP_ENV=windows
-	    is_admin=$(powershell.exe -Command "
-	        \$currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
-	        \$principal = New-Object Security.Principal.WindowsPrincipal(\$currentUser)
-	        \$principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-	    	" 2>/dev/null | tr -d '\r\n')
-	    [[ "$is_admin" == "True" ]] && export HAS_ADMIN_RIGHTS=true
-		wsl.exe --list --verbose | grep -Pa 'U\x00s\x00a\x00g\x00e' >/dev/null && ROPERDOT_WSL_V1=true
-	fi
-	case "$osname" in
-		ubuntu)
+# Cache file for static OS detection (not session-specific values)
+ROPERDOT_CACHE=~/.cache/roperdot-detect-os
+mkdir -p ~/.cache
+
+# Check if cache exists and is less than 24 hours old
+if [[ -f "$ROPERDOT_CACHE" ]] && [[ $(find "$ROPERDOT_CACHE" -mmin -1440 2>/dev/null) ]]; then
+	# Cache is fresh, load it
+	source "$ROPERDOT_CACHE"
+else
+	# Derive ROPERDOT_OS_NAME from /etc/os-release, XDG_CURRENT_DESKTOP, or uname
+	if [[ -f /etc/os-release ]]; then
+		ROPERDOT_OS_TYPE=linux
+		osname=$(grep '^ID=' /etc/os-release | cut -c 4- | tr -d '"')
+		ROPERDOT_OS_VERSION=$(grep '^VERSION_ID=' /etc/os-release | cut -c 13- | head -c -2)
+		ROPERDOT_OS_CODENAME=$(grep '^UBUNTU_CODENAME=' /etc/os-release | cut -c 17-)
+		if [[ -f /proc/version ]] && grep -iq Microsoft /proc/version; then
+			# Windows Subsystem for Linux (WSL)
+			ROPERDOT_DESKTOP_ENV=windows
+			ROPERDOT_WSL=true
+			wsl.exe --list --verbose | grep -Pa 'U\x00s\x00a\x00g\x00e' >/dev/null && ROPERDOT_WSL_V1=true
+		fi
+		case "$osname" in
+			ubuntu)
+				ROPERDOT_OS_NAME=ubuntu
+				ROPERDOT_OS_FAMILY=debian
+				if [[ "$XDG_CURRENT_DESKTOP" =~ KDE ]]; then
+					ROPERDOT_OS_ENV=kubuntu
+					ROPERDOT_DESKTOP_ENV=kde
+				elif [[ "$XDG_CURRENT_DESKTOP" =~ (GNOME|Unity) ]]; then
+					ROPERDOT_OS_ENV=ubuntu
+					ROPERDOT_DESKTOP_ENV=gnome
+				else
+					ROPERDOT_OS_ENV=ubuntu
+				fi
+				;;
+			debian)
+				# TODO Add detection of Debian desktop environments
+				ROPERDOT_OS_NAME=debian
+				ROPERDOT_OS_FAMILY=debian
+				ROPERDOT_OS_ENV=debian
+				;;
+			centos)
+				ROPERDOT_OS_NAME=$osname
+				ROPERDOT_OS_FAMILY=rhel
+				if [[ "$XDG_CURRENT_DESKTOP" =~ GNOME ]]; then
+					ROPERDOT_OS_ENV=$osname-gnome
+					ROPERDOT_DESKTOP_ENV=gnome
+				else
+					ROPERDOT_OS_ENV=$osname
+				fi
+				;;
+			linuxmint)
+				ROPERDOT_OS_NAME=$osname
+				ROPERDOT_OS_ENV=mint
+				ROPERDOT_OS_FAMILY=debian
+				[[ -n "$XDG_CURRENT_DESKTOP" ]] && ROPERDOT_DESKTOP_ENV=gnome
+				;;
+			*)
+				# rhel, raspbian
+				ROPERDOT_OS_NAME=$osname
+				ROPERDOT_OS_ENV=$osname
+				ROPERDOT_OS_FAMILY=$osname
+				;;
+		esac
+	else
+		if [[ "$OSTYPE" = "msys" ]]; then
+			ROPERDOT_OS_TYPE=windows
 			ROPERDOT_OS_NAME=ubuntu
 			ROPERDOT_OS_FAMILY=debian
-			if [[ "$XDG_CURRENT_DESKTOP" =~ KDE ]]; then
-				ROPERDOT_OS_ENV=kubuntu
-				ROPERDOT_DESKTOP_ENV=kde
-			elif [[ "$XDG_CURRENT_DESKTOP" =~ (GNOME|Unity) ]]; then
-				ROPERDOT_OS_ENV=ubuntu
-				ROPERDOT_DESKTOP_ENV=gnome
-			else
-				ROPERDOT_OS_ENV=ubuntu
+			ROPERDOT_OS_ENV=msys
+			ROPERDOT_DESKTOP_ENV=windows
+			# ROPERDOT_OS_VERSION=$(systeminfo | grep '^OS Version:' | awk '{print $3}')
+			verstr=$(wmic os get caption) && ROPERDOT_OS_VERSION=$(echo "$verstr" | awk '{print $5}')
+		else
+			# Darwin
+			uname=$(uname)
+			if [[ "$uname" = "Darwin" ]]; then
+				ROPERDOT_OS_TYPE=mac
+				ROPERDOT_OS_NAME=darwin
+				ROPERDOT_OS_ENV=darwin
+				ROPERDOT_OS_FAMILY=darwin
+				ROPERDOT_DESKTOP_ENV=mac
+				ROPERDOT_OS_VERSION=$(sw_vers | grep "^ProductVersion" | awk '{print $2}')
 			fi
-			;;
-		debian)
-			# TODO Add detection of Debian desktop environments
-			ROPERDOT_OS_NAME=debian
-			ROPERDOT_OS_FAMILY=debian
-			ROPERDOT_OS_ENV=debian
-			;;
-		centos)
-			ROPERDOT_OS_NAME=$osname
-			ROPERDOT_OS_FAMILY=rhel
-			if [[ "$XDG_CURRENT_DESKTOP" =~ GNOME ]]; then
-				ROPERDOT_OS_ENV=$osname-gnome
-				ROPERDOT_DESKTOP_ENV=gnome
-			else
-				ROPERDOT_OS_ENV=$osname
-			fi
-			;;
-		linuxmint)
-			ROPERDOT_OS_NAME=$osname
-			ROPERDOT_OS_ENV=mint
-			ROPERDOT_OS_FAMILY=debian
-			[[ -n "$XDG_CURRENT_DESKTOP" ]] && ROPERDOT_DESKTOP_ENV=gnome
-			;;
-		*)
-			# rhel, raspbian
-			ROPERDOT_OS_NAME=$osname
-			ROPERDOT_OS_ENV=$osname
-			ROPERDOT_OS_FAMILY=$osname
-			;;
-	esac
-else
-	if [[ "$OSTYPE" = "msys" ]]; then
-		ROPERDOT_OS_TYPE=windows
-		ROPERDOT_OS_NAME=ubuntu
-		ROPERDOT_OS_FAMILY=debian
-		ROPERDOT_OS_ENV=msys
-		ROPERDOT_DESKTOP_ENV=windows
-		# ROPERDOT_OS_VERSION=$(systeminfo | grep '^OS Version:' | awk '{print $3}')
-		verstr=$(wmic os get caption) && ROPERDOT_OS_VERSION=$(echo "$verstr" | awk '{print $5}')
-	else
-		# Darwin
-		uname=$(uname)
-		if [[ "$uname" = "Darwin" ]]; then
-			ROPERDOT_OS_TYPE=mac
-			ROPERDOT_OS_NAME=darwin
-			ROPERDOT_OS_ENV=darwin
-			ROPERDOT_OS_FAMILY=darwin
-			ROPERDOT_DESKTOP_ENV=mac
-			ROPERDOT_OS_VERSION=$(sw_vers | grep "^ProductVersion" | awk '{print $2}')
 		fi
 	fi
-	if [[ "$ROPERDOT_OS_TYPE" = "windows" ]]; then
-		net session >/dev/null 2>&1 && HAS_ADMIN_RIGHTS=true
+
+	if [[ "$(uname -m)" = "x86_64" ]]; then
+		ROPERDOT_KERNEL_ARCH=64
+	else
+		ROPERDOT_KERNEL_ARCH=32
 	fi
+
+	# Save static values to cache
+	cat > "$ROPERDOT_CACHE" <<EOF
+export ROPERDOT_OS_TYPE='$ROPERDOT_OS_TYPE'
+export ROPERDOT_OS_NAME='$ROPERDOT_OS_NAME'
+export ROPERDOT_OS_VERSION='$ROPERDOT_OS_VERSION'
+export ROPERDOT_OS_ENV='$ROPERDOT_OS_ENV'
+export ROPERDOT_OS_CODENAME='$ROPERDOT_OS_CODENAME'
+export ROPERDOT_OS_FAMILY='$ROPERDOT_OS_FAMILY'
+export ROPERDOT_DESKTOP_ENV='$ROPERDOT_DESKTOP_ENV'
+export ROPERDOT_KERNEL_ARCH='$ROPERDOT_KERNEL_ARCH'
+export ROPERDOT_WSL='$ROPERDOT_WSL'
+export ROPERDOT_WSL_V1='$ROPERDOT_WSL_V1'
+EOF
 fi
 
-if [[ "$(uname -m)" = "x86_64" ]]; then
-	ROPERDOT_KERNEL_ARCH=64
-else
-	ROPERDOT_KERNEL_ARCH=32
-fi
-
+# Session-specific checks (always run these)
 if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
-	# ROPERDOT_DESKTOP_VERSION="$(wmic.exe os get caption | tail -2 | head -1 | sed -E 's/^Microsoft Windows ([[:digit:]]+).*/\1/')"
-    ROPERDOT_DESKTOP_VERSION="$(powershell.exe -Command "Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty Caption" | sed -E 's/.*Windows ([0-9]+).*/\1/' | tr -d '\r')"
+	# Single PowerShell call for both admin rights and desktop version
+	read -r is_admin desktop_version < <(powershell.exe -NoProfile -Command "
+		\$currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
+		\$principal = New-Object Security.Principal.WindowsPrincipal(\$currentUser)
+		\$isAdmin = \$principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+		\$caption = (Get-CimInstance Win32_OperatingSystem).Caption
+		\$version = if (\$caption -match 'Windows ([0-9]+)') { \$Matches[1] } else { '' }
+		Write-Output \"\$isAdmin|\$version\"
+	" 2>/dev/null | tr -d '\r\n' | awk -F'|' '{print $1, $2}')
+	
+	[[ "$is_admin" == "True" ]] && export HAS_ADMIN_RIGHTS=true
+	ROPERDOT_DESKTOP_VERSION="$desktop_version"
+elif [[ "$ROPERDOT_OS_TYPE" = "windows" ]]; then
+	net session >/dev/null 2>&1 && HAS_ADMIN_RIGHTS=true
 fi
 
 export ROPERDOT_OS_TYPE ROPERDOT_OS_NAME ROPERDOT_OS_VERSION ROPERDOT_OS_ENV ROPERDOT_OS_CODENAME ROPERDOT_OS_FAMILY ROPERDOT_DESKTOP_ENV ROPERDOT_DESKTOP_VERSION ROPERDOT_KERNEL_ARCH ROPERDOT_WSL ROPERDOT_WSL_V1 HAS_ADMIN_RIGHTS

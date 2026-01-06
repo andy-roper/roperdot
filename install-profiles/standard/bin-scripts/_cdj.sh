@@ -241,7 +241,7 @@ if command -v gum >/dev/null 2>&1; then
     local gum_height=$((COUNT + 2))
     (( gum_height > LINES / 2 )) && gum_height=$(( LINES / 2 ))
     SELECTED_PATH=$(printf "%s\n" "${DISPLAY_PATHS[@]}" | \
-        gum filter --placeholder="Select Java directory: " --height="$gum_height")
+        gum filter --no-fuzzy --placeholder="Select Java directory: " --height="$gum_height")
     # Find the index by searching for the selected value
     SELECTED_INDEX=1
     for path in "${DISPLAY_PATHS[@]}"; do

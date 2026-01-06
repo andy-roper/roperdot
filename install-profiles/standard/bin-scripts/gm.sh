@@ -99,6 +99,11 @@ get_commit_message() {
     echo "${branch}: ${message}"
 }
 
+# Check if current branch has upstream set
+has_upstream() {
+    git rev-parse --abbrev-ref --symbolic-full-name @{u} &>/dev/null
+}
+
 # Execute a command with logging
 execute_command() {
     local command="$1"
@@ -110,14 +115,24 @@ execute_command() {
 action_push_current_dir() {
     local branch=$(get_current_branch)
     local message=$(get_commit_message "$branch")
-    echo "git add . && git commit -m \"$message\" && git push"
+    
+    if has_upstream; then
+        echo "git add . && git commit -m \"$message\" && git push"
+    else
+        echo "git add . && git commit -m \"$message\" && git push -u origin \"$branch\""
+    fi
 }
 
 # Action: Commit current directory and push (commit, push)
 action_commit_current_dir_and_push() {
     local branch=$(get_current_branch)
     local message=$(get_commit_message "$branch")
-    echo "git commit -m \"$message\" && git push"
+    
+    if has_upstream; then
+        echo "git commit -m \"$message\" && git push"
+    else
+        echo "git commit -m \"$message\" && git push -u origin \"$branch\""
+    fi
 }
 
 # Action: Push all changes (add, commit, push)
@@ -125,7 +140,12 @@ action_push_all_changes() {
     local branch=$(get_current_branch)
     local message=$(get_commit_message "$branch")
     local repo_root=$(git rev-parse --show-toplevel)
-    echo "cd '$repo_root' && git add . && git commit -m \"$message\" && git push"
+    
+    if has_upstream; then
+        echo "cd '$repo_root' && git add . && git commit -m \"$message\" && git push"
+    else
+        echo "cd '$repo_root' && git add . && git commit -m \"$message\" && git push -u origin \"$branch\""
+    fi
 }
 
 # Action: Commit all changes and push (commit, push)
@@ -133,7 +153,12 @@ action_commit_all_and_push() {
     local branch=$(get_current_branch)
     local message=$(get_commit_message "$branch")
     local repo_root=$(git rev-parse --show-toplevel)
-    echo "cd '$repo_root' && git add . -m \"$message\" && git push"
+
+    if has_upstream; then
+        echo "cd '$repo_root' && git commit -m \"$message\" && git push"
+    else
+        echo "cd '$repo_root' && git commit -m \"$message\" && git push -u origin \"$branch\""
+    fi
 }
 
 # Action: Merge from parent branch
@@ -321,31 +346,100 @@ EOF
 
 # Action: Stash changes
 action_stash_changes() {
-    # Check if there are changes to stash (tracked or untracked)
-    if git diff-index --quiet HEAD -- && [[ -z $(git ls-files --others --exclude-standard) ]]; then
+    # Get list of changed and untracked files up front
+    local changed_files=$(git diff --name-only)
+    local untracked_files=$(git ls-files --others --exclude-standard)
+    local all_files=$(printf "%s\n%s" "$changed_files" "$untracked_files" | grep -v '^$')
+    
+    # Check if there are any changes
+    if [[ -z "$all_files" ]]; then
         echo "Error: No changes to stash" >&2
         return 1
     fi
-    
-    local stash_message
+
+    # Prompt for stash type
+    local choice
     if command -v gum &>/dev/null; then
-        if ! stash_message=$(gum input --placeholder="Enter stash message (optional, press Esc to skip)"); then
-            echo "Stash cancelled" >&2
-            return 1
-        fi
+        local height=$(( LINES * 55 / 100 ))
+        choice=$(gum choose --header="Stash options" --height=$height \
+            "Stash all changes" \
+            "Stash specific files")
     else
-        echo "Enter stash message (optional, press Enter to skip):" >&2
-        if ! read -r stash_message; then
-            echo "Stash cancelled" >&2
-            return 1
-        fi
+        choice=$(cat <<EOF | fzf --prompt="Stash options > " --height=55% --reverse
+Stash all changes
+Stash specific files
+EOF
+)
     fi
     
-    if [[ -n "$stash_message" ]]; then
-        echo "git stash push -u -m \"$stash_message\""
-    else
-        echo "git stash -u"
+    if [[ -z "$choice" ]]; then
+        echo "Stash cancelled" >&2
+        return 1
     fi
+    
+    case "$choice" in
+        "Stash all changes")
+            local stash_message
+            if command -v gum &>/dev/null; then
+                if ! stash_message=$(gum input --placeholder="Enter stash message (optional, press Esc to skip)"); then
+                    echo "Stash cancelled" >&2
+                    return 1
+                fi
+            else
+                echo "Enter stash message (optional, press Enter to skip):" >&2
+                if ! read -r stash_message; then
+                    echo "Stash cancelled" >&2
+                    return 1
+                fi
+            fi
+            
+            if [[ -n "$stash_message" ]]; then
+                echo "git stash push -u -m \"$stash_message\""
+            else
+                echo "git stash -u"
+            fi
+            ;;
+            
+        "Stash specific files")
+            # Let user select multiple files
+            local selected_files
+            if command -v gum &>/dev/null; then
+                local height=$(( LINES * 55 / 100 ))
+                selected_files=$(echo "$all_files" | gum choose --no-limit --header="Select files to stash (space to select, enter to confirm)" --height=$height)
+            else
+                selected_files=$(echo "$all_files" | fzf --multi --prompt="Select files to stash (tab to select multiple) > " --height=55% --reverse)
+            fi
+            
+            if [[ -z "$selected_files" ]]; then
+                echo "No files selected" >&2
+                return 1
+            fi
+            
+            # Get stash message (required for specific files to make sense)
+            local stash_message
+            if command -v gum &>/dev/null; then
+                if ! stash_message=$(gum input --placeholder="Enter stash message"); then
+                    echo "Stash cancelled" >&2
+                    return 1
+                fi
+            else
+                echo "Enter stash message:" >&2
+                if ! read -r stash_message; then
+                    echo "Stash cancelled" >&2
+                    return 1
+                fi
+            fi
+            
+            if [[ -z "$stash_message" ]]; then
+                echo "Error: Message required when stashing specific files" >&2
+                return 1
+            fi
+            
+            # Build the stash push command with individual files
+            local files_arg=$(echo "$selected_files" | tr '\n' ' ')
+            echo "git stash push -m \"$stash_message\" -- $files_arg"
+            ;;
+    esac
 }
 
 # Action: Apply or pop stash
@@ -599,6 +693,40 @@ EOF
     esac
 }
 
+action_create_branch() {
+	local branch_name
+	if command -v gum >/dev/null 2>&1; then
+	    if ! branch_name=$(gum input --placeholder="Enter branch name"); then
+	        echo "Branch creation cancelled" >&2
+	        return 1
+	    fi
+	else
+		echo "Enter branch name:" >&2
+	    if ! read -r branch_name; then
+	        echo "Creation cancelled" >&2
+	        return 1
+	    fi
+    fi
+    [[ -n "$branch_name" ]] && echo "git checkout -b $branch_name"
+}
+
+action_create_and_push_branch() {
+	local branch_name
+	if command -v gum >/dev/null 2>&1; then
+	    if ! branch_name=$(gum input --placeholder="Enter branch name"); then
+	        echo "Branch creation cancelled" >&2
+	        return 1
+	    fi
+	else
+		echo "Enter branch name:" >&2
+	    if ! read -r branch_name; then
+	        echo "Creation cancelled" >&2
+	        return 1
+	    fi
+    fi
+    [[ -n "$branch_name" ]] && echo "git checkout -b $branch_name && git push -u origin $branch_name"
+}
+
 # Action: Delete branch
 action_delete_branch() {
     local current_branch=$(get_current_branch)
@@ -672,7 +800,7 @@ current_branch=$(get_current_branch)
 # Menu options
 if command -v gum &>/dev/null; then
     local height=$(( LINES * 55 / 100 ))
-    action=$(gum choose --header="Git Manager (on: $current_branch)" --height=$height \
+    action=$(gum filter --no-fuzzy --header="Git Manager (on: $current_branch)" --height=$height \
 		"Push current directory (add, commit, push)" \
 		"Commit current directory and push (commit, push)" \
 		"Push all changes (add, commit, push)" \
@@ -689,11 +817,13 @@ if command -v gum &>/dev/null; then
         "Merge from parent branch (fetch, merge)" \
         "Merge to parent branch (checkout parent, merge current)" \
         "Fetch file from parent branch" \
+        "Create branch" \
+        "Create and push branch" \
 		"Delete branch" \
         "Squash commits" \
         "Force sync with remote")
 else
-    action=$(cat <<EOF | fzf --prompt="Git Manager (on: $current_branch) > " --height=55% --reverse
+    action=$(cat <<EOF | fzf --exact --prompt="Git Manager (on: $current_branch) > " --height=55% --reverse
 Push current directory (add, commit, push)
 Commit current directory and push (commit, push)
 Push all changes (add, commit, push)
@@ -710,6 +840,8 @@ Diff vs parent branch
 Merge from parent branch (fetch, merge)
 Merge to parent branch (checkout parent, merge current)
 Fetch file from parent branch
+Create branch
+Create and push branch
 Delete branch
 Squash commits
 Force sync with remote
@@ -767,6 +899,12 @@ case "$action" in
     "Fetch file"*)
         command=$(action_fetch_file)
         ;;
+    "Create branch")
+		command=$(action_create_branch)
+		;;
+    "Create and push branch")
+		command=$(action_create_and_push_branch)
+		;;
     "Delete branch"*)
         command=$(action_delete_branch)
         ;;

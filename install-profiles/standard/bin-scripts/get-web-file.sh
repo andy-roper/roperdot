@@ -22,12 +22,15 @@ fi
 url=$1
 file=$2
 [[ -z "$file" ]] && file=${url##*/}
+
+user_agent="Mozilla/5.0 (compatible; wget/curl)"
+
 if command -v wget >/dev/null 2>&1; then
-	wget -q --no-check-certificate --max-redirect=10 -O "$file" "$url"
+	wget -q --no-check-certificate --max-redirect=10 --user-agent="$user_agent" -O "$file" "$url"
 elif command -v curl >/dev/null 2>&1; then
-	curl -fsSL --insecure "$url" -o "$file"
+	curl -fsSL --insecure -A "$user_agent" "$url" -o "$file"
 elif command -v lynx >/dev/null 2>&1; then
-	lynx -source -nosslcertcheck "$url" > "$file"
+	lynx -source -nosslcertcheck -useragent="$user_agent" "$url" > "$file"
 else
 	echo "No applications found for retrieving web files"
 	exit 1

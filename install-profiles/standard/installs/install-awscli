@@ -5,13 +5,32 @@
 # URL: https://github.com/andy-roper/roperdot
 #
 
-if [[ "$ROPERDOT_OS_FAMILY" = debian ]]; then
-    UBUNTU_VERSION=$(lsb_release -rs 2>/dev/null)
-    
-    if [[ $(echo "$UBUNTU_VERSION < 23.04" | bc -l) -eq 1 ]]; then
-        sudo apt install awscli -y
-    else
-        pipx install awscli
-        pipx ensurepath
-    fi
+. "${ROPERDOT_DIR}/source-scripts/install-script-functions"
+
+cleanup() {
+	popd >/dev/null
+	[[ -d "$temp_dir" ]] && rm -rf "$temp_dir" >/dev/null
+}
+
+trap 'cleanup; cleanup_temp_dirs' EXIT
+
+temp_dir="$(mktemp -d)"
+pushd "$temp_dir" >/dev/null || return 1
+
+if [[ "$ROPERDOT_OS_ENV" = darwin ]]; then
+	get-web-file "https://awscli.amazonaws.com/AWSCLIV2.pkg"
+	sudo installer -pkg AWSCLIV2.pkg -target /
+else
+	arch="$(uname -m)"
+	if [[ "$arch" = "x86_64" ]]; then
+	    get-web-file "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" awscliv2.zip
+	elif [[ "$arch" = "aarch64" ]]; then
+	    get-web-file "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" awscliv2.zip
+	else
+		echo "Unsupported architecture; aborting install of AWS CLI"
+		exit 1
+	fi
+	unzip awscliv2.zip
+	sudo ./aws/install
 fi
+

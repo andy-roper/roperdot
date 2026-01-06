@@ -66,7 +66,8 @@
 		"package": "p4merge",
 		"app_dir": "Perforce",
 		"package_manager": "choco",
-		"desc": "Visual diff and merge tool"
+		"desc": "Visual diff and merge tool",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "pgAdmin 4",
@@ -80,7 +81,8 @@
 		"package": "postman",
 		"package_manager": "choco",
 		"groups": ["development"],
-		"desc": "REST client"
+		"desc": "REST client",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "SoapUI",
@@ -88,8 +90,7 @@
 		"package_manager": "choco",
 		"install_prerequisite": "java",
 		"desc": "REST client",
-		"groups": ["development"],
-		"exclusionGroups": ["work"]
+		"groups": ["development"]
 	},
 	{
 		"app": "Notion",
@@ -183,7 +184,7 @@
 		"package": "slack",
 		"package_manager": "choco",
 		"desc": "Team messaging app",
-		"groups": ["development"],
+		"groups": ["development", "work"],
 		"disabledByDefault": true
 	},
 	{

@@ -23,6 +23,8 @@ url=$1
 file=$2
 [[ -z "$file" ]] && file=${url##*/}
 
+user_agent="Mozilla/5.0 (compatible; wget/curl)"
+
 # Set up certificate environment variables if ca-certificates exists
 if [ -f /etc/ssl/certs/ca-certificates.crt ]; then
 	export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
@@ -33,13 +35,13 @@ fi
 # Try curl first (better TLS support), then wget as fallback
 if command -v curl >/dev/null 2>&1; then
 	# -L follows redirects
-	if ! curl -fsSL "$url" -o "$file" 2>&1; then
+	if ! curl -fsSL "$url" -A "$user_agent" -o "$file" 2>&1; then
 		echo "curl failed to download $url"
 		exit 1
 	fi
 elif command -v wget >/dev/null 2>&1; then
 	# Force TLS 1.2 or higher, follow redirects
-	if ! wget --secure-protocol=TLSv1_2 --max-redirect=5 -O "$file" "$url" 2>&1; then
+	if ! wget --secure-protocol=TLSv1_2 --max-redirect=5 --user-agent="$user_agent" -O "$file" "$url" 2>&1; then
 		echo "wget failed to download $url"
 		exit 1
 	fi

@@ -277,16 +277,15 @@ alias reboot='sudo /sbin/reboot'
 alias halt='sudo /sbin/halt'
 alias shutdown='sudo /sbin/shutdown'
 
-GRC="$(command -v grc)"
-if [[ "$TERM" != "dumb" && -n "$GRC" ]]; then
-	alias colourify="\"$GRC\" -es --colour=auto"
-	alias configure="colourify ./configure"
-	# Note: I avoided colorizing ls to avoid embedded ANSI codes in the output
-	for app in as blkid curl df dig docker docker-machine du env fdisk findmnt free g++ gas gcc getsebool head id ifconfig ip iptables ld lsblk lsof lspci make mount mtr netstat ping ps semanage tail traceroute traceroute6; do
-		command -v $app >/dev/null 2>&1 && alias "$app"="colourify $app"
-	done
-	command -v ydiff >/dev/null 2>&1 || alias diff="colourify diff"
-fi
+# GRC="$(command -v grc)"
+# if [[ "$TERM" != "dumb" && -n "$GRC" ]]; then
+# 	alias colourify="\"$GRC\" -es --colour=auto"
+# 	alias configure="colourify ./configure"
+# 	# Note: I avoided colorizing ls to avoid embedded ANSI codes in the output
+# 	for app in as blkid curl df dig docker docker-machine du env fdisk findmnt free g++ gas gcc getsebool head id ifconfig ip iptables ld lsblk lsof lspci make mount mtr netstat ping ps semanage tail traceroute traceroute6; do
+# 		command -v $app >/dev/null 2>&1 && alias "$app"="colourify $app"
+# 	done
+# fi
 
 alias hosts='sudo $EDITOR /etc/hosts'
 

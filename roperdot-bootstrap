@@ -75,7 +75,7 @@ elif [[ -n "$ZSH_VERSION" ]]; then
 	export ROPERDOT_DIR="$(cd "$(dirname "${(%):-%N}")" && pwd)"
 fi
 
-#SHOW_TIMING=true
+# SHOW_TIMING=true
 source "${ROPERDOT_DIR}/source-scripts/do-timing"
 do_timing "phase 1a"
 
@@ -226,6 +226,11 @@ if [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
 		fi
 	fi
 	[[ -e "$ROPERDOT_DIR/.zsh-suffix-aliases" ]] && . "$ROPERDOT_DIR/.zsh-suffix-aliases"
+
+	# Configure completion quoting for better VS Code compatibility
+	zstyle ':completion:*' special-dirs true
+	zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+	zstyle ':completion:*' quote-style shell
 fi
 
 do_timing "phase 4"
@@ -497,6 +502,19 @@ if command -v grc >/dev/null 2>&1; then
 		grcfilepath="/usr/share/grc/$grcfile"
 	fi
 	[[ -n "$grcfilepath" && -f "$grcfilepath" ]] && . "$grcfilepath"
+fi
+
+# Define diff after grc processing to override the grc-generated function
+if command -v ydiff >/dev/null 2>&1; then
+	diff() {
+		if [[ $# -eq 2 && -f "$1" && -f "$2" ]]; then
+			local f1="$1" f2="$2"
+			shift 2
+			command diff -u "$f1" "$f2" | ydiff -s "$@"
+		else
+			command diff "$@"
+		fi
+	}
 fi
 
 # fix-link ".dircolors"
