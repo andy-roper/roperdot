@@ -75,6 +75,11 @@ get_parent_branch() {
             echo "$distance $branch"
         fi
     done | sort -n)
+
+    if [[ -z "$candidates" ]]; then
+    	echo $current_branch
+    	return
+    fi
     
     # Strip distances and pass to gum
     echo "$candidates" | awk '{print $2}' | gum choose --header "Select parent branch:"
@@ -652,7 +657,7 @@ action_diff_vs_parent() {
         echo "No parent branch selected" >&2
         return 1
     fi
-    
+
     if [[ "$current_branch" = "$parent_branch" ]]; then
         echo "Error: Cannot diff against same branch" >&2
         return 1
@@ -797,60 +802,115 @@ fi
 
 current_branch=$(get_current_branch)
 
+repo_root=$(git rev-parse --show-toplevel)
+if [[ "$repo_root" == *"/roperdot"* ]]; then
+    admin_options="Squash commits
+Force sync with remote"
+else
+    admin_options=""
+fi
+
 # Menu options
-if command -v gum &>/dev/null; then
+if command -v gumx &>/dev/null; then
     local height=$(( LINES * 55 / 100 ))
-    action=$(gum filter --no-fuzzy --header="Git Manager (on: $current_branch)" --height=$height \
-		"Push current directory (add, commit, push)" \
-		"Commit current directory and push (commit, push)" \
-		"Push all changes (add, commit, push)" \
-		"Commit all changes and push (commit, push)" \
-        "Switch branches" \
-        "Amend last commit" \
-        "Stash changes" \
-        "Apply/pop stash" \
-        "Clear stashes" \
-        "View commit history" \
-        "Show file history" \
-        "Git blame" \
-        "Diff vs parent branch" \
-        "Merge from parent branch (fetch, merge)" \
-        "Merge to parent branch (checkout parent, merge current)" \
-        "Fetch file from parent branch" \
-        "Create branch" \
-        "Create and push branch" \
-		"Delete branch" \
-        "Squash commits" \
-        "Force sync with remote")
+    local menu_options=(
+    	"Show abbreviated status"
+    	"Show full status"
+    	"Show log"
+    	"Show working directory changes"
+        "Diff vs parent branch"
+        "View commit history"
+        "Show file history"
+        "Git blame"
+    	"List branches"
+        "Switch branches"
+		"Push current directory (add, commit, push)"
+		"Commit current directory and push (commit, push)"
+		"Push all changes (add, commit, push)"
+		"Commit all changes and push (commit, push)"
+        "Amend last commit"
+        "Stash changes"
+        "Apply/pop stash"
+        "Clear stashes"
+        "Merge from parent branch (fetch, merge)"
+        "Merge to parent branch (checkout parent, merge current)"
+        "Fetch file from parent branch"
+        "Create branch"
+        "Create and push branch"
+		"Delete branch"
+	)
+
+    # Add admin options if they exist
+    if [[ -n "$admin_options" ]]; then
+        while IFS= read -r line; do
+            [[ -n "$line" ]] && menu_options+=("$line")
+        done <<< "$admin_options"
+    fi
+
+    action=$(gum filter --no-fuzzy --header="Git Manager (on: $current_branch)" --height=$height "${menu_options[@]}")
 else
     action=$(cat <<EOF | fzf --exact --prompt="Git Manager (on: $current_branch) > " --height=55% --reverse
+Show abbreviated status
+Show full status
+Show log
+Show working directory changes
+Diff vs parent branch
+View commit history
+Show file history
+Git blame
+List branches
+Switch branches
 Push current directory (add, commit, push)
 Commit current directory and push (commit, push)
 Push all changes (add, commit, push)
 Commit all changes and push (commit, push)
-Switch branches
 Amend last commit
 Stash changes
 Apply/pop stash
 Clear stashes
-View commit history
-Show file history
-Git blame
-Diff vs parent branch
 Merge from parent branch (fetch, merge)
 Merge to parent branch (checkout parent, merge current)
 Fetch file from parent branch
 Create branch
 Create and push branch
-Delete branch
-Squash commits
-Force sync with remote
+Delete branch${admin_options:+
+${admin_options}}
 EOF
 )
 fi
-    
+
 command=""
 case "$action" in
+	"Show abbreviated status"*)
+		command=git-status
+		;;
+    "Show full status"*)
+        command="git status"
+        ;;
+    "Show log"*)
+        command="git log --oneline --graph --decorate --all"
+        ;;
+    "Show working directory changes"*)
+		command="git diff"
+		;;
+    "Diff vs"*)
+        command=$(action_diff_vs_parent)
+        ;;
+    "View commit history"*)
+        command=$(action_view_history)
+        ;;
+    "Show file history"*)
+        command=$(action_file_history)
+        ;;
+    "Git blame"*)
+        command=$(action_git_blame)
+        ;;
+    "List branches"*)
+        command="git --no-pager branch -a"
+        ;;
+    "Switch branches"*)
+        command=$(action_switch_branch)
+        ;;
     "Push current"*)
         command=$(action_push_current_dir)
         ;;
@@ -863,9 +923,6 @@ case "$action" in
     "Commit all"*)
         command=$(action_commit_all_and_push)
         ;;
-    "Switch branches"*)
-        command=$(action_switch_branch)
-        ;;
     "Amend last commit"*)
         command=$(action_amend_commit)
         ;;
@@ -877,18 +934,6 @@ case "$action" in
         ;;
     "Clear stashes"*)
         command=$(action_clear_stashes)
-        ;;
-    "View commit history"*)
-        command=$(action_view_history)
-        ;;
-    "Show file history"*)
-        command=$(action_file_history)
-        ;;
-    "Git blame"*)
-        command=$(action_git_blame)
-        ;;
-    "Diff vs"*)
-        command=$(action_diff_vs_parent)
         ;;
     "Merge from"*)
         command=$(action_merge_from_parent)

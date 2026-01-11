@@ -38,9 +38,8 @@
 # ROPERDOT_OS_NAME: Name of OS. Supported values are ubuntu, centos and darwin.
 # ROPERDOT_OS_ENV: OS and environment. Supported values are ubuntu, kubuntu, centos, centos-gnome, rhel, darwin, raspbian
 # ROPERDOT_DESKTOP_ENV: Supported values are gnome, kde, windows and mac
-# ROPERDOT_OVERRIDE_PROMPT: true if using the prompt defined in this file
-# ROPERDOT_PROMPT_LINES: number of lines to show in the bash prompt, 1 or 2
 # ROPERDOT_HISTORY_BY_SESSION: true if each terminal session has its own history file
+# ROPERDOT_SHOW_EXTENDED_GIT_INFO: set if showing extended git information in the prompt
 # ROPERDOT_COLOR_SCHEME: color scheme to use
 # ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME: color scheme to use if ROPERDOT_COMMON_COLOR_SCHEME is set to default
 # ROPERDOT_COMMON_COLOR_SCHEME: color scheme to use for pygmentize

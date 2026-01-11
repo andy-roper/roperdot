@@ -144,8 +144,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`git-blame-colored`** - Enhanced git blame with syntax highlighting
 - **`git-lfs`** - Used to work with large files in Git repositories (https://git-lfs.github.com)
 - **`git-overwritten`** - Show files that have been overwritten in commits
-- **`gli`** - Interactive git commit browser using [fzf](https://github.com/junegunn/fzf)
-- **`gi`** - Git Information: interactive git information viewer
+- **`git-status`** - Shows repository status
 - **`gm`** - Git Manager: interactive git workflow helper
 - **`gr`** - Navigate to git repository root directory
 - **`master`** - git checkout master
