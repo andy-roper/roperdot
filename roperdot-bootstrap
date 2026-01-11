@@ -572,77 +572,93 @@ PROMPT_YELLOW_ON_BLACK=$(printf '\033[0;%s;40m' "${COLOR_YELLOW_CODE}")
 PROMPT_GREEN_INITIAL_TRIANGLE_BLUE=$(printf '\033[%s;%sm' "${PROMPT_GREEN_BG}" "${COLOR_BLUE_CODE}")
 PROMPT_YELLOW_INITIAL_TRIANGLE_BLUE=$(printf '\033[%s;%sm' "${PROMPT_YELLOW_BG}" "${COLOR_BLUE_CODE}")
 
-function set_git_info() {
-    if ! git rev-parse --git-dir >/dev/null 2>&1; then
-    	export GIT_STATUS_INFO=""
-    	return
-    fi
-
-    local branch=$(git branch --show-current 2>/dev/null)
-    
-    # Single git command for all local status
-    local status_output=$(git status --porcelain 2>/dev/null)
-    
-    # Parse status counts efficiently
-    local staged=0 unstaged=0 untracked=0 conflicted=0
-    while IFS= read -r line; do
-        [[ -z "$line" ]] && continue
-        local index_status="${line:0:1}"
-        local work_tree_status="${line:1:1}"
-        
-        # Count status types
-        [[ "$index_status" != " " && "$index_status" != "?" ]] && ((staged++))
-        [[ "$work_tree_status" != " " && "$work_tree_status" != "?" ]] && ((unstaged++))
-        [[ "$index_status" == "?" ]] && ((untracked++))
-        [[ "$index_status" == "U" || "$work_tree_status" == "U" || "$index_status" == "A" && "$work_tree_status" == "A" ]] && ((conflicted++))
-    done <<< "$status_output"
-    
-    # Get ahead/behind counts (only if upstream exists)
-    local ahead=0 behind=0
-    if git rev-parse --verify @{upstream} >/dev/null 2>&1; then
-        local ahead_behind=$(git rev-list --count --left-right @{upstream}...HEAD 2>/dev/null)
-        behind=${ahead_behind%	*}
-        ahead=${ahead_behind#*	}
-    fi
-    
-    # Get stash count efficiently
-    local stashes=0
-    if git rev-parse --verify refs/stash >/dev/null 2>&1; then
-        stashes=$(git rev-list --walk-reflogs --count refs/stash 2>/dev/null || echo 0)
-    fi
-    
-    # Build status string
-    local status_indicators=""
-    [[ $staged -gt 0 ]] && status_indicators+=" +$staged"
-    [[ $unstaged -gt 0 ]] && status_indicators+=" !$unstaged"
-    [[ $untracked -gt 0 ]] && status_indicators+=" ?$untracked"
-    [[ $conflicted -gt 0 ]] && status_indicators+=" ~$conflicted"
-    [[ $ahead -gt 0 ]] && status_indicators+=" ⇡$ahead"
-    [[ $behind -gt 0 ]] && status_indicators+=" ⇣$behind"
-    [[ $stashes -gt 0 ]] && status_indicators+=" *$stashes"
-    
-    # Determine if repo is clean
-    if [[ $staged -eq 0 && $unstaged -eq 0 && $untracked -eq 0 && $conflicted -eq 0 ]]; then
-        # Clean
-        local clean_indicators=""
-        [[ $ahead -gt 0 ]] && clean_indicators+=" ⇡$ahead"
-        [[ $behind -gt 0 ]] && clean_indicators+=" ⇣$behind"
-        [[ $stashes -gt 0 ]] && clean_indicators+=" *$stashes"
-        
+build_git_status_info() {
+	local is_clean="$1" info_text="$2"
+    if [[ "$is_clean" == true ]]; then
         if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]]; then
-            export GIT_STATUS_INFO="${PROMPT_GREEN_INITIAL_TRIANGLE}${PROMPT_TRIANGLE}${PROMPT_BLACK_ON_GREEN} ${branch}${clean_indicators} ${PROMPT_GREEN_ON_BLACK}${PROMPT_TRIANGLE}${PROMPT_RESET}"
+            export GIT_STATUS_INFO="${PROMPT_GREEN_INITIAL_TRIANGLE}${PROMPT_TRIANGLE}${PROMPT_BLACK_ON_GREEN} ${info_text} ${PROMPT_GREEN_ON_BLACK}${PROMPT_TRIANGLE}${PROMPT_RESET}"
         else
-            export GIT_STATUS_INFO="${PROMPT_GREEN_INITIAL_TRIANGLE_BLUE}${PROMPT_TRIANGLE}${PROMPT_BLACK_ON_GREEN} ${branch}${clean_indicators} ${PROMPT_GREEN_FG}${PROMPT_TRIANGLE}${PROMPT_RESET}"
+            export GIT_STATUS_INFO="${PROMPT_GREEN_INITIAL_TRIANGLE_BLUE}${PROMPT_TRIANGLE}${PROMPT_BLACK_ON_GREEN} ${info_text} ${PROMPT_GREEN_FG}${PROMPT_TRIANGLE}${PROMPT_RESET}"
         fi
     else
-        # Dirty
         if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]]; then
-            export GIT_STATUS_INFO="${PROMPT_YELLOW_INITIAL_TRIANGLE}${PROMPT_TRIANGLE}${PROMPT_BLACK_ON_YELLOW} ${branch}${status_indicators} ${PROMPT_YELLOW_ON_BLACK}${PROMPT_TRIANGLE}${PROMPT_RESET}"
+            export GIT_STATUS_INFO="${PROMPT_YELLOW_INITIAL_TRIANGLE}${PROMPT_TRIANGLE}${PROMPT_BLACK_ON_YELLOW} ${info_text} ${PROMPT_YELLOW_ON_BLACK}${PROMPT_TRIANGLE}${PROMPT_RESET}"
         else
-            export GIT_STATUS_INFO="${PROMPT_YELLOW_INITIAL_TRIANGLE_BLUE}${PROMPT_TRIANGLE}${PROMPT_BLACK_ON_YELLOW} ${branch}${status_indicators} ${PROMPT_YELLOW_FG}${PROMPT_TRIANGLE}${PROMPT_RESET}"
+            export GIT_STATUS_INFO="${PROMPT_YELLOW_INITIAL_TRIANGLE_BLUE}${PROMPT_TRIANGLE}${PROMPT_BLACK_ON_YELLOW} ${info_text} ${PROMPT_YELLOW_FG}${PROMPT_TRIANGLE}${PROMPT_RESET}"
         fi
     fi
 }
+
+if [[ -n "$ROPERDOT_SHOW_EXTENDED_GIT_INFO" ]]; then
+	function set_git_info() {
+	    if ! git rev-parse --git-dir >/dev/null 2>&1; then
+	    	export GIT_STATUS_INFO=""
+	    	return
+	    fi
+
+	    local branch=$(git branch --show-current 2>/dev/null)
+	    
+        local status_output=$(git status --porcelain 2>/dev/null)
+        
+        local staged=0 unstaged=0 untracked=0 conflicted=0
+        while IFS= read -r line; do
+            [[ -z "$line" ]] && continue
+            local index_status="${line:0:1}"
+            local work_tree_status="${line:1:1}"
+            
+            [[ "$index_status" != " " && "$index_status" != "?" ]] && ((staged++))
+            [[ "$work_tree_status" != " " && "$work_tree_status" != "?" ]] && ((unstaged++))
+            [[ "$index_status" == "?" ]] && ((untracked++))
+            [[ "$index_status" == "U" || "$work_tree_status" == "U" || "$index_status" == "A" && "$work_tree_status" == "A" ]] && ((conflicted++))
+        done <<< "$status_output"
+        
+        local ahead=0 behind=0
+        if git rev-parse --verify @{upstream} >/dev/null 2>&1; then
+            local ahead_behind=$(git rev-list --count --left-right @{upstream}...HEAD 2>/dev/null)
+            behind=${ahead_behind%	*}
+            ahead=${ahead_behind#*	}
+        fi
+        
+        local stashes=0
+        if git rev-parse --verify refs/stash >/dev/null 2>&1; then
+            stashes=$(git rev-list --walk-reflogs --count refs/stash 2>/dev/null || echo 0)
+        fi
+        
+        local is_clean=false
+        [[ $staged -eq 0 && $unstaged -eq 0 && $untracked -eq 0 && $conflicted -eq 0 ]] && is_clean=true
+        
+        local status_indicators=""
+        if [[ "$is_clean" == false ]]; then
+	        [[ $staged -gt 0 ]] && status_indicators+=" +$staged"
+	        [[ $unstaged -gt 0 ]] && status_indicators+=" !$unstaged"
+	        [[ $untracked -gt 0 ]] && status_indicators+=" ?$untracked"
+	        [[ $conflicted -gt 0 ]] && status_indicators+=" ~$conflicted"
+        fi
+        [[ $ahead -gt 0 ]] && status_indicators+=" ⇡$ahead"
+        [[ $behind -gt 0 ]] && status_indicators+=" ⇣$behind"
+        [[ $stashes -gt 0 ]] && status_indicators+=" *$stashes"
+        local info_text="${branch}${status_indicators}"
+
+        build_git_status_info $is_clean "$branch"
+	}
+else
+	function set_git_info() {
+	    if ! git rev-parse --git-dir >/dev/null 2>&1; then
+	    	export GIT_STATUS_INFO=""
+	    	return
+	    fi
+
+	    local branch=$(git branch --show-current 2>/dev/null)
+	    
+	    local is_clean=false
+	    if git diff-index --quiet HEAD -- 2>/dev/null && \
+	    [[ -z $(git ls-files --others --exclude-standard 2>/dev/null) ]]; then
+	        is_clean=true
+	    fi
+
+	    build_git_status_info $is_clean "$branch"
+	}
+fi
 
 set_terminal_title () {
 #	local display_path="${USER}@${HOST%%.*}"

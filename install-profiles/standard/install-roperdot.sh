@@ -528,16 +528,13 @@ EOT
 
 	ask_yn_n "roperdot includes an ft script to search files for matching patterns. Do you want its search to include hidden files" y "$ROPERDOT_FT_ALL" && ROPERDOT_FT_ALL=true
 
-	# if [[ ( -z "$resume_step" || "$resume_step" -le 4) && -n "$PROCESSING_BASH" ]]; then
-	# 	if ask_yn_n "Override the default bash prompt" y "$ROPERDOT_OVERRIDE_PROMPT"; then
-	# 		ROPERDOT_OVERRIDE_PROMPT=true
-	# 		[[ -z "$ROPERDOT_PROMPT_LINES" ]] && ROPERDOT_PROMPT_LINES=1
-	# 		ask_number "Do you want to have 1 or 2 lines in your bash prompt" 2 1 "$ROPERDOT_PROMPT_LINES"
-	# 	else
-	# 		ROPERDOT_OVERRIDE_PROMPT=false
-	# 		unset ROPERDOT_PROMPT_LINES ROPERDOT_SHOW_GIT_PROMPT_INFO
-	# 	fi
-	# fi
+	if [[ -z "$resume_step" || "$resume_step" -le 4 ]]; then
+		if ask_yn_n "Show extended git info in prompt" n "$ROPERDOT_SHOW_EXTENDED_GIT_INFO"; then
+			ROPERDOT_SHOW_EXTENDED_GIT_INFO=true
+		else
+			unset ROPERDOT_SHOW_EXTENDED_GIT_INFO
+		fi
+	fi
 
 	if [[ -n "$accept_recommended" ]]; then
 		EDITOR=vi
@@ -697,6 +694,7 @@ export ROPERDOT_COMMON_COLOR_SCHEME="${ROPERDOT_COMMON_COLOR_SCHEME:-default}"
 export ROPERDOT_OVERRIDE_PROMPT="$ROPERDOT_OVERRIDE_PROMPT"
 export ROPERDOT_PROMPT_LINES=$ROPERDOT_PROMPT_LINES
 export ROPERDOT_SHOW_GIT_PROMPT_INFO=${ROPERDOT_SHOW_GIT_PROMPT_INFO:-true}
+export ROPERDOT_SHOW_EXTENDED_GIT_INFO=${ROPERDOT_SHOW_EXTENDED_GIT_INFO}
 export EDITOR=$EDITOR
 export ROPERDOT_ARC_TYPE=$ROPERDOT_ARC_TYPE
 export ROPERDOT_HISTORY_BY_SESSION=$ROPERDOT_HISTORY_BY_SESSION
