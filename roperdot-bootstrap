@@ -316,6 +316,7 @@ if command -v fzf >/dev/null 2>&1; then
 	fi
 	if [[ -n "$have_fd" ]]; then
 		export R_DEFAULT_COMMAND='fd --type file --follow --hidden --exclude .git'
+		export FZF_CTRL_R_OPTS="--exact"
 		export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 		export FZF_DEFAULT_OPTS="--extended"
 		unset have_fd

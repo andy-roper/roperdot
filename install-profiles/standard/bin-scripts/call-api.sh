@@ -61,9 +61,13 @@ while [[ $# -gt 0 ]]; do
 		shift
 		if [[ $operation = GET ]]; then
 			# --data-urlencode only works for POST so I have to urlencode the value myself
-	   		p="${1%%=*}"
-			v=$(urlencode "${1#*=}")
-			[[ -n $query ]] && query="$query&$p=$v" || query="$p=$v"
+			if [[ "$1" = *"&"* ]]; then
+				query="$1"
+			else
+		   		p="${1%%=*}"
+				v=$(urlencode "${1#*=}")
+				[[ -n $query ]] && query="$query&$p=$v" || query="$p=$v"
+			fi
 		else
 			args+=("-d")
 			[[ -f "$1" ]] && args+=("@$1") || args+=("$1")
