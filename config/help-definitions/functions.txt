@@ -18,6 +18,7 @@ fm: Opens a file manager for the current directory or the specified directory
 get-brew-path: (Mac) Gets full brew path for a directory
 gifify: (Mac) Converts a video to an animated GIF
 gli: Interactive git commit browser using fzf
+h: (zsh) interactive history search/(bash) show recent history
 hexdiff: Compares files in binary/hex mode
 is-archive: Tests if a filename is an archive file
 jsondiff: Compares JSON files

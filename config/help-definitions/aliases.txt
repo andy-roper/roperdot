@@ -34,7 +34,6 @@ ftr: Recursively finds files by content using The Silver Searcher or grep
 g: Git
 GET: Calls call-api with the GET method
 gr: Changes directory to the root of a git repository
-h: History
 HEAD: Calls call-api with the HEAD method
 hide-desktop: (Mac) Hides all desktop icons
 hide-files: (Mac) Causes Finder to hide hidden files (normal behavior, can also do with Cmd + Shift + .)

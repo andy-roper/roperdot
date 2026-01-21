@@ -1531,6 +1531,13 @@ EOT
 }
 
 man() {
+    if [[ $# -eq 0 || "$1" == "-?" || "$1" == "-h" || "$1" == "--help" ]]; then
+        cat <<EOT
+man: show colorized man page for a command
+Usage: man <command>
+EOT
+		return
+	fi
 	LESS_TERMCAP_mb=$'\e'"[${COLOR_BRRED_CODE}m" \
 	LESS_TERMCAP_md=$'\e'"[01;${COLOR_BLUE_CODE}m" \
 	LESS_TERMCAP_me=$'\e[0m' \
@@ -1539,6 +1546,50 @@ man() {
 	LESS_TERMCAP_ue=$'\e[0m' \
 	LESS_TERMCAP_us=$'\e'"[04;${COLOR_BRMAGENTA_CODE}m" \
 	command man "$@"
+}
+
+alias h &>/dev/null && unalias h
+
+h() {
+    if command -v fzf &> /dev/null; then
+    	if [[ "$1" == "-?" || "$1" == "-h" || "$1" == "--help" ]]; then
+    		cat <<-EOT
+				h: interactive reverse history search
+				Usage: h
+
+				You can access history similarly by pressing Ctrl+R.
+				EOT
+			return
+    	fi
+        local selected num
+        if [[ -n "$ZSH_VERSION" ]]; then
+            selected=($(fc -rl 1 | awk '{ cmd=$0; sub(/^[ \t]*[0-9]+\**[ \t]+/, "", cmd); if (!seen[cmd]++) print $0 }' | fzf --height 40% --no-sort --exact -n2..,.. --scheme=history))
+            if [[ -n "$selected" ]]; then
+                num=$selected[1]
+                if [[ -n "$num" ]]; then
+                    fc -e - "$num"
+                fi
+            fi
+        elif [[ -n "$BASH_VERSION" ]]; then
+            selected=$(fc -rl 1 | awk '{ cmd=$0; sub(/^[ \t]*[0-9]+\**[ \t]+/, "", cmd); if (!seen[cmd]++) print $0 }' | fzf --height 40% --no-sort --exact -n2..,.. --scheme=history | sed 's/^[ ]*[0-9]*\**[ ]*//')
+            if [[ -n "$selected" ]]; then
+                history -s "$selected"
+                echo "$selected"
+            fi
+        fi
+    else
+    	if [[ "$1" == "-?" || "$1" == "-h" || "$1" == "--help" ]]; then
+    		cat <<-EOT
+				h: list recent command history
+				Usage: h
+
+				You can interactively select commands by pressing Ctrl+R.
+				EOT
+			return
+    	fi
+        fc -l -50
+        echo "Press Ctrl+R to interactively select a command from history"
+    fi
 }
 
 if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then

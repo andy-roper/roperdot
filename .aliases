@@ -122,7 +122,7 @@ alias cdp='\cd -'   # cd to previous directory
 
 alias cls=clear
 alias flush=sync
-alias h=history
+# alias h=history
 alias j='jobs -l'
 alias md='mkdir -p'
 alias rd=rmdir

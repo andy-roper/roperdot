@@ -253,7 +253,8 @@ help <text>        # Find commands whose name/description matches the text
 - **`cls`** - Clear the screen
 - **`def-win-env-linux-path` (Windows)** - Define an env var from a Windows env var and convert to a WSL path
 - **`escape-arg`** - Escape metacharacters in an argument
-- **`h`** - History
+- **`h`** (bash) - List recent commands in history
+- **`h`** (zsh) - Interactive reverse history search (same as Ctrl+R)
 - **`install-app`** - Install or upgrade an application
 - **`is-archive`** - Test if a filename is an archive file
 - **`keyhelp`** - Show keyboard shortcut information
