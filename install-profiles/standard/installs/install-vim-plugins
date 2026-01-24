@@ -92,6 +92,12 @@ let g:airline_symbols.linenr = ''
 
 let g:airline#extensions#tabline#fnamemod = ':t'
 
+" Disable word count
+let g:airline#extensions#wordcount#enabled = 0
+
+" Remove percentage, keep line number and column
+let g:airline_section_z = '%l/%L:%3v'
+
 if \\\$ROPERDOT_VI_COLOR_SCHEME =~ '^solarized'
 	let g:airline_theme = 'solarized'
 elseif \\\$ROPERDOT_VI_BACKGROUND == 'light'
@@ -181,6 +187,9 @@ EOT
 EOF
 
 $ROPERDOT_CURRENT_SHELL ./install-vi-plugin "pangloss" "vim-javascript"
+\rm /tmp/install-vi-plugin-post >/dev/null
+
+$ROPERDOT_CURRENT_SHELL ./install-vi-plugin "tpope" "vim-fugitive"
 \rm /tmp/install-vi-plugin-post >/dev/null
 
 cat << EOF >> /tmp/install-vi-plugin-post

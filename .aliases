@@ -146,7 +146,7 @@ command -v dig >/dev/null 2>&1 && alias ip="dig +short myip.opendns.com @resolve
 alias ua='u -a'
 alias ud='u -d'
 
-# define aliases to diable globbing first
+# define aliases to disable globbing first
 if [[ $ROPERDOT_CURRENT_SHELL = bash ]]; then
 	alias lf='set -f;lf'
 	alias lfr='set -f;lf -r'
@@ -203,6 +203,8 @@ alias chmox='chmod u+x'
 alias killn='pkill -i -f'
 
 # command -v ag >/dev/null 2>&1 && alias ag='ag --hidden --follow --nogroup --color-path $COLOR_GREEN_CODE --color-line-number $COLOR_YELLOW_CODE --color-match "${COLOR_BG_YELLOW_CODE};${COLOR_BLACK_CODE}"'
+
+alias format-file='format -i'
 
 if [[ $ROPERDOT_CURRENT_SHELL = bash ]]; then
 	alias m="set -f;m"

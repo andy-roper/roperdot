@@ -1,0 +1,99 @@
+#!/usr/bin/env python3
+"""
+Description: Converts simple markdown to groff/man macro format
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+"""
+
+import sys
+import re
+import os
+
+def help():
+	print('''
+md2groff: convert simple markdown to groff/man macro format
+Usage: md2groff <input_file>
+
+This script creates a groff file with the same basename as the input file.
+It will convert simple markdown to groff macros for display using man.
+
+Supports:
+  **HEADER** on its own line -> Bold header text
+  **bold text** -> inline \\fBtext\\fP
+  _italic text_ -> inline \\fItext\\fP (displays as underline in man pages)
+  > indented text -> indent text 7 spaces (standard man indentation)
+'''[1:-1])
+	quit()
+
+args = sys.argv[1:]
+if len(args) == 0 or args[0] in ['--help', '-?', '-h']:
+	help()
+
+def process_inline_formatting(text):
+    """Convert inline markdown to groff inline escapes."""
+    # Convert **bold** to \fBtext\fP
+    text = re.sub(r'\*\*([^*]+)\*\*', r'\\fB\1\\fP', text)
+    
+    # Convert _underline_ to \fItext\fP
+    text = re.sub(r'_([^_]+)_', r'\\fI\1\\fP', text)
+    
+    return text
+
+def process_file(input_file, output_file):
+    """Process markdown file and output groff."""
+    with open(input_file, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+    
+    with open(output_file, 'w', encoding='utf-8') as out:
+        for line in lines:
+            line = line.rstrip('\n')
+            
+            # Empty line = vertical space
+            if not line.strip():
+                out.write('.sp\n')
+                continue
+            
+            # Indented line (starts with >)
+            if line.startswith('>'):
+                content = line[1:].lstrip()  # Remove > and leading spaces
+                if content:
+                    # Set indent to 7n, output text, reset to 0
+                    out.write('.in 7n\n')
+                    out.write(process_inline_formatting(content) + '\n')
+                    out.write('.br\n')
+                    out.write('.in 0\n')
+                continue
+            
+            # Check if line is all bold (header)
+            bold_match = re.match(r'^\*\*(.+)\*\*$', line)
+            if bold_match:
+                # Header - bold, uppercase, with line break after
+                out.write(f'\\fB{bold_match.group(1).upper()}\\fP\n')
+                out.write('.br\n')
+                continue
+            
+            # Regular line - flush left
+            content = process_inline_formatting(line)
+            out.write(content + '\n')
+            out.write('.br\n')
+
+def main():
+    input_file = args[0]
+    
+    # Generate output filename: input.md -> input.groff
+    base_name = os.path.splitext(input_file)[0]
+    output_file = base_name + '.groff'
+    
+    try:
+        process_file(input_file, output_file)
+        print(f"Created {output_file}")
+    except FileNotFoundError:
+        print(f"Error: File not found: {input_file}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == '__main__':
+    main()

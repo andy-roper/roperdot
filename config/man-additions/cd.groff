@@ -1,0 +1,45 @@
+\fBNAME\fP
+.br
+.in 7n
+cd - change to a directory
+.br
+.in 0
+.sp
+\fBSYNOPSIS\fP
+.br
+.in 7n
+cd [\fIDIRECTORY\fP]
+.br
+.in 0
+.sp
+\fBROPERDOT CUSTOMIZATIONS\fP
+.br
+If no arguments are passed and the clipboard contains a directory name, cd will change to that directory.
+.br
+.sp
+If gum or fzf is installed:
+.br
+.sp
+* If no target is given or if the target is ".", cd will prompt the user to select a subdirectory of the current directory to change to.
+.br
+.sp
+* If the target is a pattern, cd will prompt the user to select a matching directory. If only one directory matches, cd will change to that directory.
+.br
+.sp
+If the target is an archive, it will be expanded to a temporary directory and cd will change to that directory.
+.br
+.sp
+If you're on MacOS and you cd to a dmg file, the dmg will be mounted and cd will change to the mount directory.
+.br
+.sp
+If you're on Ubuntu or Mint and you cd to an iso file, the file will be mounted.
+.br
+.sp
+If cd is called by another function or if data is piped to it, then it will execute cd without any custom behavior.
+.br
+.sp
+Longer dot sequences are supported by this command, e.g. ... is two directories up, .... is three directories up, etc.
+.br
+.sp
+Note that the roperdot custom behavior is implemented via a function called by an alias, so it will not impact the command if it's called in a script.
+.br

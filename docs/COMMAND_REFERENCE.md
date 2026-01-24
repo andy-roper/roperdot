@@ -236,6 +236,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`h2d`** - Convert hexadecimal number to decimal
 - **`html2pdf`** - Convert HTML files to PDF
 - **`m`** - Evaluate a mathematical expression
+- **`md2groff`** - Convert a simple markdown file to groff formatting
 - **`md2html`** - Convert a markdown file to HTML
 - **`pdfcount`** - Count the number of pages in a set of PDFs
 - **`png2text`** - Convert a PNG image to text

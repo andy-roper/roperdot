@@ -1535,17 +1535,81 @@ man() {
         cat <<EOT
 man: show colorized man page for a command
 Usage: man <command>
+If the command is cd, cp, ls, mv or rm and the corresponding environment variable
+is set to true to enable custom behavior (e.g. ROPERDOT_CUSTOM_LS), additional
+help will display after the man page content.
 EOT
-		return
+        return
+    fi
+    
+    local cmd="${@: -1}"
+    if [[ $cmd =~ ^(cd|cp|ls|mv|rm)$ ]]; then
+	    local cmd_upper=$(echo "$cmd" | tr '[:lower:]' '[:upper:]')
+	    local custom_var="ROPERDOT_CUSTOM_${cmd_upper}"
+	    
+	    if eval "[[ \"\${$custom_var}\" == \"true\" ]]" && [[ -f "${ROPERDOT_DIR}/config/man-additions/$cmd.groff" ]]; then
+	        local tmpfile=$(mktemp)
+	        local manfile=$(command man -w "$@" 2>/dev/null)
+	        
+	        if [[ -n "$manfile" ]]; then
+	            # Existing man page - append custom content
+		        if [[ "$manfile" == *.gz ]]; then
+		            zcat "$manfile" > "$tmpfile"
+		        else
+		            cat "$manfile" > "$tmpfile"
+		        fi
+	    	    # Reset indentation, disable justification, add separator, then custom content
+		        cat >> "$tmpfile" <<'EOF'
+.in 0
+.na
+.nh
+.sp
+\l'\n[LL]u'
+.sp
+EOF
+		    else
+		        # No man page (e.g., cd) - create standalone page
+		        cat > "$tmpfile" <<EOF
+.TH ${cmd_upper} 1 "Custom Documentation"
+.in 0
+.na
+.nh
+EOF
+		    fi
+	        cat "${ROPERDOT_DIR}/config/man-additions/$cmd.groff" >> "$tmpfile"
+	        
+	        # Process combined groff source through nroff with colors
+	        # Use -rLL and -rLT to control width based on COLUMNS
+	        LESS_TERMCAP_mb=$'\e'"[${COLOR_BRRED_CODE}m" \
+	        LESS_TERMCAP_md=$'\e'"[01;${COLOR_BLUE_CODE}m" \
+	        LESS_TERMCAP_me=$'\e[0m' \
+	        LESS_TERMCAP_se=$'\e[0m' \
+	        LESS_TERMCAP_so=$'\e'"[${COLOR_BRWHITE_CODE}m" \
+	        LESS_TERMCAP_ue=$'\e[0m' \
+	        LESS_TERMCAP_us=$'\e'"[04;${COLOR_BRMAGENTA_CODE}m" \
+	        GROFF_NO_SGR=1 \
+	        nroff -c -man -rLL=${COLUMNS:-80}n -rLT=${COLUMNS:-80}n "$tmpfile" 2>/dev/null | \
+	        LESS_TERMCAP_mb=$'\e'"[${COLOR_BRRED_CODE}m" \
+	        LESS_TERMCAP_md=$'\e'"[01;${COLOR_BLUE_CODE}m" \
+	        LESS_TERMCAP_me=$'\e[0m' \
+	        LESS_TERMCAP_se=$'\e[0m' \
+	        LESS_TERMCAP_so=$'\e'"[${COLOR_BRWHITE_CODE}m" \
+	        LESS_TERMCAP_ue=$'\e[0m' \
+	        LESS_TERMCAP_us=$'\e'"[04;${COLOR_BRMAGENTA_CODE}m" \
+	        less -R
+	        
+	        rm -f "$tmpfile" >/dev/null
+	        return
+	    fi
 	fi
-	LESS_TERMCAP_mb=$'\e'"[${COLOR_BRRED_CODE}m" \
-	LESS_TERMCAP_md=$'\e'"[01;${COLOR_BLUE_CODE}m" \
-	LESS_TERMCAP_me=$'\e[0m' \
-	LESS_TERMCAP_se=$'\e[0m' \
-	LESS_TERMCAP_so=$'\e'"[${COLOR_BRWHITE_CODE}m" \
-	LESS_TERMCAP_ue=$'\e[0m' \
-	LESS_TERMCAP_us=$'\e'"[04;${COLOR_BRMAGENTA_CODE}m" \
-	command man "$@"
+    LESS_TERMCAP_mb=$'\e'"[${COLOR_BRRED_CODE}m" \
+    LESS_TERMCAP_md=$'\e'"[01;${COLOR_BLUE_CODE}m" \
+    LESS_TERMCAP_me=$'\e[0m' \
+    LESS_TERMCAP_se=$'\e[0m' \
+    LESS_TERMCAP_so=$'\e'"[${COLOR_BRWHITE_CODE}m" \
+    LESS_TERMCAP_ue=$'\e[0m' \
+    LESS_TERMCAP_us=$'\e'"[04;${COLOR_BRMAGENTA_CODE}m" \
+    command man "$@"
 }
 
 alias h &>/dev/null && unalias h
