@@ -109,6 +109,13 @@
 		"desc": "Java IDE with built-in CVS client, Git client, XML editor, etc."
 	},
 	{
+		"app": "IntelliJ IDEA",
+		"binary": "idea",
+		"install_script": "install-intellij-idea",
+		"desc": "Java/Kotlin IDE",
+		"groups": ["work"]
+	},
+	{
 		"app": "Oracle SQL Developer",
 		"binary": "sqldeveloper",
 		"install_script": "install-sql-developer",

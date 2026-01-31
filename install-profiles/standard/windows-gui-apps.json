@@ -55,6 +55,14 @@
 		"disabledByDefault": true
 	},
 	{
+		"app": "IntelliJ IDEA",
+		"package": "intellijidea-ultimate",
+		"package_manager": "choco",
+		"install_script": "install-intellij-idea",
+		"desc": "Java/Kotlin IDE",
+		"groups": ["work"]
+	},
+	{
 		"app": "Oracle SQL Developer",
 		"app_dir": "sqldeveloper",
 		"install_script": "install-sql-developer",

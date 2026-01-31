@@ -1,0 +1,83 @@
+#
+# Description: Install script for IntelliJ IDEA
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+INTELLIJ_VERSION=2025.3
+
+. "${ROPERDOT_DIR}/source-scripts/win-env-functions"
+
+install_intellij_plugin () {
+    local PLUGIN_ID="$1"
+    local plugin_name="$2"
+    local TEMP_ZIP="/tmp/intellij_plugin_$$.zip"
+
+    # Retrieve the latest update ID for the plugin
+    echo "Looking up latest update for plugin $plugin_name..."
+    local UPDATES_URL="https://plugins.jetbrains.com/api/plugins/${PLUGIN_ID}/updates"
+    local UPDATES_JSON
+    if command -v curl &> /dev/null; then
+        UPDATES_JSON="$(curl -s "$UPDATES_URL")"
+    elif command -v wget &> /dev/null; then
+        UPDATES_JSON="$(wget -qO- "$UPDATES_URL")"
+    else
+        echo "Neither curl nor wget found; cannot retrieve plugin update info"
+        return 1
+    fi
+
+    local UPDATE_ID
+    UPDATE_ID="$(python3 -c "import sys, json; print(json.load(sys.stdin)[0]['id'])" <<< "$UPDATES_JSON")"
+    if [[ -z "$UPDATE_ID" ]]; then
+        echo "Failed to retrieve update ID for $plugin_name"
+        return 1
+    fi
+
+    # Download and install the plugin
+    local DOWNLOAD_URL="https://plugins.jetbrains.com/plugin/download?updateId=$UPDATE_ID"
+    echo "Installing IntelliJ $plugin_name plugin"
+    if get-web-file "$DOWNLOAD_URL" "$TEMP_ZIP"; then
+        unzip -o "$TEMP_ZIP" -d "$PLUGINS_DIR" > /dev/null
+        rm "$TEMP_ZIP"
+    else
+        echo "Failed to download $plugin_name"
+        rm -f "$TEMP_ZIP"
+        return 1
+    fi
+}
+
+if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
+	choco.exe install -y intellijidea-ultimate
+	CONFIG_DIR="$(win_env_linux_path APPDATA)/JetBrains/IntelliJIDEAUltimate${INTELLIJ_VERSION}"
+elif [[ "$ROPERDOT_OS_NAME" = "darwin" ]]; then
+	brew install jetbrains-intellij-idea-ultimate
+	CONFIG_DIR="$HOME/Library/Application Support/JetBrains/IntelliJIDEAUltimate${INTELLIJ_VERSION}"
+elif [[ "$ROPERDOT_OS_ENV" = "ubuntu" || "$ROPERDOT_OS_ENV" = "debian" ]]; then
+	sudo snap install intellij-idea-ultimate --classic
+	CONFIG_DIR="$HOME/.config/JetBrains/IntelliJIDEAUltimate${INTELLIJ_VERSION}"
+elif [[ "$ROPERDOT_OS_ENV" = "mint" ]]; then
+	flatpak install -y flathub com.jetbrains.IntelliJ-IDEA-Ultimate
+	echo "Cannot install plugins for Linx Mint; they must be installed manually"
+	bad_os=true
+else
+	echo "IntelliJ IDEA install error: OS currently unsupported by roperdot install script"
+	bad_os=true
+fi
+
+# To get the updateId for a plugin:
+# Visit its page in the JetBrains Marketplace, e.g. https://plugins.jetbrains.com/plugin/2162-stringmanipulation
+# Then visit a link like this for the plugin:
+# https://plugins.jetbrains.com/api/plugins/<plugin-id>/updates
+# The updates are returned newest first; the updateId is the "id" value in the first array element
+
+if [[ -z "$bad_os" ]]; then
+    PLUGINS_DIR="$CONFIG_DIR/plugins"
+    mkdir -p "$PLUGINS_DIR"
+
+	install_intellij_plugin 17718 "GitHub Copilot"
+	install_intellij_plugin 11349 "AWS Toolkit"
+	install_intellij_plugin 28521 "Hex Editor"
+	install_intellij_plugin 9667 "Quokka"
+	install_intellij_plugin 2162 "String Manipulation"
+fi

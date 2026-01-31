@@ -187,10 +187,10 @@ EOT
 EOF
 
 $ROPERDOT_CURRENT_SHELL ./install-vi-plugin "pangloss" "vim-javascript"
-\rm /tmp/install-vi-plugin-post >/dev/null
+\rm /tmp/install-vi-plugin-post >/dev/null 2>&1
 
 $ROPERDOT_CURRENT_SHELL ./install-vi-plugin "tpope" "vim-fugitive"
-\rm /tmp/install-vi-plugin-post >/dev/null
+\rm /tmp/install-vi-plugin-post >/dev/null 2>&1
 
 cat << EOF >> /tmp/install-vi-plugin-post
 install-vi-plugin-post() {
@@ -199,7 +199,7 @@ install-vi-plugin-post() {
 EOF
 
 $ROPERDOT_CURRENT_SHELL ./install-vi-plugin "moll" "vim-node"
-\rm /tmp/install-vi-plugin-post >/dev/null
+\rm /tmp/install-vi-plugin-post >/dev/null 2>&1
 
 if [[ ! -e ~/.vimrc ]] || ! grep matchparen ~/.vimrc >/dev/null; then
 	cat << EOT >> ~/.vimrc

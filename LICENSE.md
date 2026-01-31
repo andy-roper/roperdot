@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2025 Andy Roper
+Copyright (c) 2026 Andy Roper
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -39,6 +39,12 @@ This repository includes software components with different licenses:
    License: MIT License
    Source: https://github.com/vbasky/sublime-vscode-plus
    License Text: See LICENSES/sublime-vscode-plus.MIT.txt
+3. JSTool plugin for Notepad++
+   Location: apps-and-packages/npp-plugins/jstoolnpp
+   Copyright (c) Sun Junwen
+   License: GNU General Public License v2.0
+   Source: https://www.sunjw.us/jstool/npp/
+   License Text: https://www.gnu.org/licenses/gpl-2.0.txt
 
 ===========================================================================
 

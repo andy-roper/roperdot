@@ -99,6 +99,14 @@
 		"desc": "Microsoft's source code editor"
 	},
 	{
+		"app": "Eclipse for Java",
+		"bundle_name": "Eclipse",
+		"package": "eclipse-java",
+		"package_manager": "brew",
+		"desc": "Java IDE with built-in CVS client, Git client, XML editor, etc.",
+		"disabledByDefault": true
+	},
+	{
 		"app": "WebStorm",
 		"package": "webstorm",
 		"package_manager": "brew",
@@ -106,12 +114,12 @@
 		"disabledByDefault": true
 	},
 	{
-		"app": "Eclipse for Java",
-		"bundle_name": "Eclipse",
-		"package": "eclipse-java",
+		"app": "IntelliJ IDEA",
+		"package": "jetbrains-intellij-idea-ultimate",
 		"package_manager": "brew",
-		"desc": "Java IDE with built-in CVS client, Git client, XML editor, etc.",
-		"disabledByDefault": true
+		"install_script": "install-intellij-idea",
+		"desc": "Java/Kotlin IDE",
+		"groups": ["work"]
 	},
 	{
 		"app": "Oracle SQL Developer",

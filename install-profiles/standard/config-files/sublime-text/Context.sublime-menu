@@ -2,5 +2,9 @@
 	{
 	    "command": "pretty_json",
 	    "caption": "Pretty JSON"
+	},
+	{
+		"command": "basic_indent",
+		"caption": "Indent X"
 	}
 ]

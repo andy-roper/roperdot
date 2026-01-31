@@ -331,7 +331,7 @@ EOT
     
     winuser="$(cd /mnt/c && cmd.exe /c "echo %USERNAME%" 2>/dev/null)"
 
-    create_binary_script_windows_pf subl Sublime\ Text\ 3/subl.exe
+    create_binary_script_windows_pf subl Sublime\ Text/subl.exe
     # create_binary_script_windows_pf code Microsoft\ Visual\ Studio/2019/Community/Common7/IDE/devenv.exe
     # create_binary_script_windows code "/mnt/c/Users/${winuser}/AppData/Local/Programs/Microsoft VS Code/code"
     create_binary_script_windows_pf code "Microsoft VS Code/bin/code.exe"

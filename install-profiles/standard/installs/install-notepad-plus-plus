@@ -85,11 +85,11 @@ download_and_extract_plugin() {
 			if unzip_file plugin.zip >/dev/null 2>&1; then
 				if [[ $# -eq 0 ]]; then
 					rm plugin.zip
-					ls
+#					ls
 					mv * "$plugin_dir"/
-					ls
+#					ls
 				else
-					ls
+#					ls
 					for f in "$@"; do
 						if [[ -d "$f" ]]; then
 							cp -r "$f" "$plugin_dir"
@@ -102,7 +102,7 @@ download_and_extract_plugin() {
 						fi
 					done
 					rm -rf "$plugin_extract_dir"/* >/dev/null 2>&1
-					ls
+#					ls
 				fi
 			fi
 		fi
@@ -133,9 +133,11 @@ download_and_extract_plugin "XMLTools" \
 	"https://github.com/morbac/xmltools/releases/download/${xmltools_version}/XMLTools-${xmltools_version}-x64.zip" \
 	"XMLTools.dll"
 
-download_and_extract_plugin "JSTool" \
-	"https://cytranet-dal.dl.sourceforge.net/project/jsminnpp/Uni/JSToolNPP.${jstool_version}.uni.64.zip" \
-	"JSMinNPP.dll"
+# The JSTool DLL is included in roperdot due to SourceForge download issues
+echo "Installing the bundled JSTool plugin DLL..."
+plugin_dir="$plugin_src_dir/JSTool"
+mkdir "$plugin_dir"
+cp -r "${ROPERDOT_DIR}/apps-and-packages/npp-plugins/jstoolnpp" "$plugin_dir"
 
 download_and_extract_plugin "HexEditor" \
 	"https://github.com/chcg/NPP_HexEdit/releases/download/${hexeditor_version}/HexEditor_${hexeditor_version}_x64.zip" \

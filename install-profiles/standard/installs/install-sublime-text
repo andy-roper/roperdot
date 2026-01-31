@@ -145,18 +145,24 @@ if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
 	sublimetext_exe="$sublimetext_win_dir\\subl.exe"
 
 	echo -e "\nLaunching Sublime Text to generate initial configuration files..."
-	echo "${warning_text}Sublime Text will open automatically. Close the application after the package dialogs finish spawning to continue the installation.${normal_text}"
+	echo "${warning_text}Sublime Text will open automatically. Close the application after the packages finish installing to continue the main installation.${normal_text}"
 	powershell.exe -Command "Start-Process -FilePath '$sublimetext_exe' -Wait"
     
     # Update HTMLPrettify settings
     settings_dir="${sublime_text_dir}/Packages/HTML-CSS-JS Prettify"
     htmlprettify_settings="${settings_dir}/HTMLPrettify.sublime-settings"
     if [[ -f "$htmlprettify_settings" ]]; then
-        node_windows_path="$(where.exe node.exe)"
-        node_windows_path="${node_windows_path//\\//}"
-        $python_bin "$ROPERDOT_DIR/bin/set-values-in-json" \
-            "$htmlprettify_settings" \
-            node_path.windows "$node_windows_path"
+        node_windows_path="$(powershell.exe -Command '
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+    (Get-Command node.exe).Source.Replace("\", "/")
+')"
+        if [[ -n "$node_windows_path" ]]; then
+	        $python_bin "$ROPERDOT_DIR/bin/set-values-in-json" \
+	            "$htmlprettify_settings" \
+	            node_path.windows "$node_windows_path"
+	    else
+	        echo "node.exe not found; skipping update of HTMLPrettify.sublime-settings"
+	    fi
     fi
 fi
 
