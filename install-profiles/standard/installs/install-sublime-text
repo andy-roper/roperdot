@@ -8,24 +8,27 @@
 . "${ROPERDOT_DIR}/source-scripts/install-script-functions"
 . "${ROPERDOT_DIR}/source-scripts/win-path-functions"
 
+export warning_text=$(echo -e '\x1B[0;91m')
+export normal_text=$(echo -e '\x1B[0m')
+
 if [[ "$ROPERDOT_OS_ENV" = darwin ]]; then
 	if [[ -n "$has_sudo" ]]; then
 		brew install sublime-text || exit $?
 	else
 		brew install sublime-text --appdir=~/Applications || exit $?
 	fi
-	sublime_text_dir="$HOME/Library/Application Support/Sublime Text 4"
+	sublime_text_dir="$HOME/Library/Application Support/Sublime Text"
 elif [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
 	choco install -y --ignore-pending-reboot sublimetext4 || exit $?
 	source "${ROPERDOT_DIR}/source-scripts/win-env-functions"
-	sublime_text_dir="$(win_env_linux_path APPDATA)/Sublime Text 4"
-	[[ "$(desktop_shortcut_exists "Sublime Text 4")" ]] || create-windows-shortcut "Sublime Text 4" "%PROGRAMFILES%\Sublime Text 4\sublime_text.exe"
+	sublime_text_dir="$(win_env_linux_path APPDATA)/Sublime Text"
+	[[ "$(desktop_shortcut_exists "Sublime Text")" ]] || create-windows-shortcut "Sublime Text" "%PROGRAMFILES%\Sublime Text\sublime_text.exe"
 elif [[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" = gnome ]]; then
 	print-web-file https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add - || exit $?
 	echo "deb https://download.sublimetext.com/ apt/stable/" | sudo tee /etc/apt/sources.list.d/sublime-text.list || exit $?
 	sudo apt update || exit $?
 	sudo apt install sublime-text -y || exit $?
-	sublime_text_dir="$HOME/.config/sublime-text-4"
+	sublime_text_dir="$HOME/.config/sublime-text"
 else
 	echo "Unsupported platform"
 	exit 1
@@ -37,7 +40,7 @@ config_files="${ROPERDOT_DIR}/install-profiles/standard/config-files/sublime-tex
 
 if [[ -d "$sublime_user_dir" ]]; then
 	source "${ROPERDOT_DIR}/source-scripts/input-functions"
-	ask_yn_n "Apply updates to Sublime Text 4 user preferences and install recommended packages" y || exit 0
+	ask_yn_n "Apply updates to Sublime Text user preferences and install recommended packages" y || exit 0
 else
 	mkdir -p "$sublime_user_dir"
 fi
@@ -84,6 +87,7 @@ if [[ -n "$zscaler_detected" ]]; then
 		["HexViewer"]="https://github.com/facelessuser/HexViewer/archive/refs/heads/master.zip"
 		["HTML-CSS-JS Prettify"]="https://github.com/victorporof/Sublime-HTMLPrettify/archive/refs/heads/master.zip"
 		["HTML5"]="https://github.com/mrmartineau/HTML5/archive/refs/heads/master.zip"
+		["IndentX"]="https://github.com/socsieng/IndentX/archive/refs/heads/master.zip"
 		["Pretty JSON"]="https://github.com/dzhibas/SublimePrettyJson/archive/refs/heads/master.zip"
 		["SideBarEnhancements"]="https://github.com/titoBouzout/SideBarEnhancements/archive/refs/heads/st3.zip"
 		["Solarized Color Scheme"]="https://github.com/braver/Solarized/archive/refs/heads/master.zip"
@@ -125,7 +129,7 @@ else
 		
 		if [[ "$zscaler_detected" != true ]]; then
 			$python_bin "$ROPERDOT_DIR/bin/set-values-in-json" "$sublime_user_dir/Package Control.sublime-settings" bootstrapped true
-			$python_bin "$ROPERDOT_DIR/bin/set-values-in-json" "$sublime_user_dir/Package Control.sublime-settings" --add-to-array installed_packages Alignment BracketHighlighter "Column Select" Emmet HexViewer "HTML-CSS-JS Prettify" HTML5 "Pretty JSON" SideBarEnhancements "Solarized Color Scheme" SublimeCodeIntel SublimeLinter Terminal
+			$python_bin "$ROPERDOT_DIR/bin/set-values-in-json" "$sublime_user_dir/Package Control.sublime-settings" --add-to-array installed_packages Alignment BracketHighlighter "Column Select" Emmet HexViewer "HTML-CSS-JS Prettify" HTML5 IndentX "Pretty JSON" SideBarEnhancements "Solarized Color Scheme" SublimeCodeIntel SublimeLinter Terminal
 		else
 			echo "Skipping Package Control bootstrapped setting due to Zscaler - packages downloaded directly"
 		fi
@@ -135,6 +139,29 @@ else
 
 	# [[ -n "$have_shellcheck" ]] && $python_bin "$ROPERDOT_DIR/bin/set-values-in-json" "$sublime_user_dir/Package Control.sublime-settings" --add-to-array installed_packages SublimeLinter-shellcheck || { echo "third set-values-in-json failed with exit code $?, continuing to debug..."; }
 fi
+
+if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
+	sublimetext_win_dir="$(win_env PROGRAMFILES)\\Sublime Text"
+	sublimetext_exe="$sublimetext_win_dir\\subl.exe"
+
+	echo -e "\nLaunching Sublime Text to generate initial configuration files..."
+	echo "${warning_text}Sublime Text will open automatically. Close the application after the package dialogs finish spawning to continue the installation.${normal_text}"
+	powershell.exe -Command "Start-Process -FilePath '$sublimetext_exe' -Wait"
+    
+    # Update HTMLPrettify settings
+    settings_dir="${sublime_text_dir}/Packages/HTML-CSS-JS Prettify"
+    htmlprettify_settings="${settings_dir}/HTMLPrettify.sublime-settings"
+    if [[ -f "$htmlprettify_settings" ]]; then
+        node_windows_path="$(where.exe node.exe)"
+        node_windows_path="${node_windows_path//\\//}"
+        $python_bin "$ROPERDOT_DIR/bin/set-values-in-json" \
+            "$htmlprettify_settings" \
+            node_path.windows "$node_windows_path"
+    fi
+fi
+
+# Copy file with Pretty JSON context menu definition
+cp "$config_files/Context.sublime-menu" "$sublime_user_dir"
 
 # Set terminal spawned by Terminal package to iTerm 2
 if [[ "$ROPERDOT_OS_ENV" = darwin && -d "/Applications/iTerm.app" ]]; then

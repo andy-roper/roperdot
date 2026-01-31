@@ -74,6 +74,7 @@ roperdot makes use of a number of excellent third party terminal applications.
 - **[`oc`](https://openshift.com)** - CLI for Red Hat OpenShift container platform and Kubernetes
 - **[`shellcheck`](https://www.shellcheck.net/)** - Shell script linter
 - **[`sqlplus`](https://www.oracle.com/database/technologies/instant-client.html)** - Oracle SQL*Plus CLI for Oracle databases
+- **[`terraform`](https://developer.hashicorp.com/terraform)** - Infrastructure as code tool
 - **`tkn`** - [Tekton](https://tekton.dev) CLI for managing CI/CD pipelines on Kubernetes
 - [**`uuid-runtime`**](https://packages.debian.org/sid/uuid-runtime) - Library for generating and parsing UUIDs
 - **[`Vim/vimdiff`](https://www.vim.org/)** - Text editor and diff tool

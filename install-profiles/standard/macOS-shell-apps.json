@@ -222,6 +222,13 @@
 	    "groups": ["work"]
 	},
 	{
+	    "app": "Terraform",
+	    "binary": "terraform",
+	    "install_script": "install-terraform",
+	    "desc": "Infrastructure as code tool",
+	    "groups": ["work"]
+	},
+	{
 	    "app": "Liquibase",
 	    "binary": "liquibase",
 	    "install_script": "install-liquibase",

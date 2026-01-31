@@ -1,0 +1,44 @@
+#
+# Description: Install script for terraform
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
+
+if [[ "$ROPERDOT_OS_ENV" = darwin ]]; then
+	brew tap hashicorp/tap
+	brew install hashicorp/tap/terraform
+elif [[ "$ROPERDOT_OS_FAMILY" = debian ]]; then
+	# command -v gpg >/dev/null 2>&1 || sudo apt-get install -y gnupg
+	# command -v software-properties-common >/dev/null 2>&1 || sudo apt-get install -y software-properties-common
+	
+
+	if command -v brew >/dev/null 2>&1; then
+		brew tap hashicorp/tap
+		brew install hashicorp/tap/terraform
+	else
+		[[ -d /etc/apt/keyrings ]] || sudo mkdir -p -m 755 /etc/apt/keyrings
+		if ! command -v gpg >/dev/null 2>&1; then
+			echo "Terraform install error: could not find gpg"
+			failed_download=true
+		elif ! command -v software-properties-common >/dev/null 2>&1; then
+			echo "Terraform install error: could not find software-properties-common"
+			failed_download=true
+		else
+			if command -v wget >/dev/null 2>&1; then
+				wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /etc/apt/keyrings/hashicorp-archive-keyring.gpg > /dev/null
+			elif command -v curl >/dev/null 2>&1; then
+				curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /etc/apt/keyrings/hashicorp-archive-keyring.gpg > /dev/null
+			else
+				echo "Terraform install error: could not find wget or curl to configure the keyring"
+				failed_download=true
+			fi
+		fi
+		if [[ -z "$failed_download" ]]; then
+			echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+			sudo apt update && sudo apt install -y terraform
+		fi
+	fi
+else
+	echo "Terraform install error: OS currently unsupported by roperdot install script"
+fi

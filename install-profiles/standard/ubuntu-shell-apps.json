@@ -306,6 +306,25 @@
 	    "groups": ["work"]
 	},
 	{
+	    "app": "GnuPG",
+	    "binary": "gpg",
+	    "desc": "Open-source alternative to PGP",
+	    "groups": ["work"]
+	},
+	{
+	    "app": "software-properties-common",
+	    "binary": "software-properties-common",
+	    "desc": "Package for managing Personal Package Archives",
+	    "groups": ["work"]
+	},
+	{
+	    "app": "Terraform",
+	    "binary": "terraform",
+	    "install_script": "install-terraform",
+	    "desc": "Infrastructure as code tool",
+	    "groups": ["work"]
+	},
+	{
 	    "app": "Liquibase",
 	    "binary": "liquibase",
 	    "install_script": "install-liquibase",

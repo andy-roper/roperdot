@@ -16,12 +16,18 @@
 		"exclusionGroups": ["work"]
 	},
 	{
+		"app": "Node JS",
+		"package": "nodejs",
+		"app_dir": "nodejs",
+		"package_manager": "choco",
+		"desc": "JavaScript run-time environment; needed by Sublime Text plugins"
+	},
+	{
 		"app": "Sublime Text 4",
 		"package": "sublimetext4",
 		"package_manager": "choco",
 		"install_script": "install-sublime-text",
-		"desc": "Developers' text editor",
-		"exclusionGroups": ["work"]
+		"desc": "Developers' text editor"
 	},
 	{
 		"app": "Notepad++",
