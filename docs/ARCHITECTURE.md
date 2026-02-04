@@ -50,6 +50,9 @@ roperdot/
 ```bash
 .bash_history            # bash command history
 .bashrc                  # bash configuration and initialization
+.config
+├── roperdot/
+├── ├── configure-prompt # optional override for prompt configuration
 .fdignore                # files and directories for fd to ignore when searching
 .fzf.bash                # fzf fuzzy finder integration for bash
 .fzf.zsh                 # fzf fuzzy finder integration for zsh
@@ -70,7 +73,9 @@ roperdot-loader          # defines ROPERDOT env vars and loads roperdot-bootstra
 
 As I migrated from [powerlevel10k](https://github.com/romkatv/powerlevel10k) to [Starship](https://starship.rs/), I discovered several of the features I used previously weren't directly supported in the Starship prompt.
 
-I wrote functions that do that work instead by setting environment variables that are used in the prompt. See set_git_info, set_status_info and set_dir_stack_info in roperdot-bootstrap.
+I wrote functions that do that work instead by setting environment variables that are used in the prompt. See set_git_info, set_status_info and set_dir_stack_info in source-scripts/configure-prompt.
+
+To customize your prompt, copy source-scripts/configure-prompt to ~/.config/roperdot/configure-prompt and modify it as needed.
 
 ## Enhanced Shell Commands
 
