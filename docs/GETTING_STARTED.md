@@ -36,7 +36,7 @@ On Windows, you should install [Chocolatey](https://chocolatey.org) first if you
 
 Installation can be done on MacOS even as a non-admin user. Homebrew will be installed in ~/homebrew and applications in ~/Applications.
 
-After installing, either source ~/roperdot-loader or restart your shell.
+After installing, either source ~/.config/roperdot/roperdot-loader or restart your shell.
 
 On MacOS, you'll want to import the roperdot/config/apps/macos-terminal/roperdot-hybrid.terminal profile into Terminal, and the roperdot/config/apps/iTerm2/roperdot-hybrid.json profile into iTerm2.
 
@@ -48,7 +48,7 @@ An installation which encounters a problem can usually be resumed using the `--r
 
 ### Configuration Variables
 
-Variables are defined in ~/roperdot-loader that control how the dotfiles function. This file will be populated by the install but can be modified after.
+Variables are defined in ~/.config/roperdot/roperdot-loader that control how the dotfiles function. This file will be populated by the install but can be modified after.
 
 ```bash
 export ROPERDOT_LOADED=true

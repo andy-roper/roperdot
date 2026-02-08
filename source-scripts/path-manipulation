@@ -19,7 +19,7 @@ remove_from_path_var () {
             new_path="${new_path:+$new_path:}$dir"
         fi
     done
-    export $PATH="$new_path"
+    export PATH="$new_path"
 }
 
 add_dirs_to_path () {

@@ -15,7 +15,8 @@ if [[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" = gnome ]]; then
 	get-web-file https://download.jetbrains.com/webstorm/${file_name}
 	sudo tar xfz ${file_name} -C /opt/
 	rm ${file_name}
-	ln -s ${bin_dir}/webstorm.sh "${ROPERDOT_DIR}/extra-bin/webstorm"
+	mkdir -p ~/.config/roperdot/extra-bin
+	ln -s ${bin_dir}/webstorm.sh ~/.config/roperdot/extra-bin/webstorm
 	[[ -d "$HOME/.local/share/applications" ]] || mkdir -p "$HOME/.local/share/applications"
 	cat << EOT > "$HOME/.local/share/applications/jetbrains-webstorm.desktop"
 [Desktop Entry]

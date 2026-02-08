@@ -27,6 +27,13 @@ EOT
 	exit 0
 fi
 
+# Detect shell for associative array syntax
+if [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
+	typeset -A OPENED_FILES
+else
+	declare -A OPENED_FILES
+fi
+
 # Parse options
 UNIQUE_ONLY=false
 VERBOSE=false
@@ -71,16 +78,16 @@ else
 	exit 1
 fi
 
-# Track files we've already opened (for --unique mode)
-declare -A OPENED_FILES
+# Load shell-specific regex matching
+. "${ROPERDOT_DIR}/source-scripts/re-match"
 
 # Parse stack trace and open files
 echo "$INPUT" | while IFS= read -r line; do
 	# Match lines like: at com.example.ClassName.method(ClassName.java:123)
-	if [[ $line =~ ^[[:space:]]*at[[:space:]]+([a-zA-Z0-9_.]+)\.[^(]+\(([^:]+):([0-9]+)\) ]]; then
-		QUALIFIED_CLASS="${BASH_REMATCH[1]}"
-		SOURCE_FILE="${BASH_REMATCH[2]}"
-		LINE_NUMBER="${BASH_REMATCH[3]}"
+	if re_match "$line" '^[[:space:]]*at[[:space:]]+([a-zA-Z0-9_.]+)\.[^(]+\(([^:]+):([0-9]+)\)'; then
+		QUALIFIED_CLASS="${re_match[1]}"
+		SOURCE_FILE="${re_match[2]}"
+		LINE_NUMBER="${re_match[3]}"
 		
 		# Convert package path to directory path: com.example.Foo -> com/example/Foo
 		PACKAGE_PATH="${QUALIFIED_CLASS%.*}"  # Remove class name

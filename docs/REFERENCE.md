@@ -4,13 +4,15 @@
 
 ### Updating Scripts for Apps on Your System
 
-This is typically done when you need to add handling for additional applications not accounted for in the distributed copy of update-app-binaries. update-app-binaries creates scripts in app-bin-bash and app-bin-zsh based on the applications that are installed on your system.
+This is typically done when you need to add handling for additional applications not accounted for in the distributed copy of update-app-binaries. update-app-binaries creates scripts in app-bin-bash and app-bin-zsh in ~/.config/roperdot based on the applications that are installed on your system.
 
-Make the necessary changes for your applications in roperdot/bin-bash/update-app-binaries, source source-scripts/copy-scripts to update the scripts in bin-bash and bin-zsh, and then execute update-app-binaries. Alternatively, you can directly modify update-app-binaries for your shell (e.g. in bin-zsh) and then execute it.
+Make the necessary changes for your applications in update-app-binaries in roperdot/source-scripts, source roperdot/source-scripts/copy-scripts to update the scripts in bin-bash and bin-zsh in ~/.config/roperdot, and then execute update-app-binaries.
 
-update-app-binaries will update the scripts in app-bin-bash and app-bin-zsh that are used to open files in GUI viewers/editors.
+update-app-binaries will update the scripts in app-bin-bash and app-bin-zsh in ~/.config/roperdot that are used to open files in GUI viewers/editors.
 
-To support file extensions that currently don't have an associated application in zsh, you'll also want to update roperdot/.zsh-suffix-aliases.
+Not that update-app-binaries may be overwritten if you update to a new version of roperdot.
+
+To support file extensions that currently don't have an associated application in zsh, you'll also want to update ~/.config/roperdot/zsh-suffix-aliases.
 
 ### Application Installation JSON Structure
 

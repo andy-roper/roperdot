@@ -27,18 +27,18 @@ if [[ -n "$color_scheme" ]]; then
 		source "${scheme_dir}/initialize"
 		if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
 			if [[ -n $SSH_CLIENT ]]; then
-				sed -i '' 's/^export ROPERDOT_COLOR_SCHEME=.*/export ROPERDOT_COLOR_SCHEME='$color_scheme'/' ~/roperdot-loader
+				sed -i '' 's/^export ROPERDOT_COLOR_SCHEME=.*/export ROPERDOT_COLOR_SCHEME='$color_scheme'/' ~/.config/roperdot/roperdot-loader
 				export ROPERDOT_COLOR_SCHEME=$color_scheme
 			fi
-			sed -i '' 's/^export ROPERDOT_COMMON_COLOR_SCHEME=.*/export ROPERDOT_COMMON_COLOR_SCHEME='$color_scheme'/' ~/roperdot-loader
-			sed -i '' 's/ROPERDOT_VI_BACKGROUND=.*/ROPERDOT_VI_BACKGROUND='$ROPERDOT_VI_BACKGROUND'/' ~/roperdot-loader
+			sed -i '' 's/^export ROPERDOT_COMMON_COLOR_SCHEME=.*/export ROPERDOT_COMMON_COLOR_SCHEME='$color_scheme'/' ~/.config/roperdot/roperdot-loader
+			sed -i '' 's/ROPERDOT_VI_BACKGROUND=.*/ROPERDOT_VI_BACKGROUND='$ROPERDOT_VI_BACKGROUND'/' ~/.config/roperdot/roperdot-loader
 		else
 			if [[ -n $SSH_CLIENT ]]; then
-				sed -i 's/^export ROPERDOT_COLOR_SCHEME=.*/export ROPERDOT_COLOR_SCHEME='$color_scheme'/' ~/roperdot-loader
+				sed -i 's/^export ROPERDOT_COLOR_SCHEME=.*/export ROPERDOT_COLOR_SCHEME='$color_scheme'/' ~/.config/roperdot/roperdot-loader
 				export ROPERDOT_COLOR_SCHEME=$color_scheme
 			fi
-			sed -i 's/^export ROPERDOT_COMMON_COLOR_SCHEME=.*/export ROPERDOT_COMMON_COLOR_SCHEME='$color_scheme'/' ~/roperdot-loader
-			sed -i 's/ROPERDOT_VI_BACKGROUND=.*/ROPERDOT_VI_BACKGROUND='$ROPERDOT_VI_BACKGROUND'/' ~/roperdot-loader
+			sed -i 's/^export ROPERDOT_COMMON_COLOR_SCHEME=.*/export ROPERDOT_COMMON_COLOR_SCHEME='$color_scheme'/' ~/.config/roperdot/roperdot-loader
+			sed -i 's/ROPERDOT_VI_BACKGROUND=.*/ROPERDOT_VI_BACKGROUND='$ROPERDOT_VI_BACKGROUND'/' ~/.config/roperdot/roperdot-loader
 		fi
 		export ROPERDOT_COMMON_COLOR_SCHEME="$color_scheme"
 		if [[ -n $SSH_CLIENT ]]; then

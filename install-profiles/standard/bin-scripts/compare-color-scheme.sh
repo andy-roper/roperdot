@@ -20,7 +20,12 @@ EOT
 fi
 
 f=$1
-declare -A ansi_color
+if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
+	declare -A ansi_color
+else
+	typeset -A ansi_color
+fi
+
 ansi_color=(
  	["BLACK"]="0"
 	["RED"]="1"

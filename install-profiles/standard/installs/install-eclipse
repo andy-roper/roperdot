@@ -25,7 +25,7 @@ if [[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" = gnome ]]; then
 		
 		sudo tar xfz $file_name -C /opt/
 		rm $file_name
-		ln -s /opt/eclipse/eclipse "${ROPERDOT_DIR}/extra-bin/eclipse"
+		ln -s /opt/eclipse/eclipse ~/.config/roperdot/extra-bin/eclipse
 		
 		[[ -d "$HOME/.local/share/icons" ]] || mkdir -p "$HOME/.local/share/icons"
 		cp /opt/eclipse/icon.xpm "$HOME/.local/share/icons/eclipse.xpm"

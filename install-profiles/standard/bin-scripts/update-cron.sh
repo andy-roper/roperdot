@@ -1,19 +1,19 @@
 #
-# Description: Updates cron with jobs defined in ~/roperdot-cron-jobs.txt
+# Description: Updates cron with jobs defined in ~/.config/roperdot/roperdot-cron-jobs.txt
 #
 # Author: Andy Roper <andyroper42@gmail.com>
 # URL: https://github.com/andy-roper/roperdot
 #
 if [[ "$1" == "-?" || "$1" == "-h" || "$1" == "--help" ]]; then
 	cat <<EOT
-update-cron: Update cron with jobs defined in ~/roperdot-cron-jobs.txt
+update-cron: Update cron with jobs defined in ~/.config/roperdot/roperdot-cron-jobs.txt
 Usage: update-cron
 
-Define cron jobs in ~/roperdot-cron-jobs.txt using formats like these:
+Define cron jobs in ~/.config/roperdot/roperdot-cron-jobs.txt using formats like these:
 
-daily 20:30 ~/roperdot/extra-bin/backup-reminder
-weekdays 09:00 ~/roperdot/extra-bin/sync-check
-sunday 14:00 ~/roperdot/extra-bin/weekly-task
+daily 20:30 ~/.config/roperdot/extra-bin/backup-reminder
+weekdays 09:00 ~/.config/roperdot/extra-bin/sync-check
+sunday 14:00 ~/.config/roperdot/extra-bin/weekly-task
 
 Note: this script is only meant to manage calling scripts that reside within
 the roperdot directory structure.
@@ -21,9 +21,9 @@ EOT
 	exit 0
 fi
 
-ROPERDOT_CRON_FILE="$HOME/roperdot-cron-jobs.txt"
+ROPERDOT_CRON_FILE="$HOME/.config/roperdot/roperdot-cron-jobs.txt"
 if [[ ! -f "$ROPERDOT_CRON_FILE" ]]; then
-	echo "Error: ~/roperdot-cron-jobs.txt not found"
+	echo "Error: ~/.config/roperdot/roperdot-cron-jobs.txt not found"
 	exit 1
 fi
 

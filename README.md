@@ -42,7 +42,7 @@ Running install.sh will take you through an interactive installation in which yo
 
 On Windows, you should install [Chocolatey](https://chocolatey.org) first if you plan to install GUI applications with roperdot.
 
-After installing, either source ~/roperdot-loader or restart your shell.
+After installing, either source ~/.config/roperdot/roperdot-loader or restart your shell.
 
 For more information about installation and configuration, see **[GETTING_STARTED](docs/GETTING_STARTED.md)**.
 

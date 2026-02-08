@@ -14,7 +14,8 @@ if [[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" = gnome ]]; then
 	sudo tar xfz p4v.tgz -C /opt/
 	rm p4v.tgz
 	app_path=$(find /opt -maxdepth 1 -name "p4v*")
-	ln -s ${app_path}/bin/p4merge "${ROPERDOT_DIR}/extra-bin/p4merge"
+	mkdir -p ~/.config/roperdot/extra-bin
+	ln -s ${app_path}/bin/p4merge ~/.config/roperdot/extra-bin/p4merge"
 	[[ -d "$HOME/.local/share/icons" ]] || mkdir -p "$HOME/.local/share/icons"
 	cp ${app_path}/lib/P4VResources/icons/p4merge.svg "$HOME/.local/share/icons"
 	[[ -d "$HOME/.local/share/applications" ]] || mkdir -p "$HOME/.local/share/applications"

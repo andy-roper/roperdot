@@ -10,8 +10,9 @@
 #debug start
 
 copy_script() {
-	cp "${ROPERDOT_DIR}/install-profiles/standard/app-scripts/js-beautify" "${ROPERDOT_DIR}/extra-bin"
-	chmod u+x "${ROPERDOT_DIR}/extra-bin/js-beautify"
+	mkdir -p ~/.config/roperdot/extra-bin
+	cp "${ROPERDOT_DIR}/install-profiles/standard/app-scripts/js-beautify" ~/.config/roperdot/extra-bin
+	chmod u+x ~/.config/roperdot/extra-bin/js-beautify
 }
 
 if [[ -n "$has_sudo" ]] && command -v npm >/dev/null 2>&1; then

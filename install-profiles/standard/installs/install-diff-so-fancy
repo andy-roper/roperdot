@@ -9,7 +9,7 @@
 . "${ROPERDOT_DIR}/source-scripts/nice-copy"
 
 install_app_from_git () {
-	nice_copy diff-so-fancy "${ROPERDOT_DIR}/extra-bin"
+	nice_copy diff-so-fancy ~/.config/roperdot/extra-bin
 }
 
 if [[ -n "$has_sudo" ]] && command -v brew >/dev/null 2>&1; then

@@ -43,7 +43,7 @@ fi
 
 export ROPERDOT_PROFILES=standard profiles=standard
 . "${ROPERDOT_DIR}/source-scripts/copy-scripts"
-[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && export PATH="${ROPERDOT_DIR}/bin-bash:$PATH" || export PATH="${ROPERDOT_DIR}/bin-zsh:$PATH"
+[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && export PATH="${HOME}/.config/roperdot/bin-bash:$PATH" || export PATH="${HOME}/.config/roperdot/bin-zsh:$PATH"
 
 #export LOCALUSR="${ROPERDOT_DIR}/local-usr"
 export LOCAL=~/.local
@@ -242,8 +242,8 @@ if ! command -v gum >/dev/null 2>&1 || ! command -v fzf >/dev/null 2>&1; then
 		fi
 		if ! command -v fzf >/dev/null 2>&1; then
 			$SHELL "${ROPERDOT_DIR}/install-profiles/standard/installs/install-fzf"
-		    [[ -f ~/.fzf.bash ]] && source ~/.fzf.bash
-		    [[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
+		    [[ -f ~/.config/roperdot/fzf.bash ]] && source ~/.config/roperdot/fzf.bash
+		    [[ -f ~/.config/roperdot/fzf.zsh ]] && source ~/.config/roperdot/fzf.zsh
 		fi
 	else
 		echo "Exiting the install"
@@ -306,9 +306,9 @@ EOT
 	fi
 fi
 
-[[ -d "${ROPERDOT_DIR}/extra-bin" ]] || mkdir "${ROPERDOT_DIR}/extra-bin"
+[[ -d ~/.config/roperdot/extra-bin ]] || mkdir -p ~/.config/roperdot/extra-bin
 #	[[ -d "${ROPERDOT_DIR}/extra-source" ]] || mkdir "${ROPERDOT_DIR}/extra-source"
-[[ "$PATH" =~ extra-bin ]] || export PATH="$PATH:${ROPERDOT_DIR}/extra-bin"
+[[ "$PATH" =~ extra-bin ]] || export PATH="$PATH:~/.config/roperdot/extra-bin"
 [[ -d "${LOCALUSR}/bin" && ! "$PATH" =~ local-usr ]] && export PATH="$PATH:${LOCALUSR}/bin"
 
 if [[ -d /home/linuxbrew/.linuxbrew/bin && ! "$PATH" =~ linuxbrew ]]; then
@@ -336,12 +336,12 @@ fi
 
 if [[ -n "$resume_step" && "$resume_step" -gt 6 ]]; then
 	skip_to_installs=true
-elif [[ -e ~/roperdot-loader ]]; then
+elif [[ -e ~/.config/roperdot/roperdot-loader ]]; then
 	ask_yn_n "Skip setup and proceed directly to app installs" && skip_to_installs=true
 fi
 
 if [[ -z "$skip_to_installs" ]]; then
-	[[ -d "${ROPERDOT_DIR}/extra-bin" ]] && echo "$PATH" | grep -qv "extra-bin" && export PATH="$PATH:${ROPERDOT_DIR}/extra-bin"
+	[[ -d ~/.config/roperdot/extra-bin ]] && echo "$PATH" | grep -qv "extra-bin" && export PATH="$PATH:~/.config/roperdot/extra-bin"
 
 	save_resume_point 2
 	if [[  -z "$resume_step" || "$resume_step" -le 2 ]]; then
@@ -642,7 +642,7 @@ EOT
 
 	save_resume_point 5
 	if [[ -z "$resume_step" || "$resume_step" -le 5 ]]; then
-		[[ -e ~/roperdot-loader-extra ]] && rm ~/roperdot-loader-extra >/dev/null
+		[[ -e ~/.config/roperdot/roperdot-loader-extra ]] && rm ~/.config/roperdot/roperdot-loader-extra >/dev/null
 #		export ROPERDOT_PROFILES="$base_profile"
 
 		if [[ -n "$extra_profiles" ]]; then
@@ -676,7 +676,7 @@ EOT
 				ROPERDOT_VI_BACKGROUND=dark
 			fi
 		fi
-		cat << EOT > ~/roperdot-loader
+		cat << EOT > ~/.config/roperdot/roperdot-loader
 # [[ -n "\$ROPERDOT_LOADED" ]] && return
 export ROPERDOT_LOADED=true
 export ROPERDOT_VERSION=$CURRENT_VERSION
@@ -703,9 +703,9 @@ export ROPERDOT_MC_SCHEME=$ROPERDOT_MC_SCHEME
 export ROPERDOT_VI_BACKGROUND=$ROPERDOT_VI_BACKGROUND
 export ROPERDOT_VI_COLOR_SCHEME="${ROPERDOT_VI_COLOR_SCHEME:-$ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME}"
 EOT
-		[[ -n "$ROPERDOT_COLOR_SCHEME" ]] && echo -e "export ROPERDOT_COLOR_SCHEME=\"$ROPERDOT_COLOR_SCHEME\"\n" >> ~/roperdot-loader
+		[[ -n "$ROPERDOT_COLOR_SCHEME" ]] && echo -e "export ROPERDOT_COLOR_SCHEME=\"$ROPERDOT_COLOR_SCHEME\"\n" >> ~/.config/roperdot/roperdot-loader
 		if [[ "${ROPERDOT_DIR}" = "$(realpath ~/roperdot)" ]]; then
-			cat << EOT >> ~/roperdot-loader
+			cat << EOT >> ~/.config/roperdot/roperdot-loader
 if [[ -e "${ROPERDOT_DIR}/roperdot-bootstrap" ]]; then
 	. "${ROPERDOT_DIR}/roperdot-bootstrap"
 else
@@ -713,7 +713,7 @@ else
 fi
 EOT
 		else
-			cat << EOT >> ~/roperdot-loader
+			cat << EOT >> ~/.config/roperdot/roperdot-loader
 if [[ -e "${ROPERDOT_DIR}/roperdot-bootstrap" ]]; then
 	. "${ROPERDOT_DIR}/roperdot-bootstrap"
 elif [[ -e ~/roperdot/roperdot-bootstrap ]]; then
@@ -725,7 +725,7 @@ EOT
 		fi
 	fi
 
-	. ~/roperdot-loader
+	. ~/.config/roperdot/roperdot-loader
 
 	# Copy .fdignore to home directory if necessary
 	# ~/.fdignore needs to be present to prevent .gitignore from being used to exclude files/directories
@@ -757,7 +757,7 @@ EOT
 	if [[ -z "$resume_step" || "$resume_step" -le 6 ]]; then
 		if [[ -n "$ROPERDOT_DESKTOP_ENV" ]]; then
 			# Install Hack Nerd fonts
-			"${ROPERDOT_DIR}/bin/install-font-from-web" 'Hack Nerd Font' 'Hack' 'https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.tar.xz' 'HackNerdFontMono-Regular.ttf'
+			install-font-from-web 'Hack Nerd Font' 'Hack' 'https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.tar.xz' 'HackNerdFontMono-Regular.ttf'
 
 			# Install Windows fonts in WSL
 			sudo apt update
@@ -797,7 +797,7 @@ EOT
 		done
 	fi
 else
-	. ~/roperdot-loader
+	. ~/.config/roperdot/roperdot-loader
 
 #		echo Fixing shebangs of scripts in roperdot to use local binary paths
 #		bash source-scripts/fix-bin-shebangs
@@ -875,22 +875,22 @@ echo
 
 # This must be done after application installs so vim and fzf will be present
 if command -v vim >/dev/null 2>&1 && vim --version | grep "+syntax" >/dev/null && ask_yn_n "Copy .vimrc and vim settings files to home directory" y; then
-	# sed -i -e 's/# vi vars/# vi vars\nROPERDOT_USE_VIM_SETTINGS=true/' ~/roperdot-loader
+	# sed -i -e 's/# vi vars/# vi vars\nROPERDOT_USE_VIM_SETTINGS=true/' ~/.config/roperdot/roperdot-loader
 	if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
-		sed -i '' 's/# vi vars/# vi vars\nROPERDOT_USE_VIM_SETTINGS=true/' ~/roperdot-loader
+		sed -i '' 's/# vi vars/# vi vars\nROPERDOT_USE_VIM_SETTINGS=true/' ~/.config/roperdot/roperdot-loader
 	else
-		sed -i 's/# vi vars/# vi vars\nROPERDOT_USE_VIM_SETTINGS=true/' ~/roperdot-loader
+		sed -i 's/# vi vars/# vi vars\nROPERDOT_USE_VIM_SETTINGS=true/' ~/.config/roperdot/roperdot-loader
 	fi
 	nice_copy config/apps/vim/vimrc-base ~/.vimrc
 	mkdir -p ~/.vim/colors ~/.vim/backup ~/.vim/swap ~/.vim/undo
 	nice_copy "${ROPERDOT_DIR}/config/apps/vim/.vim/colors"/* ~/.vim/colors
-	echo "If you encounter errors using the included vim color scheme, you should upgrade your installed vi/vim." >> ~/roperdot-info.txt
+	echo "If you encounter errors using the included vim color scheme, you should upgrade your installed vi/vim." >> ~/.config/roperdot/roperdot-info.txt
 else
-	# sed -i -e 's/# vi vars/# vi vars\nROPERDOT_USE_VIM_SETTINGS=/' ~/roperdot-loader
+	# sed -i -e 's/# vi vars/# vi vars\nROPERDOT_USE_VIM_SETTINGS=/' ~/.config/roperdot/roperdot-loader
 	if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
-		sed -i '' 's/# vi vars/# vi vars\nROPERDOT_USE_VIM_SETTINGS=/' ~/roperdot-loader
+		sed -i '' 's/# vi vars/# vi vars\nROPERDOT_USE_VIM_SETTINGS=/' ~/.config/roperdot/roperdot-loader
 	else
-		sed -i 's/# vi vars/# vi vars\nROPERDOT_USE_VIM_SETTINGS=/' ~/roperdot-loader
+		sed -i 's/# vi vars/# vi vars\nROPERDOT_USE_VIM_SETTINGS=/' ~/.config/roperdot/roperdot-loader
 	fi
 fi
 
@@ -905,7 +905,7 @@ fi
 #	if [[ -e /Applications/iTerm.app ]] && ask_yn_n "Copy iTerm2 profile to dynamic profiles directory" y; then
 #		[[ -d "${HOME}/Library/Application Support/iTerm2/DynamicProfiles" ]] || mkdir -p "${HOME}/Library/Application Support/iTerm2/DynamicProfiles"
 #		nice_copy "${ROPERDOT_DIR}/config/apps/iTerm2"/* "${HOME}/Library/Application Support/iTerm2/DynamicProfiles"
-#		echo "You should consider making the roperdot dynamic profile for iTerm2 your default profile." >> ~/roperdot-info.txt
+#		echo "You should consider making the roperdot dynamic profile for iTerm2 your default profile." >> ~/.config/roperdot/roperdot-info.txt
 #	fi
 #fi
 
@@ -928,10 +928,10 @@ if command -v git >/dev/null 2>&1; then
 			ROPERDOT_SHOW_GIT_PROMPT_INFO=false
 		fi
 		if sed --version >/dev/null 2>&1; then
-			sed -i 's/ROPERDOT_SHOW_GIT_PROMPT_INFO=.*/ROPERDOT_SHOW_GIT_PROMPT_INFO=$ROPERDOT_SHOW_GIT_PROMPT_INFO/' ~/roperdot-loader
+			sed -i 's/ROPERDOT_SHOW_GIT_PROMPT_INFO=.*/ROPERDOT_SHOW_GIT_PROMPT_INFO=$ROPERDOT_SHOW_GIT_PROMPT_INFO/' ~/.config/roperdot/roperdot-loader
 		else
 			# bash packaged with macOS requires a parameter after sed -i
-			sed -i '' 's/ROPERDOT_SHOW_GIT_PROMPT_INFO=.*/ROPERDOT_SHOW_GIT_PROMPT_INFO=$ROPERDOT_SHOW_GIT_PROMPT_INFO/' ~/roperdot-loader
+			sed -i '' 's/ROPERDOT_SHOW_GIT_PROMPT_INFO=.*/ROPERDOT_SHOW_GIT_PROMPT_INFO=$ROPERDOT_SHOW_GIT_PROMPT_INFO/' ~/.config/roperdot/roperdot-loader
 		fi
 	fi
 	if ask_yn_n "Set up git configuration for roperdot" y; then
@@ -1035,7 +1035,7 @@ elif [[ -n "$skipped_config_update" ]]; then
 
 Installation complete.
 
-To use roperdot in this and future terminal sessions, source ~/roperdot-loader.
+To use roperdot in this and future terminal sessions, source ~/.config/roperdot/roperdot-loader.
 
 EOT
 else
@@ -1043,16 +1043,16 @@ else
 
 Installation complete.
 
-To use roperdot in this session, source ~/roperdot-loader.
+To use roperdot in this session, source ~/.config/roperdot/roperdot-loader.
 
 EOT
 fi
 if [[ "$ROPERDOT_OS_ENV" = "darwin" && -d /Applications/iTerm.app ]]; then
-	echo -e "You should import the profile JSON from roperdot/config/apps/iTerm2 into iTerm2.\n" >> ~/roperdot-info.txt
+	echo -e "You should import the profile JSON from roperdot/config/apps/iTerm2 into iTerm2.\n" >> ~/.config/roperdot/roperdot-info.txt
 elif [[ "$ROPERDOT_DESKTOP_ENV" == "windows" ]]; then
-	echo -e "If this is your first time running Windows Terminal, you should run the configure-windows-terminal script to update the Windows Terminal schemes." >> ~/roperdot-info.txt
+	echo -e "If this is your first time running Windows Terminal, you should run the configure-windows-terminal script to update the Windows Terminal schemes." >> ~/.config/roperdot/roperdot-info.txt
 fi
-echo -e "If your color scheme of choice is light instead of dark, you should update ~/roperdot-loader and set the values of ROPERDOT_MC_SCHEME and ROPERDOT_VI_BACKGROUND to 'light'.\n" >> ~/roperdot-info.txt
+echo -e "If your color scheme of choice is light instead of dark, you should update ~/.config/roperdot/roperdot-loader and set the values of ROPERDOT_MC_SCHEME and ROPERDOT_VI_BACKGROUND to 'light'.\n" >> ~/.config/roperdot/roperdot-info.txt
 if [[ "$ROPERDOT_DESKTOP_ENV" == "windows" ]]; then
 	cat <<EOT
 Some things you should consider doing for Windows:
@@ -1063,4 +1063,4 @@ Some things you should consider doing for Windows:
 * Pin frequently used apps to the Taskbar
 EOT
 fi
-cat ~/roperdot-info.txt
+cat ~/.config/roperdot/roperdot-info.txt

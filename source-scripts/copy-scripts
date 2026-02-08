@@ -2,7 +2,7 @@ process_script_file () {
 	local shell="$1"
 	local src_file="$2"
 	local f="$(basename "$src_file")"
-	local dst_file="${ROPERDOT_DIR}/bin-${shell}/${f%%.*}"
+	local dst_file="${HOME}/.config/roperdot/bin-${shell}/${f%%.*}"
 	local ext=${f##*.}
 	if [[ "$ext" = "sh" ]]; then
 		echo "#!/usr/bin/env ${shell}" > "$dst_file"
@@ -15,6 +15,7 @@ process_script_file () {
 process_script_dir () {
 	local src_dir="$1"
 	for src_file in "$src_dir"/*; do
+		[[ -e "$src_file" ]] || continue
 		[[ -d "$src_file" ]] && continue
 		[[ "$src_file" = "idea" && "$ROPERDOT_OS_ENV" != "mint" ]] && continue
 		[[ -n $bash_path ]] && process_script_file bash "$src_file"
@@ -34,15 +35,15 @@ if [[ -n "$ROPERDOT_PROFILES" ]]; then
 		zsh_path=$(command -v zsh)
 	fi
 	if [[ -n $bash_path ]]; then
-		[[ -d "${ROPERDOT_DIR}/bin-bash" ]] && \rm -rf "${ROPERDOT_DIR}/bin-bash" >/dev/null 2>&1
-		mkdir "${ROPERDOT_DIR}/bin-bash"
+		[[ -d ~/.config/roperdot/bin-bash ]] && \rm -rf ~/.config/roperdot/bin-bash >/dev/null 2>&1
+		mkdir ~/.config/roperdot/bin-bash
 	fi
 	if [[ -n $zsh_path ]]; then
-		[[ -d "${ROPERDOT_DIR}/bin-zsh" ]] && \rm -rf "${ROPERDOT_DIR}/bin-zsh" >/dev/null 2>&1
-		mkdir "${ROPERDOT_DIR}/bin-zsh"
+		[[ -d ~/.config/roperdot/bin-zsh ]] && \rm -rf ~/.config/roperdot/bin-zsh >/dev/null 2>&1
+		mkdir ~/.config/roperdot/bin-zsh
 	fi
-	[[ -d "${ROPERDOT_DIR}/scripts" ]] && \rm -rf "${ROPERDOT_DIR}/scripts" >/dev/null 2>&1
-	mkdir "${ROPERDOT_DIR}/scripts"
+	[[ -d ~/.config/roperdot/scripts ]] && \rm -rf ~/.config/roperdot/scripts >/dev/null 2>&1
+	mkdir ~/.config/roperdot/scripts
 	if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
 		profiles=()
 		value="$ROPERDOT_PROFILES"
@@ -59,7 +60,7 @@ if [[ -n "$ROPERDOT_PROFILES" ]]; then
 		[[ -d "$profile_dir" ]] || continue
 		process_script_dir "$profile_dir/bin-scripts"
 		[[ -d "$profile_dir/bin-scripts/${ROPERDOT_DESKTOP_ENV}" ]] && process_script_dir "$profile_dir/bin-scripts/${ROPERDOT_DESKTOP_ENV}"
-		[[ -d "$profile_dir/scripts" ]] && \cp -rf "$profile_dir/scripts"/* "${ROPERDOT_DIR}/scripts"
+		[[ -d "$profile_dir/scripts" ]] && \cp -rf "$profile_dir/scripts"/* ~/.config/roperdot/scripts
 	done
 	if command -v npm >/dev/null 2>&1; then
 		while IFS= read -r -d '' d; do
@@ -69,9 +70,9 @@ if [[ -n "$ROPERDOT_PROFILES" ]]; then
 				npm install
 				popd >/dev/null
 			fi
-		done < <(find "${ROPERDOT_DIR}/scripts" -mindepth 1 -maxdepth 1 -type d -print0)
+		done < <(find ~/.config/roperdot/scripts -mindepth 1 -maxdepth 1 -type d -print0)
 	fi
 	echo 
-	[[ -n $bash_path ]] && find "${ROPERDOT_DIR}/bin-bash" -type f ! -name "*.*" -exec chmod u+x {} \; >/dev/null 2>&1
-	[[ -n $zsh_path ]] && find "${ROPERDOT_DIR}/bin-zsh" -type f ! -name "*.*" -exec chmod u+x {} \; >/dev/null 2>&1
+	[[ -n $bash_path ]] && find ~/.config/roperdot/bin-bash -type f ! -name "*.*" -exec chmod u+x {} \; >/dev/null 2>&1
+	[[ -n $zsh_path ]] && find ~/.config/roperdot/bin-zsh -type f ! -name "*.*" -exec chmod u+x {} \; >/dev/null 2>&1
 fi

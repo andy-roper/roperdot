@@ -27,7 +27,8 @@ if [[ "$ROPERDOT_OS_FAMILY" = debian && "$ROPERDOT_DESKTOP_ENV" = gnome ]]; then
 	    sed -i '/Exec=/c\Exec=/opt/PeaZip/peazip %F' "$HOME/.local/share/applications/peazip.desktop"
 	    [[ -d "$HOME/.local/share/icons" ]] || mkdir -p "$HOME/.local/share/icons"
 	    cp /opt/PeaZip/res/share/icons/peazip.png "$HOME/.local/share/icons"
-	    ln -s /opt/PeaZip/peazip "${ROPERDOT_DIR}/extra-bin/peazip"
+	    mkdir -p ~/.config/roperdot/extra-bin
+	    ln -s /opt/PeaZip/peazip ~/.config/roperdot/extra-bin/peazip
 	else
 		echo "PeaZip portable DEB couldn't be found for 32-bit systems; aborting install"
 		exit 1

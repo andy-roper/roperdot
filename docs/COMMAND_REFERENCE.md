@@ -203,7 +203,7 @@ help <text>        # Find commands whose name/description matches the text
 - **`show-desktop` (Mac)** - Restore normal desktop icon display
 - **`show-files` (Mac)** - Cause Finder to display hidden files (can also do with Cmd + Shift + .)
 - **`update-brew` (Mac)** - Update Homebrew and formula definitions, upgrade installed packages, remove old downloads/cache files/unneeded dependencies, and check for potential issues
-- **`update-cron`** - Update cron with jobs defined in ~/roperdot-cron-jobs.txt
+- **`update-cron`** - Update cron with jobs defined in ~/.config/roperdot/roperdot-cron-jobs.txt
 - **`vburn` (Mac)** - Burn a disc image to a CD/DVD/Blu-Ray with verification
 
 ### System Information
@@ -298,5 +298,5 @@ help <text>        # Find commands whose name/description matches the text
 - **`configure-windows-terminal` (Windows)** - Import color schemes into Windows Terminal settings and set the font to use
 - **`set-windows-terminal-default-profile` (Windows)** - Set default profile for Windows Terminal
 - **`unload-roperdot`** - Resets ~/.dircolors and ~/.vimrc to their contents before roperdot was started
-- **`update-app-binaries`** - Updates ~/.roperdot-os-functions and app binaries for the current OS
+- **`update-app-binaries`** - Updates ~/.config/roperdot/roperdot-os-functions and app binaries for the current OS
 - **`update-vscode-settings`** - Updates Visual Studio Code settings.json for the color scheme

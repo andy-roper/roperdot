@@ -30,8 +30,8 @@ elif [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
 	# Manual installation for bash
 	if [[ "$has_bash" = "true" ]]; then
 		install_app_from_git () {
-			nice_copy z.sh "${ROPERDOT_DIR}/extra-bin"
-			dos2unix "${ROPERDOT_DIR}/extra-bin/z.sh"
+			nice_copy z.sh ~/.config/roperdot/extra-bin
+			dos2unix ~/.config/roperdot/extra-bin/z.sh
 
 			if [[ -d /usr/local/share/man/man1 ]]; then
 				nice_copy z.1 /usr/local/share/man/man1
@@ -50,8 +50,8 @@ fi
 # Manual zsh-z installation
 if [[ "$has_zsh" = "true" ]]; then
 	install_app_from_git () {
-		nice_copy zsh-z.plugin.zsh "${ROPERDOT_DIR}/extra-bin"
-		dos2unix "${ROPERDOT_DIR}/extra-bin/zsh-z.plugin.zsh"
+		nice_copy zsh-z.plugin.zsh ~/.config/roperdot/extra-bin
+		dos2unix ~/.config/roperdot/extra-bin/zsh-z.plugin.zsh
 	}
 
 	get_from_git https://github.com/agkozak/zsh-z zsh-z
@@ -62,14 +62,14 @@ fi
 if [[ "$has_bash" = "true" ]]; then
 	if command -v brew >/dev/null 2>&1; then
 	    brew_z_path="$(brew --prefix)/etc/profile.d/z.sh"
-	    echo "[[ -n \"\$BASH_VERSION\" && -f \"$brew_z_path\" ]] && . \"$brew_z_path\"" >> "${ROPERDOT_DIR}/.extra"
+	    echo "[[ -n \"\$BASH_VERSION\" && -f \"$brew_z_path\" ]] && . \"$brew_z_path\"" >> ~/.extra
 	else
-	    echo '[[ -n "$BASH_VERSION" && -f "${ROPERDOT_DIR}/extra-bin/z.sh" ]] && . "${ROPERDOT_DIR}/extra-bin/z.sh"' >> "${ROPERDOT_DIR}/.extra"
+	    echo '[[ -n "$BASH_VERSION" && -f ~/.config/roperdot/extra-bin/z.sh ]] && . ~/.config/roperdot/extra-bin/z.sh' >> ~/.extra
 	fi
 fi
 
 if [[ "$has_zsh" = "true" ]]; then
-	echo '[[ -n "$ZSH_VERSION" ]] && source "${ROPERDOT_DIR}/extra-bin/zsh-z.plugin.zsh"' >> "${ROPERDOT_DIR}/.extra"
+	echo '[[ -n "$ZSH_VERSION" ]] && source ~/.config/roperdot/extra-bin/zsh-z.plugin.zsh' >> ~/.extra
 fi
 
 [[ -e ~/.z ]] || echo > ~/.z

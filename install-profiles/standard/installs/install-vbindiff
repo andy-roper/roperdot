@@ -33,8 +33,8 @@ elif [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
 	pushd "$temp_dir" >/dev/null || return 1
 	get-web-file https://www.cjmweb.net/vbindiff/$zip_file
 	unpack $zip_file
-	[[ -d "${ROPERDOT_DIR}/extra-bin" ]] || mkdir "${ROPERDOT_DIR}/extra-bin"
-	nice_copy VBinDiff.exe "${ROPERDOT_DIR}/extra-bin"
+	[[ -d ~/.config/roperdot/extra-bin ]] || mkdir -p ~/.config/roperdot/extra-bin
+	nice_copy VBinDiff.exe ~/.config/roperdot/extra-bin
 	popd >/dev/null || return 1
 	rm -rf "$temp_dir"
 fi

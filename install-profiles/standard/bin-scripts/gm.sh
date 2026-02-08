@@ -116,9 +116,60 @@ execute_command() {
     eval "$command"
 }
 
+check_ignored_files() {
+    # Read directories from GIT_CHECK_DIRS env var (space or colon-separated)
+    # e.g., export GIT_CHECK_DIRS="dir1 dir2" or export GIT_CHECK_DIRS="dir1:dir2"
+	[[ -n "$GIT_WORKING_DIRS" ]] || return 0
+
+    local check_dirs=()
+    # Convert colons to spaces and split into array
+    IFS=' :' read -r -A check_dirs <<< "$GIT_WORKING_DIRS" 2>/dev/null || \
+    IFS=' :' read -r -a check_dirs <<< "$GIT_WORKING_DIRS"
+    
+    # Get ignored files with full paths (not just directories)
+    local ignored_files=$(git ls-files --others --ignored --exclude-standard 2>/dev/null | \
+        grep -v -E '(gen_sdk_hash.properties|AndroidManifest.xml)$' | \
+        grep -v -E '\.(class|pyc|log|swp|swo|jar)$' | \
+        grep -v -E '(\.gradle|\.idea|\.vscode|target|\.cache|bin|out|\.pytest_cache|__pycache__)/' | \
+        grep -v -E '(\.manifest|build|tmp|client)/')
+    
+    # Filter to specific directories if provided
+    if [[ ${#check_dirs[@]} -gt 0 ]]; then
+        local filtered=""
+        for dir in "${check_dirs[@]}"; do
+            filtered+=$(echo "$ignored_files" | grep "^${dir}/")$'\n'
+        done
+        ignored_files=$(echo "$filtered" | grep -v '^$')
+    fi
+    
+    if [[ -n "$ignored_files" ]]; then
+        echo "Warning: The following files would be ignored by .gitignore:" >&2
+        echo "$ignored_files" | sed 's/^/  /' >&2
+        cat <<-EOT >&2
+
+These files will NOT be included in the commit.
+If you want to add them, use: git add -f <filename>
+
+EOT
+        local reply
+        if [[ -n "$ZSH_VERSION" ]]; then
+            read -q "reply?Do you want to continue [y/N]? "
+        else
+            read -p "Do you want to continue [y/N]? " -n 1 -r reply
+        fi
+        echo ""
+        if [[ ! "$reply" =~ ^[Yy]$ ]]; then
+            echo "Operation cancelled." >&2
+            return 1
+        fi
+    fi
+    return 0
+}
+
 # Action: Push current directory (add, commit, push)
 action_push_current_dir() {
     local branch=$(get_current_branch)
+    check_ignored_files || return
     local message=$(get_commit_message "$branch")
     
     if has_upstream; then
@@ -131,6 +182,7 @@ action_push_current_dir() {
 # Action: Commit current directory and push (commit, push)
 action_commit_current_dir_and_push() {
     local branch=$(get_current_branch)
+    check_ignored_files || return
     local message=$(get_commit_message "$branch")
     
     if has_upstream; then
@@ -143,6 +195,7 @@ action_commit_current_dir_and_push() {
 # Action: Push all changes (add, commit, push)
 action_push_all_changes() {
     local branch=$(get_current_branch)
+    check_ignored_files || return
     local message=$(get_commit_message "$branch")
     local repo_root=$(git rev-parse --show-toplevel)
     
@@ -156,6 +209,7 @@ action_push_all_changes() {
 # Action: Commit all changes and push (commit, push)
 action_commit_all_and_push() {
     local branch=$(get_current_branch)
+    check_ignored_files || return
     local message=$(get_commit_message "$branch")
     local repo_root=$(git rev-parse --show-toplevel)
 
@@ -798,6 +852,21 @@ fi
 if ! git rev-parse --git-dir > /dev/null 2>&1; then
     echo "Error: Not in a git repository" >&2
 	exit 1
+fi
+
+if [[ -z "$GIT_WORKING_DIRS" ]]; then
+	cat <<EOT
+Warning: GIT_WORKING_DIRS is not set
+
+You should set this environment variable to reference your working directories
+so this script can check for new and relevant files that would be ignored by
+.gitignore. Directories should be referenced relative to the repository root,
+for example:
+
+export GIT_WORKING_DIRS="interfaces/wms/inbound/wms-inbound scmerp-util"
+EOT
+else
+	echo "Using GIT_WORKING_DIRS: ${GIT_WORKING_DIRS}"
 fi
 
 current_branch=$(get_current_branch)

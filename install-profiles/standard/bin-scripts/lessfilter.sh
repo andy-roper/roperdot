@@ -22,7 +22,7 @@ case "${1##*/}" in
 	diff|patch|py|rb|sql|ebuild|eclass|htm|html|ts|json))
 		pygmentize -O style=roperdot -f 256 "$1" 2>/dev/null
 		;;
-	.bashrc|.bash_profile|.bash_aliases|.bash_environment|.zshrc|.p10k.zsh|.fzf.bash|.fzf.zsh)
+	.bashrc|.bash_profile|.bash_aliases|.bash_environment|.zshrc|.p10k.zsh|.fzf.bash|.fzf.zsh|fzf.bash|fzf.zsh)
 		pygmentize -O style=roperdot -f 256 -l sh "$1" 2>/dev/null
 		;;
 	*)

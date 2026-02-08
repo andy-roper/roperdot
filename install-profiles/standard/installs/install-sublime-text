@@ -78,30 +78,50 @@ if [[ -n "$zscaler_detected" ]]; then
 	packages_dir="${sublime_text_dir}/Packages"
 	[[ -d "$packages_dir" ]] || mkdir -p "$packages_dir"
 	
-	# Define package repositories (GitHub URLs for direct download)
-	declare -A package_repos=(
-		["Alignment"]="https://github.com/wbond/sublime_alignment/archive/refs/heads/master.zip"
-		["BracketHighlighter"]="https://github.com/facelessuser/BracketHighlighter/archive/refs/heads/master.zip"
-		["Column Select"]="https://github.com/ehuss/Sublime-Column-Select/archive/refs/heads/master.zip"
-		["Emmet"]="https://github.com/emmetio/sublime-text-plugin/archive/refs/heads/master.zip"
-		["HexViewer"]="https://github.com/facelessuser/HexViewer/archive/refs/heads/master.zip"
-		["HTML-CSS-JS Prettify"]="https://github.com/victorporof/Sublime-HTMLPrettify/archive/refs/heads/master.zip"
-		["HTML5"]="https://github.com/mrmartineau/HTML5/archive/refs/heads/master.zip"
-		["IndentX"]="https://github.com/socsieng/IndentX/archive/refs/heads/master.zip"
-		["Pretty JSON"]="https://github.com/dzhibas/SublimePrettyJson/archive/refs/heads/master.zip"
-		["SideBarEnhancements"]="https://github.com/titoBouzout/SideBarEnhancements/archive/refs/heads/st3.zip"
-		["Solarized Color Scheme"]="https://github.com/braver/Solarized/archive/refs/heads/master.zip"
-		["SublimeCodeIntel"]="https://github.com/SublimeCodeIntel/SublimeCodeIntel/archive/refs/heads/master.zip"
-		["SublimeLinter"]="https://github.com/SublimeLinter/SublimeLinter/archive/refs/heads/master.zip"
-		["Terminal"]="https://github.com/wbond/sublime_terminal/archive/refs/heads/master.zip"
+	# Define package names and URLs using parallel indexed arrays (bash/zsh compatible)
+	package_names=(
+		"Alignment"
+		"BracketHighlighter"
+		"Column Select"
+		"Emmet"
+		"HexViewer"
+		"HTML-CSS-JS Prettify"
+		"HTML5"
+		"IndentX"
+		"Pretty JSON"
+		"SideBarEnhancements"
+		"Solarized Color Scheme"
+		"SublimeCodeIntel"
+		"SublimeLinter"
+		"Terminal"
 	)
 	
-	for package_name in "${!package_repos[@]}"; do
+	package_urls=(
+		"https://github.com/wbond/sublime_alignment/archive/refs/heads/master.zip"
+		"https://github.com/facelessuser/BracketHighlighter/archive/refs/heads/master.zip"
+		"https://github.com/ehuss/Sublime-Column-Select/archive/refs/heads/master.zip"
+		"https://github.com/emmetio/sublime-text-plugin/archive/refs/heads/master.zip"
+		"https://github.com/facelessuser/HexViewer/archive/refs/heads/master.zip"
+		"https://github.com/victorporof/Sublime-HTMLPrettify/archive/refs/heads/master.zip"
+		"https://github.com/mrmartineau/HTML5/archive/refs/heads/master.zip"
+		"https://github.com/socsieng/IndentX/archive/refs/heads/master.zip"
+		"https://github.com/dzhibas/SublimePrettyJson/archive/refs/heads/master.zip"
+		"https://github.com/titoBouzout/SideBarEnhancements/archive/refs/heads/st3.zip"
+		"https://github.com/braver/Solarized/archive/refs/heads/master.zip"
+		"https://github.com/SublimeCodeIntel/SublimeCodeIntel/archive/refs/heads/master.zip"
+		"https://github.com/SublimeLinter/SublimeLinter/archive/refs/heads/master.zip"
+		"https://github.com/wbond/sublime_terminal/archive/refs/heads/master.zip"
+	)
+	
+	# Iterate using array indices (compatible with both bash and zsh)
+	for i in $(seq 0 $((${#package_names[@]} - 1))); do
+		package_name="${package_names[$i]}"
+		package_url="${package_urls[$i]}"
 		package_dir="${packages_dir}/${package_name}"
 		if [[ ! -d "$package_dir" ]]; then
 			echo "Downloading ${package_name}..."
 			zip_file="/tmp/${package_name}.zip"
-			get-web-file "${package_repos[$package_name]}" "$zip_file"
+			get-web-file "${package_url}" "$zip_file"
 			if [[ -f "$zip_file" ]]; then
 				unzip -q "$zip_file" -d "/tmp/${package_name}_extract"
 				# Move the extracted directory (handles master/st3 suffix)

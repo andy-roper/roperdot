@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 #
 # Description: Generate roperdot-help.txt from script metadata and static definitions
 #
@@ -40,7 +39,7 @@ fi
 
 # Configuration
 HELP_CONFIG_DIR="$ROPERDOT_DIR/config/help-definitions"
-OUTPUT_FILE="$HOME/roperdot-help.txt"
+OUTPUT_FILE="$HOME/.config/roperdot/roperdot-help.txt"
 TEMP_FILE="$(mktemp)"
 
 # Ensure we clean up temp file
@@ -109,16 +108,16 @@ extract_description() {
 scan_script_directories() {
     # Determine shell-specific directory
     if [[ "$ROPERDOT_CURRENT_SHELL" = "zsh" ]]; then
-        local shell_dir="$ROPERDOT_DIR/bin-zsh"
+        local shell_dir="${HOME}/.config/roperdot/bin-zsh"
     else
-        local shell_dir="$ROPERDOT_DIR/bin-bash"
+        local shell_dir="${HOME}/.config/roperdot/bin-bash"
     fi
 
     # All directories to scan
     local script_dirs=(
         "$shell_dir"
         "$ROPERDOT_DIR/bin"
-        "$ROPERDOT_DIR/extra-bin"
+        ~/.config/roperdot/extra-bin
         "$ROPERDOT_DIR/os-bin/$ROPERDOT_OS_TYPE"
     )
     

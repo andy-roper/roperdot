@@ -216,7 +216,13 @@ else
 
 	# Find the corresponding index from the full DISPLAY_LIST
 	SELECTED_INDEX=$(echo "$DISPLAY_LIST" | grep -F "${SELECTED_DISPLAY}|" | head -1 | cut -d'|' -f2)
-	SELECTED_FILE="${JAVA_PATHS[$SELECTED_INDEX+1]}"  # zsh arrays are 1-indexed
+	
+	# Handle array indexing differences between bash and zsh
+	if [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
+		SELECTED_FILE="${JAVA_PATHS[$SELECTED_INDEX+1]}"  # zsh arrays are 1-indexed
+	else
+		SELECTED_FILE="${JAVA_PATHS[$SELECTED_INDEX]}"    # bash arrays are 0-indexed
+	fi
 
 	if [[ -z "$SELECTED_FILE" ]]; then
 	    echo "Error: Could not resolve file path"

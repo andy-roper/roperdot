@@ -11,18 +11,13 @@ roperdot/
 ├── .inputrc                    # Readline key bindings
 ├── .roperdot-os-*              # OS-specific settings
 ├── .zsh-suffix-aliases         # Associates file extensions with commands in zsh
-├── define-colors               # Defines bash prompt colors
+├── define-colors               # Defines shell colors
 ├── roperdot-bootstrap          # Core bootstrap script loaded by shells
 ├── 
 ├── Scripts and Binaries:
-├── app-bin-bash/               # Application scripts for bash (created during install)
-├── app-bin-zsh/                # Application scripts for zsh (created during install)
 ├── apps-and-packages/          # Included/modified supporting applications
 ├── bin/                        # Portable scripts (Perl, Python, shell)
-├── bin-bash/                   # Bash-specific scripts (created during install)
-├── bin-zsh/                    # Zsh-specific scripts (created during install)
 ├── examples/                   # Example scripts
-├── extra-bin/                  # Additional utilities
 ├── os-bin/                     # OS-specific scripts
 ├── source-scripts/             # Utility scripts (sourced in other scripts)
 ├── 
@@ -48,25 +43,34 @@ roperdot/
 ### Files in $HOME
 
 ```bash
-.bash_history            # bash command history
-.bashrc                  # bash configuration and initialization
+.bash_history                   # bash command history
+.bashrc                         # bash configuration and initialization
 .config
+.fdignore                       # Files and directories for fd to ignore when searching
+.lesshst                        # Less pager command history
+.viminfo                        # Vim editor session info and history
+.vimrc                          # Vim editor configuration
+.z.*                            # Z jump-around command history database
+.zshrc                          # zsh configuration and initialiation
 ├── roperdot/
-├── ├── configure-prompt # optional override for prompt configuration
-.fdignore                # files and directories for fd to ignore when searching
-.fzf.bash                # fzf fuzzy finder integration for bash
-.fzf.zsh                 # fzf fuzzy finder integration for zsh
-.lesshst                 # Less pager command history
-roperdot-help.txt        # help text for roperdot commands; searched with help command
-roperdot-info.txt        # post-install info; disable display at shell start by removing 
-                         # the file or setting ROPERDOT_SUPPRESS_INFO env var to true
-roperdot-install.log     # roperdot installation log
-roperdot-loader          # defines ROPERDOT env vars and loads roperdot-bootstrap
-.roperdot-os-functions   # OS-specific functions; created during installation
-.viminfo                 # Vim editor session info and history
-.vimrc                   # Vim editor configuration
-.z.*                     # Z jump-around command history database
-.zshrc                   # zsh configuration and initialiation
+│   ├── .inputrc                # Override for readline key bindings
+│   ├── app-bin-bash/           # Application scripts for bash (created during install)
+│   ├── app-bin-zsh/            # Application scripts for zsh (created during install)
+│   ├── bin-bash/               # bash specific scripts (created during install)
+│   ├── bin-zsh/                # zsh specific scripts (created during install)
+│   ├── configure-prompt        # Optional override for prompt configuration
+│   ├── define-colors           # Shell color definition overrides
+|   ├── extra-bin/              # Additional utilities
+│   ├── fzf.bash                # fzf fuzzy finder integration for bash
+│   ├── fzf.zsh                 # fzf fuzzy finder integration for zsh
+│   ├── roperdot-help.txt       # Help text for roperdot commands; searched with help 
+│   │                           # command
+│   ├── roperdot-info.txt       # Post-install info; disable display at shell start by 
+│   │                           # removing the file or setting ROPERDOT_SUPPRESS_INFO env 
+│   │                           # var to true
+│   ├── roperdot-loader         # Defines ROPERDOT env vars and loads roperdot-bootstrap
+│   ├── roperdot-os-functions   # OS-specific functions; created during installation
+roperdot-install.log            # roperdot installation log
 ```
 
 ## Starship Prompt
@@ -75,7 +79,7 @@ As I migrated from [powerlevel10k](https://github.com/romkatv/powerlevel10k) to 
 
 I wrote functions that do that work instead by setting environment variables that are used in the prompt. See set_git_info, set_status_info and set_dir_stack_info in source-scripts/configure-prompt.
 
-To customize your prompt, copy source-scripts/configure-prompt to ~/.config/roperdot/configure-prompt and modify it as needed.
+To customize your prompt, copy source-scripts/configure-prompt to ~/.config/roperdot and modify it as needed.
 
 ## Enhanced Shell Commands
 

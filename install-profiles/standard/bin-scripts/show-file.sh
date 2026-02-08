@@ -91,7 +91,7 @@ if [[ "$lines_in_file" -lt "$lines_available" || ! -t 1 ]]; then
 		    diff|patch|py|rb|sql|ebuild|eclass|htm|html|ts|json))
 		    	pygmentize -O style=roperdot -f 256 "$f" 2>"$error_file"
 		    	;;
-		    .bashrc|.bash_profile|.bash_aliases|.bash_environment|.zshrc|.p10k.zsh|.fzf.bash|.fzf.zsh)
+		    .bashrc|.bash_profile|.bash_aliases|.bash_environment|.zshrc|.p10k.zsh|.fzf.bash|.fzf.zsh|fzf.bash|fzf.zsh)
 		        pygmentize -O style=roperdot -f 256 -l sh "$f" 2>"$error_file"
 		        ;;
 		    *)

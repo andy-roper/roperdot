@@ -19,8 +19,8 @@ install-fd-from-release () {
 	if [[ -n "$archive" ]]; then
 		tar xvf "$archive" >/dev/null
 		cd "$(max-file-for-pattern -d . "fd-.*")" || return 1
-		[[ -d "${ROPERDOT_DIR}/extra-bin" ]] || mkdir "${ROPERDOT_DIR}/extra-bin"
-		nice_copy fd "${ROPERDOT_DIR}/extra-bin"
+		[[ -d ~/.config/roperdot/extra-bin ]] || mkdir -p ~/.config/roperdot/extra-bin
+		nice_copy fd ~/.config/roperdot/extra-bin
 		copy_man_pages fd.1
 	fi
 	popd >/dev/null || return 1

@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 #
 # Description: Installs fonts from a web archive
 #

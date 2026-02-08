@@ -19,5 +19,9 @@ initialize_colors () {
 	else
 		echo "Neither ROPERDOT_COMMON_COLOR_SCHEME nor ROPERDOT_DEFAULT_COMMON_COLOR_SCHEME are defined; skipping loading of common-color-env-vars."
 	fi
-	source "${ROPERDOT_DIR}/define-colors"
+	if [[ -f ~/.config/roperdot/define-colors ]]; then
+		source ~/.config/roperdot/define-colors
+	else
+		source "${ROPERDOT_DIR}/define-colors"
+	fi
 }

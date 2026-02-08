@@ -729,7 +729,7 @@ main () {
 	. "${ROPERDOT_DIR}/source-scripts/copy-scripts"
 	export PATH="${ROPERDOT_DIR}/bin-$ROPERDOT_CURRENT_SHELL:$PATH"
 
-	[[ -d "${ROPERDOT_DIR}/extra-bin" ]] && echo "$PATH" | grep -qv "extra-bin" && export PATH="$PATH:${ROPERDOT_DIR}/extra-bin"
+	[[ -d ~/.config/roperdot/extra-bin ]] && echo "$PATH" | grep -qv "extra-bin" && export PATH="$PATH:~/.config/roperdot/extra-bin"
 
 	if command -v python3 >/dev/null 2>&1; then
 		export python_bin=python3

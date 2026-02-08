@@ -24,7 +24,7 @@ EOT
 	exit 0
 fi
 
-[[ -f ~/.roperdot-os-functions ]] && source ~/.roperdot-os-functions
+[[ -f ~/.config/roperdot/roperdot-os-functions ]] && source ~/.config/roperdot/roperdot-os-functions
 
 if [[ -n "$1" ]]; then
     start_dir="$1"

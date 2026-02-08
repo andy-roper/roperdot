@@ -349,4 +349,6 @@ else
 	alias u="set -F;u"
 fi
 
-alias tvdb="node ~/roperdot/scripts/tvdb/tvdb.js"
+if [[ -d ~/.config/roperdot/scripts/tvdb ]]; then
+	alias tvdb="node ~/.config/roperdot/scripts/tvdb/tvdb.js"
+fi

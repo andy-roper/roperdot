@@ -1,0 +1,111 @@
+echo "Migrating to using ~/.config/roperdot..."
+
+export PATH="${ROPERDOT_DIR}/bin-${ROPERDOT_CURRENT_SHELL}:${ROPERDOT_DIR}/bin:$PATH"
+
+mkdir -p ~/.config/roperdot/config-backup/roperdot
+
+if [[ $ROPERDOT_CURRENT_SHELL = zsh && ! -o NULL_GLOB ]]; then
+    need_to_unset_null_glob=true
+    setopt NULL_GLOB
+fi
+
+cp ~/roperdot-loader ~/.config/roperdot/config-backup >/dev/null
+mv ~/roperdot-loader ~/.config/roperdot >/dev/null
+
+if [[ -f ~/roperdot-cron-jobs.txt ]]; then
+	cp ~/roperdot-cron-jobs.txt ~/.config/roperdot/config-backup >/dev/null
+	mv ~/roperdot-cron-jobs.txt ~/.config/roperdot >/dev/null
+fi
+
+if [[ -f ~/roperdot-help.txt ]]; then
+	cp ~/roperdot-help.txt ~/.config/roperdot/config-backup >/dev/null
+	mv ~/roperdot-help.txt ~/.config/roperdot >/dev/null
+fi
+
+if [[ -f ~/.roperdot-os-functions ]]; then
+	cp ~/.roperdot-os-functions ~/.config/roperdot/config-backup >/dev/null
+	mv ~/.roperdot-os-functions ~/.config/roperdot/roperdot-os-functions >/dev/null
+fi
+
+if [[ -f ~/.fzf.bash ]]; then
+	cp ~/.fzf.bash ~/.config/roperdot/config-backup >/dev/null
+	mv ~/.fzf.bash ~/.config/roperdot/fzf.bash >/dev/null
+fi
+
+if [[ -f ~/.fzf.zsh ]]; then
+	cp ~/.fzf.zsh ~/.config/roperdot/config-backup >/dev/null
+	mv ~/.fzf.zsh ~/.config/roperdot/fzf.zsh >/dev/null
+fi
+
+if [[ -f "${ROPERDOT_DIR}/.zsh-suffix-aliases" ]]; then
+	cp "${ROPERDOT_DIR}/.zsh-suffix-aliases" ~/.config/roperdot/config-backup/roperdot >/dev/null
+	mv "${ROPERDOT_DIR}/.zsh-suffix-aliases" ~/.config/roperdot/zsh-suffix-aliases >/dev/null
+fi
+
+if [[ -d "${ROPERDOT_DIR}/scripts" ]]; then
+	mkdir -p ~/.config/roperdot/config-backup/roperdot/scripts
+    cp -r "${ROPERDOT_DIR}/scripts/"* ~/.config/roperdot/config-backup/roperdot/scripts 2>/dev/null
+	mv "${ROPERDOT_DIR}/scripts" ~/.config/roperdot >/dev/null
+fi
+
+if [[ -d "${ROPERDOT_DIR}/extra-bin" ]]; then
+	mkdir -p ~/.config/roperdot/config-backup/roperdot/extra-bin
+	cp -r "${ROPERDOT_DIR}/extra-bin/"* ~/.config/roperdot/config-backup/roperdot/extra-bin >/dev/null
+	mv "${ROPERDOT_DIR}/extra-bin" ~/.config/roperdot >/dev/null
+fi
+
+if [[ -f "${ROPERDOT_DIR}/.extra" ]]; then
+	cp "${ROPERDOT_DIR}/.extra" ~/.config/roperdot/config-backup/roperdot
+	sed -i.tmp \
+	  -e 's|\${ROPERDOT_DIR}/extra-bin|\$\{HOME\}/.config/roperdot/extra-bin|' \
+	  "${ROPERDOT_DIR}/.extra"
+	rm -f "${ROPERDOT_DIR}/.extra.tmp" >/dev/null
+fi
+
+if [[ -f ~/.bashrc ]]; then
+	cp ~/.bashrc ~/.config/roperdot/config-backup >/dev/null
+	sed -i.tmp \
+	  -e 's|^\[\[ -f ~/"roperdot-loader" \]\] && \. ~/"roperdot-loader"|[[ -f ~/.config/roperdot/roperdot-loader ]] \&\& . ~/.config/roperdot/roperdot-loader|' \
+	  -e 's|^\[ -f ~/.fzf\.bash \] && source ~/.fzf\.bash|[ -f ~/.config/roperdot/fzf.bash ] \&\& source ~/.config/roperdot/fzf.bash|' \
+	  ~/.bashrc
+	rm -f ~/.bashrc.tmp >/dev/null
+fi
+
+if [[ -f ~/.zshrc ]]; then
+	cp ~/.zshrc ~/.config/roperdot/config-backup >/dev/null
+	sed -i.tmp \
+	  -e 's|^\[\[ -f ~/"roperdot-loader" \]\] && \. ~/"roperdot-loader"|[[ -f ~/.config/roperdot/roperdot-loader ]] \&\& . ~/.config/roperdot/roperdot-loader|' \
+	  -e 's|^\[ -f ~/.fzf\.zsh \] && source ~/.fzf\.zsh|[ -f ~/.config/roperdot/fzf.zsh ] \&\& source ~/.config/roperdot/fzf.zsh|' \
+	  ~/.zshrc
+	rm -f ~/.zshrc.tmp >/dev/null
+fi
+
+mkdir -p ~/.config/roperdot/bin-bash
+mkdir -p ~/.config/roperdot/bin-zsh
+
+export ROPERDOT_PROFILES=standard
+
+if [[ -d "${ROPERDOT_DIR}/bin-bash" ]]; then
+	ROPERDOT_SHELL_TO_COPY=bash
+	export PROCESSING_BASH=true
+	source "${ROPERDOT_DIR}/source-scripts/copy-scripts"
+fi
+if [[ -d "${ROPERDOT_DIR}/bin-zsh" ]]; then
+	ROPERDOT_SHELL_TO_COPY=zsh
+	export PROCESSING_ZSH=true
+	source "${ROPERDOT_DIR}/source-scripts/copy-scripts"
+fi
+
+$ROPERDOT_CURRENT_SHELL "${ROPERDOT_DIR}/install-profiles/standard/bin-scripts/generate-help.sh"
+unset ROPERDOT_SHELL_TO_COPY
+
+. "${ROPERDOT_DIR}/source-scripts/update-app-binaries"
+
+[[ -d "${ROPERDOT_DIR}/app-bin-bash" ]] && rm -rf "${ROPERDOT_DIR}/app-bin-bash" >/dev/null
+[[ -d "${ROPERDOT_DIR}/app-bin-zsh" ]] && rm -rf "${ROPERDOT_DIR}/app-bin-zsh" >/dev/null
+[[ -d "${ROPERDOT_DIR}/bin-bash" ]] && rm -rf "${ROPERDOT_DIR}/bin-bash" >/dev/null
+[[ -d "${ROPERDOT_DIR}/bin-zsh" ]] && rm -rf "${ROPERDOT_DIR}/bin-zsh" >/dev/null
+
+[[ -n $need_to_unset_null_glob ]] && unsetopt NULL_GLOB
+
+echo "You should close this and any other bash or zsh terminal sessions since the roperdot bin directories have been moved to ~/.config/roperdot."

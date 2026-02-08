@@ -1866,7 +1866,7 @@ _u() {
 	# Turn globbing back on
 	[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && set +f || set +F
 
-	perl "${ROPERDOT_DIR}/scripts/u.pl" "$@"
+	perl "${HOME}/.config/roperdot/scripts/u.pl" "$@"
 }
 
 bindiff() {

@@ -23,7 +23,8 @@ elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
 		if [[ -d "$dir" ]]; then
 			cd "$dir" || return 1
 			if [[ -e jq-osx-amd64 ]]; then
-				nice_copy jq-osx-amd64 "${ROPERDOT_DIR}/extra-bin/jq"
+				mkdir -p ~/.config/roperdot/extra-bin
+				nice_copy jq-osx-amd64 ~/.config/roperdot/extra-bin/jq
 				installed=true
 			fi
 		fi

@@ -25,10 +25,12 @@ EOT
 	exit 0
 fi
 
-[[ -z $current_shell ]] && export current_shell=$(ps h -p $$ -o args='' | cut -f1 -d' ')
-
 # Enable extended globbing and disable case-sensitive matching
-[[ $current_shell = bash ]] && shopt -s extglob nocasematch || setopt ksh_glob nocasematch
+if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
+	shopt -s extglob nocasematch
+else
+	setopt ksh_glob nocasematch
+fi
 
 . "${ROPERDOT_DIR}/source-scripts/abs-path"
 . "${ROPERDOT_DIR}/source-scripts/filename-base"

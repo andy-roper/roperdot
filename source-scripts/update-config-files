@@ -32,7 +32,7 @@ add_config_sourcing () {
 }
 
 add_package_sourcing () {
-	add_config_sourcing "$1" "roperdot-loader"
+	add_config_sourcing "$1" "${HOME}/.config/roperdot/roperdot-loader"
 }
 
 # If the user doesn't have config files sourcing each other already, add sourcing

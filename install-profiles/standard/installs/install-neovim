@@ -16,7 +16,7 @@ if [[ "$ROPERDOT_OS_ENV" = "centos" || "$ROPERDOT_OS_ENV" = "rhel" ]]; then
 		if yum list installed fuse >/dev/null 2>&1; then
 			echo "fuse present; linking to nvim.appimage"
 			chmod u+x "${INSTALLSOURCE}/nvim.appimage"
-			ln -fs "${INSTALLSOURCE}/nvim.appimage" "${ROPERDOT_DIR}/extra-bin/nvim"
+			ln -fs "${INSTALLSOURCE}/nvim.appimage" ~/.config/roperdot/extra-bin/nvim
 		else
 			if [[ -n "$has_sudo" ]]; then
 				if yum repolist | grep epel; then
@@ -49,8 +49,8 @@ if [[ "$ROPERDOT_OS_ENV" = "centos" || "$ROPERDOT_OS_ENV" = "rhel" ]]; then
 					sudo groupadd fuse
 					user="$(whoami)"
 					sudo usermod -a -G fuse "$user"
-					ln -fs "${INSTALLSOURCE}/nvim.appimage" "${ROPERDOT_DIR}/extra-bin/nvim"
-					chmod u+x "${ROPERDOT_DIR}/extra-bin/nvim"
+					ln -fs "${INSTALLSOURCE}/nvim.appimage" ~/.config/roperdot/extra-bin/nvim
+					chmod u+x ~/.config/roperdot/extra-bin/nvim
 				fi
 			fi
 			if ! yum list installed fuse >/dev/null 2>&1; then
@@ -59,7 +59,7 @@ if [[ "$ROPERDOT_OS_ENV" = "centos" || "$ROPERDOT_OS_ENV" = "rhel" ]]; then
 				pushd "${INSTALLSOURCE}" >/dev/null || return 1
 				chmod u+x "${INSTALLSOURCE}/nvim.appimage"
 				"${INSTALLSOURCE}/nvim.appimage" --appimage-extract
-				ln -fs "${INSTALLSOURCE}/squashfs-root/usr/bin/nvim" "${ROPERDOT_DIR}/extra-bin/nvim"
+				ln -fs "${INSTALLSOURCE}/squashfs-root/usr/bin/nvim" ~/.config/roperdot/extra-bin/nvim
 				popd >/dev/null || return 1
 			fi
 		fi
@@ -71,7 +71,7 @@ if [[ "$ROPERDOT_OS_ENV" = "centos" || "$ROPERDOT_OS_ENV" = "rhel" ]]; then
 	
 	if [[ -z "$ROPERDOT_DESKTOP_ENV" && "$EDITOR" != "nvim" ]]; then
 		if ask_yn_y "Use nvim as the default text editor" y; then
-			sed -i 's/^\(.*export EDITOR=\).*/\1nvim/' ~/roperdot-loader
+			sed -i 's/^\(.*export EDITOR=\).*/\1nvim/' ~/.config/roperdot/roperdot-loader
 		fi
 	fi
 fi
