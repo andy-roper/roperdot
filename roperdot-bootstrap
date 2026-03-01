@@ -135,6 +135,8 @@ do_timing "phase 1i"
 PATH="${HOME}/.config/roperdot/bin-${ROPERDOT_CURRENT_SHELL}:${ROPERDOT_DIR}/bin:$PATH"
 [[ -f "${ROPERDOT_DIR}/.roperdot-os-${ROPERDOT_OS_NAME}" ]] && source "${ROPERDOT_DIR}/.roperdot-os-${ROPERDOT_OS_NAME}"
 
+[[ -d ~/bin ]] && PATH="${HOME}/bin:$PATH"
+
 # Implemented to work around Python externally-managed-environment errors
 current_python="$(command -v python3)"
 if [[ -f /usr/bin/python3 ]] && [[ "$current_python" == "/usr/local/bin/python3" || "$current_python" == */homebrew/bin/python3 ]] && [[ ! -f ~/.config/roperdot/python3 ]]; then

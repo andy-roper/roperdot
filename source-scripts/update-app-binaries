@@ -343,7 +343,8 @@ EOT
         gimp_path=$(find "$gimp_dir" -regextype posix-extended -regex "^.*/gimp-[0-9].*\.exe")
         [[ -n "$gimp_path" ]] && create_binary_script_windows gimp "$gimp_path"
     fi
-    create_binary_script_windows_pf acrobat Adobe/Acrobat\ Reader\ DC/Reader/AcroRd32.exe
+    create_binary_script_windows_pf acrobat Adobe/Acrobat\ DC/Acrobat/Acrobat.exe
+    [[ -n "$created" ]] || create_binary_script_windows_pf acrobat Adobe/Acrobat\ Reader\ DC/Reader/AcroRd32.exe
     create_binary_script_windows_pf cdisplayex CDisplayEx/CDisplayEx.exe
     create_binary_script_windows_pf calibre Calibre2/ebook-viewer.exe
 

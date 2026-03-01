@@ -33,7 +33,7 @@ if [[ "$ROPERDOT_CUSTOM_LS" = true ]]; then
 			alias lw='set -f;__ls -A'
 		else
 			alias ls='set -f;__ls -lA --group-directories-first --time-style=long-iso'
-			alias lw='set -f;__ls -A --group-directories-first --time-style=long-iso'
+			alias lw='set -f;__ls -C --group-directories-first'
 			alias lt='set -f;__ls -lA -tr --time-style=long-iso'
 			alias lsz='set -f;__ls -lA -Sr --time-style=long-iso'
 			alias lb='set -f;__ls -1 -A'
@@ -46,7 +46,7 @@ if [[ "$ROPERDOT_CUSTOM_LS" = true ]]; then
 			alias lw='noglob __ls -A'
 		else
 			alias ls='set -F;__ls -lA --group-directories-first --time-style=long-iso'
-			alias lw='set -F;__ls -A --group-directories-first --time-style=long-iso'
+			alias lw='set -F;__ls -C --group-directories-first'
 			alias lt='set -F;__ls -lA -tr --time-style=long-iso'
 			alias lsz='set -F;__ls -lA -Sr --time-style=long-iso'
 			alias lb='set -F;__ls -1 -A --ignore=\. --ignore=\.\.'
@@ -60,13 +60,13 @@ else
 		alias lw='\ls $LS_SWITCHES -A'
 	elif [[ $ROPERDOT_OS_ENV = darwin ]] && command -v gls >/dev/null 2>&1; then
 		alias ls='gls $LS_SWITCHES -lA --group-directories-first --time-style=long-iso'
-		alias lw='gls $LS_SWITCHES -A --group-directories-first --time-style=long-iso'
+		alias lw='gls $LS_SWITCHES -C --group-directories-first'
 		alias lt='gls $LS_SWITCHES -lA -tr --time-style=long-iso'
 		alias lsz='gls $LS_SWITCHES -lA -Sr --time-style=long-iso'
 		alias lb='gls $LS_SWITCHES -1 -A'
 	else
 		alias ls='\ls $LS_SWITCHES -lA --group-directories-first --time-style=long-iso'
-		alias lw='\ls $LS_SWITCHES -A --group-directories-first --time-style=long-iso'
+		alias lw='\ls $LS_SWITCHES -C --group-directories-first'
 		alias lt='\ls $LS_SWITCHES -lA -tr --time-style=long-iso'
 		alias lsz='\ls $LS_SWITCHES -lA -Sr --time-style=long-iso'
 		alias lb='\ls $LS_SWITCHES -1 -A'
