@@ -61,6 +61,7 @@ POST: Calls call-api with the POST method
 pscpu: Lists processes in order by CPU usage
 psmem: Lists processes in order by memory usage
 pst: Terse ps; pst will truncate long lines at the window boundary
+pstree: ps -ef --forest
 push: Git push
 PUT: Calls call-api with the PUT method
 rd: Removes a directory (same as rmdir)

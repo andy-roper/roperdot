@@ -300,6 +300,7 @@ if command -v perl >/dev/null 2>&1; then
 		alias pst="ps -ef | perl -wln -e '\$_ = \$1 if (/^(.{\$ENV{COLUMNS}}).+/); print;'"
 	fi
 fi
+alias pstree="ps -ef --forest"
 
 alias fs="stat -c \"%s bytes\""
 alias decode-base64-clip="decode-base64 --writeclip"

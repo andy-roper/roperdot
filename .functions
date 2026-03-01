@@ -1150,7 +1150,7 @@ EOT
 			if [[ -n "$sort_output" ]]; then
 				ag --nogroup --color $case_flag $type_flag $filename_flag "$1" | sort
 			else
-				ag --nogroup $case_flag $type_flag $filename_flag "$1"
+				ag --nogroup --color $case_flag $type_flag $filename_flag "$1"
 			fi
 		else
 			local pattern="$1"
@@ -1160,7 +1160,7 @@ EOT
 					if [[ -n "$sort_output" ]]; then
 						ag --nogroup --color $case_flag $type_flag $filename_flag "$pattern" "$1" | sort
 					else
-						ag --nogroup $case_flag $type_flag $filename_flag "$pattern" "$1"
+						ag --nogroup --color $case_flag $type_flag $filename_flag "$pattern" "$1"
 					fi
 				else
 					if re_match "$1" "^(.*)/(.*?)$"; then
@@ -1180,13 +1180,13 @@ EOT
 						if [[ -n "$sort_output" ]]; then
 							ag --nogroup --color $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern" "$target_dir" | sort
 						else
-							ag --nogroup $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern" "$target_dir"
+							ag --nogroup --color $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern" "$target_dir"
 						fi
 					else
 						if [[ -n "$sort_output" ]]; then
 							ag --nogroup --color $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern" | sort
 						else
-							ag --nogroup $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern"
+							ag --nogroup --color $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern"
 						fi
 					fi
 				fi

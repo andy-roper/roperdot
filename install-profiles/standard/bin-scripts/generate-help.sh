@@ -127,7 +127,7 @@ scan_script_directories() {
         if [[ -d "$dir" ]]; then
             [[ -n "$verbose" ]] && echo "  Checking: $dir" >&2
             for file in "$dir"/*; do
-                if [[ -f "$file" && ! "$(basename "$file")" =~ ^\. ]]; then
+                if [[ -f "$file" && ! "$(basename "$file")" =~ ^\\. ]]; then
                     local script_name="$(basename "$file")"
                     
                     is_script_excluded "$script_name" && continue

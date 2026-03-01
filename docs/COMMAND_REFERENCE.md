@@ -97,6 +97,7 @@ help <text>        # Find commands whose name/description matches the text
 ### Searching
 - **`apt-file`** - Indexes available package contents to allow you to search for a file among them
 - **`ff`** - Recursively find files by name
+- **`find-edit`** - Allows the user to select a file from a piped list for editing
 - **`fsz`** - Find files by name and print size information
 - **`ft`** - Find files by content using [The Silver Searcher](https://github.com/ggreer/the_silver_searcher) or grep
 - **`ftr`** - Recursively find files by content using [The Silver Searcher](https://github.com/ggreer/the_silver_searcher) or grep
