@@ -1,0 +1,23 @@
+if ! type _ft 2>/dev/null | grep -q 'function'; then
+	source "${ROPERDOT_DIR}/.find-and-archive-functions"
+fi
+
+if ! type re_match 2>/dev/null | grep -q 'function'; then
+	source "${ROPERDOT_DIR}/source-scripts/re-match"
+fi
+
+ff() {
+	_ff "$@"
+}
+
+fsz() {
+	_fsz "$@"
+}
+
+ft() {
+	_ft "$@"
+}
+
+ftr() {
+	_ftr "$@"
+}

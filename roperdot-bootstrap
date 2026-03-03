@@ -8,6 +8,7 @@
 # Files that are part of this package:
 # roperdot-bootstrap: this file
 # .aliases: aliases not specific to an OS
+# .find-and-archive-functions: functions for finding files/text and archiving
 # .functions: functions not specific to an OS
 # .roperdot-os-<os>: OS-specific bash configs
 # install.sh: roperdot install script
@@ -250,6 +251,7 @@ do_timing "phase 4"
 [[ -f "${ROPERDOT_DIR}/.aliases" ]] && source "${ROPERDOT_DIR}/.aliases"
 do_timing "phase 5"
 [[ -f "${ROPERDOT_DIR}/.functions" ]] && source "${ROPERDOT_DIR}/.functions"
+[[ -f "${ROPERDOT_DIR}/.find-and-archive-functions" ]] && source "${ROPERDOT_DIR}/.find-and-archive-functions"
 do_timing "phase 6"
 
 set +f

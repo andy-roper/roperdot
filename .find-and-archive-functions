@@ -1,0 +1,647 @@
+cr() {
+	if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]] ; then
+		cat <<EOT
+cr: Recursively compress files into an archive file
+Usage: cr [-p <password>] [--verbose] <archive> [filespec ...]
+
+Options:
+-p <password>   Specify the password to use when compressing the archive
+--verbose       Display the command used to compress the file
+
+If no filespec is specified, all files in the current directory will be stored
+in the archive (assuming the compressor being used accepts wildcards).
+
+If the destination archive has a recognized archive extension it will be
+created as a file of that type. Otherwise the archive will be created using
+the default archive type that is stored in the arctype environment variable.
+
+Valid values for the arctype variable are:
+
+zip, 7z, gz, tar.gz, tgz, rar, bz2, tar.bz2, tbz, tbz2, tar.Z, tar.7z, xz,
+tar.xz, txz, lzma, tar.lzma, tlz, tar.7z, and lha.
+
+If the arctype is gz, bz2, Z, xz, or lzma the files will be compressed using
+tar first.
+
+Current arctype value: $arctype
+EOT
+		return
+	fi
+	c -r "$@"
+}
+
+if command -v fd >/dev/null 2>&1; then
+	if ! command -v fdfind >/dev/null 2>&1; then
+		fdfind() { fd "$@"; }
+	fi
+
+	# _ff: finds files matching a pattern
+	# called by ff alias
+	_ff() {
+		if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
+			cat <<EOT
+ff: find files whose names match a pattern
+Usage: ff [options] <pattern> [directory]
+
+This will print a list of all files that match a pattern within the directory
+and its subdirectories. Asterisks don't have to be quoted; filename expansion
+is suppressed by the alias that calls this function.
+
+To include files which are ignored by default (e.g. .gitignore, .ignore, .env),
+use the -I option.
+
+ff uses fd to perform file searches and uses its options. See the fd man page
+for more information.
+EOT
+			return
+		fi
+		# Turn globbing back on
+		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && set +f || set +F
+
+		local searchpath pattern switches=()
+		while [[ "$1" =~ ^- ]]; do
+			switches+=("$1")
+			[[ "$1" == "--" ]] && shift && break
+			shift
+		done
+		re="^(.*)/([^/]*)$"
+		if re_match "$1" "$re"; then
+			searchpath="${re_match[1]}"
+			pattern="${re_match[2]}"
+		elif [[ -z "$2" ]]; then
+			searchpath=$(pwd)
+			pattern="$1"
+		else
+			pattern="$1"
+			searchpath="$2"
+		fi
+
+		fd -gH --no-ignore-vcs ${switches[@]} "$pattern" "$searchpath"
+	}
+
+	_fsz() {
+		if [[ "$1" == "--help" || "$1" == "-?" ]] ; then
+			cat <<EOT
+fsz: find files whose names match a pattern and print size information
+Usage: fsz [-h] [-r] [-t] <pattern> [directory]
+
+This will print sizes and filenames for all files that match a pattern within
+the directory. Asterisks don't have to be quoted; filename expansion is
+suppressed by the alias that calls this function.
+
+Options:
+-h, --human       Print human-readable sizes
+-r, --recurse     Search recursively
+-t, --total-only  Only print the total
+
+fsz uses fdfind to perform file searches.
+EOT
+			return
+		fi
+		while :; do
+			case "$1" in
+				-h|--human)   local human_readable=true; shift ;;
+				-r|--recurse) local recursing=true; shift ;;
+				-t|--total)   local total_only=true; shift ;;
+				*) break ;;
+			esac
+		done
+		local re="^(.*)/([^/]*)$"
+		if re_match "$1" "$re"; then
+			local searchpath="${re_match[1]}"
+			local pattern="${re_match[2]}"
+		elif [[ -z "$2" ]]; then
+			local searchpath=.
+			local pattern="$1"
+		else
+			pattern="$1"
+			searchpath="$2"
+		fi
+		[[ -z $pattern ]] && pattern="*"
+		if [[ -n $total_only ]]; then
+			if [[ -n $recursing ]]; then
+				if [[ -n $human_readable ]]; then
+					fdfind --no-ignore-vcs -gH "$pattern" "$searchpath" -X du -b | awk '
+					function human(x) {
+					    if (x<1000) {return x} else {x/=1024}
+					    s="KMGTEPZY";
+					    while (x>=1000 && length(s)>1)
+					        {x/=1024; s=substr(s,2)}
+					    return int(x+0.5) substr(s,1,1)
+					}
+					{ total += $1 }; END { print human(total) }'
+				else
+					fdfind --no-ignore-vcs -gH "$pattern" "$searchpath" -X du -b | awk '{ total += $1 }; END { printf "%'\''d\n", total }'
+				fi
+			else
+				if [[ -n $human_readable ]]; then
+					fdfind --no-ignore-vcs -d 1 -t f -gH "$pattern" "$searchpath" -X du -b | awk '
+					function human(x) {
+					    if (x<1000) {return x} else {x/=1024}
+					    s="KMGTEPZY";
+					    while (x>=1000 && length(s)>1)
+					        {x/=1024; s=substr(s,2)}
+					    return int(x+0.5) substr(s,1,1)
+					}
+					{ total += $1 }; END { print human(total) }'
+				else
+					fdfind --no-ignore-vcs -d 1 -t f -gH "$pattern" "$searchpath" -X du -b | awk '{ total += $1 }; END { printf "%'\''d\n", total }'
+				fi
+			fi
+		else
+			if [[ -n $recursing ]]; then
+				if [[ -n $human_readable ]]; then
+					fdfind --no-ignore-vcs -gH "$pattern" "$searchpath" -X du -b | awk '
+					function human(x) {
+					    if (x<1000) {return x} else {x/=1024}
+					    s="KMGTEPZY";
+					    while (x>=1000 && length(s)>1)
+					        {x/=1024; s=substr(s,2)}
+					    return int(x+0.5) substr(s,1,1)
+					}
+					{ total += $1; printf "%s\t", human($1); for(i=2;i<=NF;i++) printf $i" "; print "" }; END { print human(total) }'
+				else
+					fdfind --no-ignore-vcs -gH "$pattern" "$searchpath" -X du -b | awk '{ total += $1; printf "%'\''d\t", $1; for(i=2;i<=NF;i++) printf $i" "; print "" }; END { printf "%'\''d\n", total }'
+				fi
+			else
+				if [[ -n $human_readable ]]; then
+					fdfind --no-ignore-vcs -d 1 -t f -gH "$pattern" "$searchpath" -X du -b | awk '
+					function human(x) {
+					    if (x<1000) {return x} else {x/=1024}
+					    s="KMGTEPZY";
+					    while (x>=1000 && length(s)>1)
+					        {x/=1024; s=substr(s,2)}
+					    return int(x+0.5) substr(s,1,1)
+					}
+					{ total += $1; printf "%s\t", human($1); for(i=2;i<=NF;i++) printf $i" "; print "" }; END { print human(total) }'
+				else
+					fdfind --no-ignore-vcs -d 1 -t f -gH "$pattern" "$searchpath" -X du -b | awk '{ total += $1; printf "%'\''d\t", $1; for(i=2;i<=NF;i++) printf $i" "; print "" }; END { printf "%'\''d\n", total }'
+				fi
+			fi
+		fi
+	}
+
+else  # fd is not installed
+
+	# _ff: finds files matching a pattern
+	# called by ff alias
+	_ff() {
+		if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]] ; then
+			cat <<EOT
+ff: find files whose names match a pattern
+Usage: ff <pattern> [directory]
+
+This will print a list of all files that match a pattern within the a directory
+and its subdirectories. Asterisks don't have to be quoted; filename expansion
+is suppressed by the alias that calls this function.
+EOT
+			return
+		fi
+		local searchpath pattern
+		re="^(.*)/([^/]*)$"
+		if re_match "$1" "$re"; then
+			searchpath="${re_match[1]}"
+			pattern="${re_match[2]}"
+		elif [[ -z "$2" ]]; then
+			searchpath=$(pwd)
+			pattern="$1"
+		else
+			pattern="$1"
+			searchpath="$2"
+		fi
+		find "$searchpath" -iname "$pattern" 2>/dev/null
+	}
+
+	_fsz() {
+		if [[ "$1" == "--help" || "$1" == "-?" ]] ; then
+			cat <<EOT
+fsz: find files whose names match a pattern and print size information
+Usage: fsz [-h] [-r] [-t] <pattern> [directory]
+
+This will print sizes and filenames for all files that match a pattern within
+the directory. Asterisks don't have to be quoted; filename expansion is
+suppressed by the alias that calls this function.
+
+Options:
+-h, --human       Print human-readable sizes
+-r, --recurse     Search recursively
+-t, --total-only  Only print the total
+EOT
+			return
+		fi
+		while :; do
+			case "$1" in
+				-h|--human)   local human_readable=true; shift ;;
+				-r|--recurse) local recursing=true; shift ;;
+				-t|--total)   local total_only=true; shift ;;
+				*) break ;;
+			esac
+		done
+		local re="^(.*)/([^/]*)$"
+		if re_match "$1" "$re"; then
+			local searchpath="${re_match[1]}"
+			local pattern="${re_match[2]}"
+		elif [[ -z "$2" ]]; then
+			local searchpath=.
+			local pattern="$1"
+		else
+			pattern="$1"
+			searchpath="$2"
+		fi
+		[[ -z $pattern ]] && pattern="*"
+		if [[ -n $total_only ]]; then
+			if [[ -n $recursing ]]; then
+				if [[ -n $human_readable ]]; then
+					find "$searchpath" -iname "$pattern" -print0 | xargs -0 du -b | awk '
+					function human(x) {
+					    if (x<1000) {return x} else {x/=1024}
+					    s="KMGTEPZY";
+					    while (x>=1000 && length(s)>1)
+					        {x/=1024; s=substr(s,2)}
+					    return int(x+0.5) substr(s,1,1)
+					}
+					{ total += $1 }; END { print human(total) }'
+				else
+					find "$searchpath" -iname "$pattern" -print0 | xargs -0 du -b | awk '{ total += $1 }; END { printf "%'\''d\n", total }'
+				fi
+			else
+				if [[ -n $human_readable ]]; then
+					find "$searchpath" -maxdepth 1 -type f -iname "$pattern" -print0 | xargs -0 du -b | awk '
+					function human(x) {
+					    if (x<1000) {return x} else {x/=1024}
+					    s="KMGTEPZY";
+					    while (x>=1000 && length(s)>1)
+					        {x/=1024; s=substr(s,2)}
+					    return int(x+0.5) substr(s,1,1)
+					}
+					{ total += $1 }; END { print human(total) }'
+				else
+					find "$searchpath" -maxdepth 1 -type f -iname "$pattern" -print0 | xargs -0 du -b | awk '{ total += $1 }; END { printf "%'\''d\n", total }'
+				fi
+			fi
+		else
+			if [[ -n $recursing ]]; then
+				if [[ -n $human_readable ]]; then
+					find "$searchpath" -iname "$pattern" -print0 | xargs -0 du -b | awk '
+					function human(x) {
+					    if (x<1000) {return x} else {x/=1024}
+					    s="KMGTEPZY";
+					    while (x>=1000 && length(s)>1)
+					        {x/=1024; s=substr(s,2)}
+					    return int(x+0.5) substr(s,1,1)
+					}
+					{ total += $1; printf "%s\t", human($1); for(i=2;i<=NF;i++) printf $i" "; print "" }; END { print human(total) }'
+				else
+					find "$searchpath" -iname "$pattern" -print0 | xargs -0 du -b | awk '{ total += $1; printf "%'\''d\t", $1; for(i=2;i<=NF;i++) printf $i" "; print "" }; END { printf "%'\''d\n", total }'
+				fi
+			else
+				if [[ -n $human_readable ]]; then
+					find "$searchpath" -maxdepth 1 -type f -iname "$pattern" -print0 | xargs -0 du -b | awk '
+					function human(x) {
+					    if (x<1000) {return x} else {x/=1024}
+					    s="KMGTEPZY";
+					    while (x>=1000 && length(s)>1)
+					        {x/=1024; s=substr(s,2)}
+					    return int(x+0.5) substr(s,1,1)
+					}
+					{ total += $1; printf "%s\t", human($1); for(i=2;i<=NF;i++) printf $i" "; print "" }; END { print human(total) }'
+				else
+					find "$searchpath" -maxdepth 1 -type f -iname "$pattern" -print0 | xargs -0 du -b | awk '{ total += $1; printf "%'\''d\t", $1; for(i=2;i<=NF;i++) printf $i" "; print "" }; END { printf "%'\''d\n", total }'
+				fi
+			fi
+		fi
+	}
+fi  # fd if
+
+if command -v ag >/dev/null 2>&1; then
+	# ft: finds files in the current directory whose contents contain the specified patttern
+	_ft() {
+		if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]] ; then
+			cat <<EOT
+ft: search files for a pattern
+Usage: ft [options] <pattern> [filespec ...]
+
+ft will do a case-insensitive text search using The Silver Searcher to print
+lines in files in the current directory or a directory referenced in a filespec
+that match the pattern. If no filespec is provided, all files in the current
+directory will be searched. If one or more filespecs are provided, only files
+matching those filespecs will be searched.
+
+The Silver Searcher ignores files specified in .gitignore and .hgignore by default.
+To enable searching usually ignored files (such as the contents of the lib
+directory in a node application), either use the unrestricted switch or set the
+ROPERDOT_FT_ALL environment variable.
+
+Options
+-a or --all        Search all files including ignored files
+-c                 Search for pattern in a case-sensitive fashion
+-e                 Exclude hidden files from being searched
+-f or --filenames  Print only the filenames that match (don't print the matching
+                   lines)
+-s                 Sort output
+
+Examples:
+ft perl
+ft perl *.pl
+ft perl ~/roperdot
+ft perl ~/roperdot/*.pl
+EOT
+			return
+		fi
+		# Turn globbing back on
+		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && set +f || set +F
+
+		local type_flag filename_flag case_flag=--ignore-case sort_output
+		while [[ "$1" =~ ^- ]]; do
+			[[ "$1" == "--" ]] && shift && break
+			[[ "$1" == "--all" ]] && type_flag=--unrestricted && shift && continue
+			[[ "$1" == "--filenames" ]] && filename_flag=--files-with-matches && shift && continue
+			[[ "$1" =~ [aA] ]] && type_flag=--unrestricted
+			[[ "$1" =~ [cC] ]] && unset case_flag
+			[[ "$1" =~ [eE] ]] && type_flag=NO_HIDDEN
+			[[ "$1" =~ [fF] ]] && filename_flag=--files-with-matches
+			[[ "$1" =~ [sS] ]] && sort_output=true
+			shift
+		done
+		if [[ -z "$type_flag" ]]; then
+			if [[ -n "$ROPERDOT_FT_ALL" ]]; then
+				type_flag=--unrestricted
+			else
+				type_flag=--hidden
+			fi
+		elif [[ "$type_flag" = "NO_HIDDEN" ]]; then
+			unset type_flag
+		fi
+		if [[ $# -eq 1 ]]; then
+			if [[ -n "$sort_output" ]]; then
+				ag --nogroup --norecurse --color $case_flag $type_flag $filename_flag "$1" | sort
+			else
+				ag --nogroup --norecurse $case_flag $type_flag $filename_flag "$1"
+			fi
+		else
+			local pattern="$1"
+			shift
+			while [[ $# -gt 0 ]]; do
+				if [[ -d "$1" ]]; then
+					ag --nogroup --norecurse $case_flag $type_flag $filename_flag "$pattern" "$1"
+				else
+					if re_match "$1" "^(.*)/(.*?)$"; then
+						local file_pattern="${re_match[2]}"
+						local target_dir="${re_match[1]}"
+					else
+						local file_pattern="$1"
+					fi
+					# Replace "." with "\." and "*" with ".*"
+					file_pattern="${file_pattern/\./\\.}"
+					file_pattern="${file_pattern/\*/.*}"
+					if [[ -n "$target_dir" ]]; then
+						if [[ -n "$sort_output" ]]; then
+							ag --nogroup --norecurse --color $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern" "$target_dir" | sort
+						else
+							ag --nogroup --norecurse $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern" "$target_dir"
+						fi
+					else
+						if [[ -n "$sort_output" ]]; then
+							ag --nogroup --norecurse --color $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern" | sort
+						else
+							ag --nogroup --norecurse $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern"
+						fi
+					fi
+				fi
+				shift
+			done
+		fi
+	}
+
+	_ftr() {
+		if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]] ; then
+			cat <<EOT
+ftr: recursively search files for a pattern
+Usage: ftr [options] <pattern> [filespec ...]
+
+ftr will do a recursive, case-insensitive text search using The Silver Searcher
+to print lines in files in the current directory that match the pattern. If no
+filespec is provided, all files in the current directory will be searched. If
+one or more filespecs are provided, only files matching those filespecs will be
+searched.
+
+The Silver Searcher ignores files specified in .gitignore and .hgignore by default.
+To enable searching usually ignored files (such as the contents of the lib
+directory in a node application), either use the unrestricted switch or set the
+ROPERDOT_FT_ALL environment variable.
+
+Options
+-a or --all        Search all files including ignored files
+-c                 Search for pattern in a case-sensitive fashion
+-e                 Exclude hidden files from being searched
+-f or --filenames  Print only the filenames that match (don't print the matching
+                   lines)
+-s                 Sort output
+
+Examples:
+ftr perl
+ftr perl *.pl
+ftr perl ~/roperdot
+ftr perl ~/roperdot/*.pl
+EOT
+		return
+		fi
+
+		# Turn globbing back on
+		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && set +f || set +F
+		local type_flag filename_flag case_flag=--ignore-case sort_output
+		while [[ "$1" =~ ^- ]]; do
+			[[ "$1" == "--" ]] && shift && break
+			[[ "$1" == "--all" ]] && type_flag=--unrestricted && shift && continue
+			[[ "$1" == "--filenames" ]] && filename_flag=--files-with-matches && shift && continue
+			[[ "$1" =~ [aA] ]] && type_flag=--unrestricted
+			[[ "$1" =~ [cC] ]] && unset case_flag
+			[[ "$1" =~ [eE] ]] && type_flag=--skip-hidden
+			[[ "$1" =~ [fF] ]] && filename_flag=--files-with-matches
+			[[ "$1" =~ [sS] ]] && sort_output=true
+			shift
+		done
+		if [[ -z "$type_flag" ]]; then
+			if [[ -n "$ROPERDOT_FT_ALL" ]]; then
+				type_flag=--unrestricted
+			else
+				type_flag=--hidden
+			fi
+		fi
+		if [[ $# -eq 1 ]]; then
+			if [[ -n "$sort_output" ]]; then
+				ag --nogroup --color $case_flag $type_flag $filename_flag "$1" | sort
+			else
+				ag --nogroup --color $case_flag $type_flag $filename_flag "$1"
+			fi
+		else
+			local pattern="$1"
+			shift
+			while [[ $# -gt 0 ]] ; do
+				if [[ -d "$1" ]]; then
+					if [[ -n "$sort_output" ]]; then
+						ag --nogroup --color $case_flag $type_flag $filename_flag "$pattern" "$1" | sort
+					else
+						ag --nogroup --color $case_flag $type_flag $filename_flag "$pattern" "$1"
+					fi
+				else
+					if re_match "$1" "^(.*)/(.*?)$"; then
+						local file_pattern="${re_match[2]}"
+						local target_dir="${re_match[1]}"
+					else
+						local file_pattern="$1"
+					fi
+					# Replace "." with "\." and "*" with ".*"
+					file_pattern="${file_pattern/\./\\.}"
+					file_pattern="${file_pattern/\*/.*}"
+					if [[ -n "$target_dir" ]]; then
+						if [[ ! -d "$target_dir" ]]; then
+							echo "Error: directory not found"
+							return
+						fi
+						if [[ -n "$sort_output" ]]; then
+							ag --nogroup --color $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern" "$target_dir" | sort
+						else
+							ag --nogroup --color $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern" "$target_dir"
+						fi
+					else
+						if [[ -n "$sort_output" ]]; then
+							ag --nogroup --color $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern" | sort
+						else
+							ag --nogroup --color $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern"
+						fi
+					fi
+				fi
+				shift
+			done
+		fi
+	}
+else
+	# ft: finds files in the current directory whose contents contain the specified patttern
+	_ft() {
+		if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]] ; then
+			cat <<EOT
+ft: search files for a pattern
+Usage: ft [options] <pattern> [filespec ...]
+
+ft will do a case-insensitive text search using grep to print lines in files in
+the current directory or a directory referenced in a filespec that match the
+pattern. If no filespec is provided, all files in the current directory will be
+searched. If one or more filespecs are provided, only files matching those
+filespecs will be searched.
+
+Options
+-c                 Search for pattern in a case-sensitive fashion
+-f or --filenames  Print only the filenames that match (don't print the matching
+                   lines)
+
+Examples:
+ft perl
+ft perl *.pl
+ft perl ~/roperdot
+ft perl ~/roperdot/*.pl
+EOT
+			return
+		fi
+
+		# Turn globbing back on
+		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && set +f || set +F
+
+		local filename_flag case_flag=-i
+		while [[ "$1" =~ ^- ]]; do
+			[[ "$1" == "--" ]] && shift && break
+			[[ "$1" == "--filenames" ]] && filename_flag=--files-with-matches && shift && continue
+			[[ "$1" =~ [fF] ]] && filename_flag=--files-with-matches
+			[[ "$1" =~ [cC] ]] && case_flag=
+			shift
+		done
+
+		if [[ $# -eq 1 ]] ; then
+			grep $filename_flag -isFHn "$1" ./* .*
+		else
+			local pattern=$1
+			shift
+			while [[ $# -gt 0 ]]; do
+				if [[ -d "$1" ]]; then
+					grep $filename_flag $case_flag -FHn -d skip "$pattern" "$1"/*
+				else
+					grep $filename_flag $case_flag -FHn -d skip "$pattern" "$1"
+				fi
+				shift
+			done
+		fi
+		# Force return of 0 code to overcome zsh returning a spurious code of 2 when grepping
+		return 0
+	}
+
+	_ftr() {
+		if [[ $# -eq 0 || "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]] ; then
+			cat <<EOT
+ftr: recursively search files for a pattern
+Usage: ftr [options] <pattern> [filespec ...]
+
+ftr will do a recursive, case-insensitive text search using grep to print lines
+in files in the current directory that match the pattern. If no filespec is
+provided, all files in the current directory will be searched. If one or more
+filespecs are provided, only files matching those filespecs will be searched.
+
+Options
+-c                 Search for pattern in a case sensitive fashion
+-f or --filenames  Print only the filenames that match (don't print the matching
+                   lines)
+
+Examples:
+ftr perl
+ftr perl *.pl
+ftr perl ~/roperdot
+ftr perl ~/roperdot/*.pl
+EOT
+			return
+		fi
+
+		# Turn globbing back on
+		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && set +f || set +F
+
+		local filename_flag case_flag=-i
+		while [[ "$1" =~ ^- ]]; do
+			[[ "$1" == "--" ]] && shift && break
+			[[ "$1" == "--filenames" ]] && filename_flag=--files-with-matches && shift && continue
+			[[ "$1" =~ [fF] ]] && filename_flag=--files-with-matches
+			[[ "$1" =~ [cC] ]] && case_flag=
+			shift
+		done
+
+		# Test for Mac (darwin) below since Mac's grep requires the last parameter
+		# to be a directory when -r is used
+		if [[ $# -eq 1 ]]; then
+			if [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
+				grep -r $case_flag $filename_flag --include="*" -FHn "$1" .
+			else
+				grep -r $case_flag $filename_flag --include="*" -FHn "$1"
+			fi
+		else
+			local pattern="$1"
+			shift
+			while [[ $# -gt 0 ]]; do
+				if [[ -d "$1" ]]; then
+					grep -r $case_flag $filename_flag -FHn "$pattern" "$1"
+				elif [[ "$1" =~ / ]]; then
+					local dir="${1%/*}"
+					local filespec="${1##*/}"
+					if [[ ! -d "$dir" ]]; then
+						echo "Error: directory not found"
+						return
+					fi
+					grep -r $case_flag $filename_flag --include="$filespec" -FHn "$pattern" "$dir"
+				else
+					if [ "$ROPERDOT_OS_ENV" = "darwin" ]; then
+						grep -r $case_flag $filename_flag --include="$1" -FHn "$pattern" .
+					else
+						grep -r $case_flag $filename_flag --include="$1" -FHn "$pattern"
+					fi
+				fi
+				shift
+			done
+		fi
+	}
+fi

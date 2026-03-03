@@ -184,6 +184,13 @@
 	    "groups": ["work"]
 	},
 	{
+		"app": "Go",
+		"binary": "go",
+		"package": "go",
+		"sudo_not_required": true,
+		"desc": "Tool for managing Go source code"
+	},
+	{
 	    "app": "Oracle Instant Client",
 	    "presence_command": "[[ -d /opt/oracle/instantclient_21_1 ]]",
 	    "install_script": "install-oracle-instant-client",

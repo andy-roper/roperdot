@@ -85,6 +85,24 @@ get_parent_branch() {
     echo "$candidates" | awk '{print $2}' | gum choose --header "Select parent branch:"
 }
 
+get_default_branch() {
+    # Try the remote HEAD pointer first
+    local branch
+    branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
+
+    # Fall back: ask the remote directly (requires network)
+    if [[ -z "$branch" ]]; then
+        branch=$(git remote show origin 2>/dev/null | awk '/HEAD branch/ {print $NF}')
+    fi
+
+    # Last resort: check if master or main exist locally
+    if [[ -z "$branch" ]]; then
+        branch=$(git branch --format='%(refname:short)' | grep -m1 -E '^(main|master)$')
+    fi
+
+    echo "${branch:-master}"  # ultimate fallback
+}
+
 # Prompt for commit message
 get_commit_message() {
     local branch="$1"
@@ -752,24 +770,36 @@ EOF
     esac
 }
 
-action_create_branch() {
-	local branch_name
-	if command -v gum >/dev/null 2>&1; then
-	    if ! branch_name=$(gum input --placeholder="Enter branch name"); then
-	        echo "Branch creation cancelled" >&2
-	        return 1
-	    fi
-	else
-		echo "Enter branch name:" >&2
-	    if ! read -r branch_name; then
-	        echo "Creation cancelled" >&2
-	        return 1
-	    fi
+action_create_branch_from_master() {
+    local branch_name
+    if command -v gum >/dev/null 2>&1; then
+        if ! branch_name=$(gum input --placeholder="Enter branch name"); then
+            echo "Branch creation cancelled" >&2
+            return 1
+        fi
+    else
+        echo "Enter branch name:" >&2
+        if ! read -r branch_name; then
+            echo "Creation cancelled" >&2
+            return 1
+        fi
     fi
-    [[ -n "$branch_name" ]] && echo "git checkout -b $branch_name"
+
+    if [[ -n "$branch_name" ]]; then
+        local default_branch=$(get_default_branch)
+        local old_branch=$(get_current_branch)
+        local has_changes=$(git status --porcelain)
+        if [[ -n "$has_changes" ]]; then
+            echo "Stashing changes in $old_branch" >&2
+            echo "Note: do 'git stash pop' on branch $old_branch to restore your changes" >&2
+            echo "git stash && git checkout $default_branch && git pull && git checkout -b $branch_name"
+        else
+            echo "git checkout $default_branch && git pull && git checkout -b $branch_name"
+        fi
+    fi
 }
 
-action_create_and_push_branch() {
+action_create_branch_from_master_and_push() {
 	local branch_name
 	if command -v gum >/dev/null 2>&1; then
 	    if ! branch_name=$(gum input --placeholder="Enter branch name"); then
@@ -777,13 +807,25 @@ action_create_and_push_branch() {
 	        return 1
 	    fi
 	else
-		echo "Enter branch name:" >&2
+		echo "Enter branch name:" >&2WW
 	    if ! read -r branch_name; then
 	        echo "Creation cancelled" >&2
 	        return 1
 	    fi
     fi
     [[ -n "$branch_name" ]] && echo "git checkout -b $branch_name && git push -u origin $branch_name"
+    if [[ -n "$branch_name" ]]; then
+        local default_branch=$(get_default_branch)
+        local old_branch=$(get_current_branch)
+        local has_changes=$(git status --porcelain)
+        if [[ -n "$has_changes" ]]; then
+            echo "Stashing changes in $old_branch" >&2
+            echo "Note: do 'git stash pop' on branch $old_branch to restore your changes" >&2
+            echo "git stash && git checkout $default_branch && git pull && git checkout -b $branch_name && git push -u origin $branch_name"
+        else
+            echo "git checkout $default_branch && git pull && git push -u origin $branch_name && git checkout -b $branch_name"
+        fi
+    fi
 }
 
 # Action: Delete branch
@@ -854,8 +896,10 @@ if ! git rev-parse --git-dir > /dev/null 2>&1; then
 	exit 1
 fi
 
-if [[ -z "$GIT_WORKING_DIRS" ]]; then
-	cat <<EOT
+repo_root=$(git rev-parse --show-toplevel)
+if [[ ! "$repo_root" == *"/roperdot"* ]]; then
+	if [[ -z "$GIT_WORKING_DIRS" ]]; then
+		cat <<EOT
 Warning: GIT_WORKING_DIRS is not set
 
 You should set this environment variable to reference your working directories
@@ -865,13 +909,13 @@ for example:
 
 export GIT_WORKING_DIRS="interfaces/wms/inbound/wms-inbound scmerp-util"
 EOT
-else
-	echo "Using GIT_WORKING_DIRS: ${GIT_WORKING_DIRS}"
+	else
+		echo "Using GIT_WORKING_DIRS: ${GIT_WORKING_DIRS}"
+	fi
 fi
 
 current_branch=$(get_current_branch)
 
-repo_root=$(git rev-parse --show-toplevel)
 if [[ "$repo_root" == *"/roperdot"* ]]; then
     admin_options="Squash commits
 Force sync with remote"
@@ -904,8 +948,8 @@ if command -v gumx &>/dev/null; then
         "Merge from parent branch (fetch, merge)"
         "Merge to parent branch (checkout parent, merge current)"
         "Fetch file from parent branch"
-        "Create branch"
-        "Create and push branch"
+        "Create branch from master"
+        "Create branch from master and push"
 		"Delete branch"
 	)
 
@@ -940,8 +984,8 @@ Clear stashes
 Merge from parent branch (fetch, merge)
 Merge to parent branch (checkout parent, merge current)
 Fetch file from parent branch
-Create branch
-Create and push branch
+Create branch from master
+Create branch from master and push
 Delete branch${admin_options:+
 ${admin_options}}
 EOF
@@ -1013,11 +1057,11 @@ case "$action" in
     "Fetch file"*)
         command=$(action_fetch_file)
         ;;
-    "Create branch")
-		command=$(action_create_branch)
+    "Create branch from master")
+		command=$(action_create_branch_from_master)
 		;;
-    "Create and push branch")
-		command=$(action_create_and_push_branch)
+    "Create branch from master and push")
+		command=$(action_create_branch_from_master_and_push)
 		;;
     "Delete branch"*)
         command=$(action_delete_branch)

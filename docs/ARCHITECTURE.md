@@ -5,72 +5,73 @@
 ```bash
 roperdot/
 ├── Core Configuration:
-├── .aliases                    # Cross-platform aliases
-├── .bash_prompt                # bash prompt
-├── .functions                  # Cross-platform functions
-├── .inputrc                    # Readline key bindings
-├── .roperdot-os-*              # OS-specific settings
-├── .zsh-suffix-aliases         # Associates file extensions with commands in zsh
-├── define-colors               # Defines shell colors
-├── roperdot-bootstrap          # Core bootstrap script loaded by shells
+├── .aliases                     # Cross-platform aliases
+├── .bash_prompt                 # bash prompt
+├── .find-and-archive-functions  # Functions for finding files/text and archiving
+├── .functions                   # Cross-platform functions
+├── .inputrc                     # readline key bindings
+├── .roperdot-os-*               # OS-specific settings
+├── .zsh-suffix-aliases          # Associates file extensions with commands in zsh
+├── define-colors                # Defines shell colors
+├── roperdot-bootstrap           # Core bootstrap script loaded by shells
 ├── 
 ├── Scripts and Binaries:
-├── apps-and-packages/          # Included/modified supporting applications
-├── bin/                        # Portable scripts (Perl, Python, shell)
-├── examples/                   # Example scripts
-├── os-bin/                     # OS-specific scripts
-├── source-scripts/             # Utility scripts (sourced in other scripts)
+├── apps-and-packages/           # Included/modified supporting applications
+├── bin/                         # Portable scripts (Perl, Python, shell)
+├── examples/                    # Example scripts
+├── os-bin/                      # OS-specific scripts
+├── source-scripts/              # Utility scripts (sourced in other scripts)
 ├── 
 ├── Installation System:
-├── install.sh                  # Main installation script
-├── install-apps                # Application installer script
-├── install-profiles/           # Installation profiles
-├── ├── standard/               # Default installation profile
-├── │   ├── *-shell-apps.json   # Shell applications by OS
-├── │   ├── *-gui-apps.json     # GUI applications by OS
-├── │   ├── app-scripts/        # Scripts for driving applications
-├── │   ├── bin-scripts/        # Scripts to copy into bin-bash and bin-zsh
-├── │   ├── config-files/       # Application configuration files
-├── │   └── installs/           # Installation scripts for apps
+├── install.sh                   # Main installation script
+├── install-apps                 # Application installer script
+├── install-profiles/            # Installation profiles
+├── ├── standard/                # Default installation profile
+├── │   ├── *-shell-apps.json    # Shell applications by OS
+├── │   ├── *-gui-apps.json      # GUI applications by OS
+├── │   ├── app-scripts/         # Scripts for driving applications
+├── │   ├── bin-scripts/         # Scripts to copy into bin-bash and bin-zsh
+├── │   ├── config-files/        # Application configuration files
+├── │   └── installs/            # Installation scripts for apps
 ├── 
 ├── Configuration:
 ├── config/
-├── ├── apps/                   # App configuration files
-├── ├── color-schemes/          # Unified color schemes
-├── └── help-definitions/       # Help text for aliases, functions and binaries
+├── ├── apps/                    # App configuration files
+├── ├── color-schemes/           # Unified color schemes
+├── └── help-definitions/        # Help text for aliases, functions and binaries
 ```
 
 ### Files in $HOME
 
 ```bash
-.bash_history                   # bash command history
-.bashrc                         # bash configuration and initialization
+.bash_history                    # bash command history
+.bashrc                          # bash configuration and initialization
 .config
-.fdignore                       # Files and directories for fd to ignore when searching
-.lesshst                        # Less pager command history
-.viminfo                        # Vim editor session info and history
-.vimrc                          # Vim editor configuration
-.z.*                            # Z jump-around command history database
-.zshrc                          # zsh configuration and initialiation
-├── roperdot/
-│   ├── .inputrc                # Override for readline key bindings
-│   ├── app-bin-bash/           # Application scripts for bash (created during install)
-│   ├── app-bin-zsh/            # Application scripts for zsh (created during install)
-│   ├── bin-bash/               # bash specific scripts (created during install)
-│   ├── bin-zsh/                # zsh specific scripts (created during install)
-│   ├── configure-prompt        # Optional override for prompt configuration
-│   ├── define-colors           # Shell color definition overrides
-|   ├── extra-bin/              # Additional utilities
-│   ├── fzf.bash                # fzf fuzzy finder integration for bash
-│   ├── fzf.zsh                 # fzf fuzzy finder integration for zsh
-│   ├── roperdot-help.txt       # Help text for roperdot commands; searched with help 
-│   │                           # command
-│   ├── roperdot-info.txt       # Post-install info; disable display at shell start by 
-│   │                           # removing the file or setting ROPERDOT_SUPPRESS_INFO env 
-│   │                           # var to true
-│   ├── roperdot-loader         # Defines ROPERDOT env vars and loads roperdot-bootstrap
-│   ├── roperdot-os-functions   # OS-specific functions; created during installation
-roperdot-install.log            # roperdot installation log
+.fdignore                        # Files and directories for fd to ignore when searching
+.lesshst                         # Less pager command history
+.viminfo                         # Vim editor session info and history
+.vimrc                           # Vim editor configuration
+.z.*                             # Z jump-around command history database
+.zshrc                           # zsh configuration and initialiation
+├── .config/roperdot/
+│   ├── .inputrc                 # Override for readline key bindings
+│   ├── app-bin-bash/            # Application scripts for bash (created during install)
+│   ├── app-bin-zsh/             # Application scripts for zsh (created during install)
+│   ├── bin-bash/                # bash specific scripts (created during install)
+│   ├── bin-zsh/                 # zsh specific scripts (created during install)
+│   ├── configure-prompt         # Optional override for prompt configuration
+│   ├── define-colors            # Shell color definition overrides
+|   ├── extra-bin/               # Additional utilities
+│   ├── fzf.bash                 # fzf fuzzy finder integration for bash
+│   ├── fzf.zsh                  # fzf fuzzy finder integration for zsh
+│   ├── roperdot-help.txt        # Help text for roperdot commands; searched with help 
+│   │                            # command
+│   ├── roperdot-info.txt        # Post-install info; disable display at shell start by 
+│   │                            # removing the file or setting ROPERDOT_SUPPRESS_INFO
+│   │                            # env var to true
+│   ├── roperdot-loader          # Defines ROPERDOT env vars and loads roperdot-bootstrap
+│   ├── roperdot-os-functions    # OS-specific functions; created during installation
+roperdot-install.log             # roperdot installation log
 ```
 
 ## Starship Prompt
