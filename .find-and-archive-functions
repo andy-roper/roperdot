@@ -335,6 +335,7 @@ ROPERDOT_FT_ALL environment variable.
 Options
 -a or --all        Search all files including ignored files
 -c                 Search for pattern in a case-sensitive fashion
+--color            Preserve colors when redirecting or piping
 -e                 Exclude hidden files from being searched
 -f or --filenames  Print only the filenames that match (don't print the matching
                    lines)
@@ -351,10 +352,18 @@ EOT
 		# Turn globbing back on
 		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && set +f || set +F
 
+		local color_flag
+		if [[ -t 1 ]]; then
+		    color_flag=--color    # stdout is a terminal => use color
+		else
+		    color_flag=--nocolor  # stdout is redirected => strip color
+		fi
+
 		local type_flag filename_flag case_flag=--ignore-case sort_output
 		while [[ "$1" =~ ^- ]]; do
 			[[ "$1" == "--" ]] && shift && break
 			[[ "$1" == "--all" ]] && type_flag=--unrestricted && shift && continue
+			[[ "$1" == "--color" ]] && color_flag=--color
 			[[ "$1" == "--filenames" ]] && filename_flag=--files-with-matches && shift && continue
 			[[ "$1" =~ [aA] ]] && type_flag=--unrestricted
 			[[ "$1" =~ [cC] ]] && unset case_flag
@@ -372,18 +381,19 @@ EOT
 		elif [[ "$type_flag" = "NO_HIDDEN" ]]; then
 			unset type_flag
 		fi
+
 		if [[ $# -eq 1 ]]; then
 			if [[ -n "$sort_output" ]]; then
-				ag --nogroup --norecurse --color $case_flag $type_flag $filename_flag "$1" | sort
+				ag --nogroup --norecurse --color $case_flag $type_flag $filename_flag $color_flag "$1" | sort
 			else
-				ag --nogroup --norecurse $case_flag $type_flag $filename_flag "$1"
+				ag --nogroup --norecurse $case_flag $type_flag $filename_flag $color_flag "$1"
 			fi
 		else
 			local pattern="$1"
 			shift
 			while [[ $# -gt 0 ]]; do
 				if [[ -d "$1" ]]; then
-					ag --nogroup --norecurse $case_flag $type_flag $filename_flag "$pattern" "$1"
+					ag --nogroup --norecurse $case_flag $type_flag $filename_flag $color_flag "$pattern" "$1"
 				else
 					if re_match "$1" "^(.*)/(.*?)$"; then
 						local file_pattern="${re_match[2]}"
@@ -396,15 +406,15 @@ EOT
 					file_pattern="${file_pattern/\*/.*}"
 					if [[ -n "$target_dir" ]]; then
 						if [[ -n "$sort_output" ]]; then
-							ag --nogroup --norecurse --color $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern" "$target_dir" | sort
+							ag --nogroup --norecurse --color $case_flag $type_flag $filename_flag $color_flag --file-search-regex "$file_pattern\$" "$pattern" "$target_dir" | sort
 						else
-							ag --nogroup --norecurse $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern" "$target_dir"
+							ag --nogroup --norecurse $case_flag $type_flag $filename_flag $color_flag --file-search-regex "$file_pattern\$" "$pattern" "$target_dir"
 						fi
 					else
 						if [[ -n "$sort_output" ]]; then
-							ag --nogroup --norecurse --color $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern" | sort
+							ag --nogroup --norecurse --color $case_flag $type_flag $filename_flag $color_flag --file-search-regex "$file_pattern\$" "$pattern" | sort
 						else
-							ag --nogroup --norecurse $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern"
+							ag --nogroup --norecurse $case_flag $type_flag $filename_flag $color_flag --file-search-regex "$file_pattern\$" "$pattern"
 						fi
 					fi
 				fi
@@ -433,6 +443,7 @@ ROPERDOT_FT_ALL environment variable.
 Options
 -a or --all        Search all files including ignored files
 -c                 Search for pattern in a case-sensitive fashion
+--color            Preserve colors when redirecting or piping
 -e                 Exclude hidden files from being searched
 -f or --filenames  Print only the filenames that match (don't print the matching
                    lines)
@@ -449,10 +460,19 @@ EOT
 
 		# Turn globbing back on
 		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && set +f || set +F
+
+		local color_flag
+		if [[ -t 1 ]]; then
+		    color_flag=--color    # stdout is a terminal => use color
+		else
+		    color_flag=--nocolor  # stdout is redirected => strip color
+		fi
+
 		local type_flag filename_flag case_flag=--ignore-case sort_output
 		while [[ "$1" =~ ^- ]]; do
 			[[ "$1" == "--" ]] && shift && break
 			[[ "$1" == "--all" ]] && type_flag=--unrestricted && shift && continue
+			[[ "$1" == "--color" ]] && color_flag=--color
 			[[ "$1" == "--filenames" ]] && filename_flag=--files-with-matches && shift && continue
 			[[ "$1" =~ [aA] ]] && type_flag=--unrestricted
 			[[ "$1" =~ [cC] ]] && unset case_flag
@@ -470,9 +490,9 @@ EOT
 		fi
 		if [[ $# -eq 1 ]]; then
 			if [[ -n "$sort_output" ]]; then
-				ag --nogroup --color $case_flag $type_flag $filename_flag "$1" | sort
+				ag --nogroup --color $case_flag $type_flag $filename_flag $color_flag "$1" | sort
 			else
-				ag --nogroup --color $case_flag $type_flag $filename_flag "$1"
+				ag --nogroup --color $case_flag $type_flag $filename_flag $color_flag "$1"
 			fi
 		else
 			local pattern="$1"
@@ -480,9 +500,9 @@ EOT
 			while [[ $# -gt 0 ]] ; do
 				if [[ -d "$1" ]]; then
 					if [[ -n "$sort_output" ]]; then
-						ag --nogroup --color $case_flag $type_flag $filename_flag "$pattern" "$1" | sort
+						ag --nogroup --color $case_flag $type_flag $filename_flag $color_flag "$pattern" "$1" | sort
 					else
-						ag --nogroup --color $case_flag $type_flag $filename_flag "$pattern" "$1"
+						ag --nogroup --color $case_flag $type_flag $filename_flag $color_flag "$pattern" "$1"
 					fi
 				else
 					if re_match "$1" "^(.*)/(.*?)$"; then
@@ -500,15 +520,15 @@ EOT
 							return
 						fi
 						if [[ -n "$sort_output" ]]; then
-							ag --nogroup --color $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern" "$target_dir" | sort
+							ag --nogroup --color $case_flag $type_flag $filename_flag $color_flag --file-search-regex "$file_pattern\$" "$pattern" "$target_dir" | sort
 						else
-							ag --nogroup --color $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern" "$target_dir"
+							ag --nogroup --color $case_flag $type_flag $filename_flag $color_flag --file-search-regex "$file_pattern\$" "$pattern" "$target_dir"
 						fi
 					else
 						if [[ -n "$sort_output" ]]; then
-							ag --nogroup --color $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern" | sort
+							ag --nogroup --color $case_flag $type_flag $filename_flag $color_flag --file-search-regex "$file_pattern\$" "$pattern" | sort
 						else
-							ag --nogroup --color $case_flag $type_flag $filename_flag --file-search-regex "$file_pattern\$" "$pattern"
+							ag --nogroup --color $case_flag $type_flag $filename_flag $color_flag --file-search-regex "$file_pattern\$" "$pattern"
 						fi
 					fi
 				fi
