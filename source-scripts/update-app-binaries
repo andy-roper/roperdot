@@ -187,8 +187,8 @@ create_text_editor_script () {
 #!/usr/bin/env bash
 if [[ -n "\$VSCODE_INJECTION" || "\$TERM_PROGRAM" == "vscode" || -n "\$VSCODE_PID" ]]; then
     code "\$@" &
-elif [[ "\$TERMINAL_EMULATOR" == "JetBrains-JediTerm" ]]; then
-    idea "\$@" &
+elif [[ "\$TERMINAL_EMULATOR" == "JetBrains-JediTerm" && -n "\$IDEA_BIN" ]]; then
+    "\$IDEA_BIN" "\$@" &
 else
     ( $bash_script "\$@" & )
 fi
@@ -199,8 +199,8 @@ EOT
 #!/usr/bin/env zsh
 if [[ -n "\$VSCODE_INJECTION" || "\$TERM_PROGRAM" == "vscode" || -n "\$VSCODE_PID" ]]; then
     code "\$@" &
-elif [[ "\$TERMINAL_EMULATOR" == "JetBrains-JediTerm" ]]; then
-    idea "\$@" &
+elif [[ "\$TERMINAL_EMULATOR" == "JetBrains-JediTerm" && -n "\$IDEA_BIN" ]]; then
+    "\$IDEA_BIN" "\$@" &
 else
     ( $zshScript "\$@" & )
 fi

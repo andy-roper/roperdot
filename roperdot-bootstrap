@@ -597,6 +597,19 @@ for oracle_dir in /opt/oracle/instantclient_*; do
 done
 unset oracle_dir
 
+# IntelliJ IDEA
+if [[ "$ROPERDOT_DESKTOP_ENV" == "windows" ]]; then
+	export IDEA_BIN=$(find "/mnt/c/Program Files/JetBrains" -maxdepth 3 -type f -name "idea64.exe" 2>/dev/null | head -1)
+elif [[ "$ROPERDOT_DESKTOP_ENV" == "mac" ]]; then
+	if [[ -d "/Applications/IntelliJ IDEA" ]]; then
+		export IDEA_BIN="/Applications/IntelliJ IDEA.app/Contents/MacOS/idea"
+	elif [[ -d "/Applications/IntelliJ IDEA CE" ]]; then
+		export IDEA_BIN="/Applications/IntelliJ IDEA CE.app/Contents/MacOS/idea"
+	fi
+else
+	command -v idea >/dev/null 2>&1 && export IDEA_BIN=idea
+fi
+
 # .NET environment
 if command -v dotnet >/dev/null 2>&1; then
     export PATH="$HOME/.dotnet/tools:$PATH"
