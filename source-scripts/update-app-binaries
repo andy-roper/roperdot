@@ -185,8 +185,10 @@ create_text_editor_script () {
     if [[ -n $bash_script ]]; then
         cat << EOT >> ~/.config/roperdot/app-bin-bash/"$script_name"
 #!/usr/bin/env bash
-if [[ -n "\$VSCODE_INJECTION" ]] || [[ "\$TERM_PROGRAM" == "vscode" ]] || [[ -n "\$VSCODE_PID" ]]; then
+if [[ -n "\$VSCODE_INJECTION" || "\$TERM_PROGRAM" == "vscode" || -n "\$VSCODE_PID" ]]; then
     code "\$@" &
+elif [[ "\$TERMINAL_EMULATOR" == "JetBrains-JediTerm" ]]; then
+    idea "\$@" &
 else
     ( $bash_script "\$@" & )
 fi
@@ -195,8 +197,10 @@ EOT
     if [[ -n $zshScript ]]; then
         cat << EOT >> ~/.config/roperdot/app-bin-zsh/"$script_name"
 #!/usr/bin/env zsh
-if [[ -n "\$VSCODE_INJECTION" ]] || [[ "\$TERM_PROGRAM" == "vscode" ]] || [[ -n "\$VSCODE_PID" ]]; then
+if [[ -n "\$VSCODE_INJECTION" || "\$TERM_PROGRAM" == "vscode" || -n "\$VSCODE_PID" ]]; then
     code "\$@" &
+elif [[ "\$TERMINAL_EMULATOR" == "JetBrains-JediTerm" ]]; then
+    idea "\$@" &
 else
     ( $zshScript "\$@" & )
 fi
