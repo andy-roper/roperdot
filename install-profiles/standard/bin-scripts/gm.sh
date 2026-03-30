@@ -800,20 +800,20 @@ action_create_branch_from_master() {
 }
 
 action_create_branch_from_master_and_push() {
-	local branch_name
-	if command -v gum >/dev/null 2>&1; then
-	    if ! branch_name=$(gum input --placeholder="Enter branch name"); then
-	        echo "Branch creation cancelled" >&2
-	        return 1
-	    fi
-	else
-		echo "Enter branch name:" >&2WW
-	    if ! read -r branch_name; then
-	        echo "Creation cancelled" >&2
-	        return 1
-	    fi
+    local branch_name
+    if command -v gum >/dev/null 2>&1; then
+        if ! branch_name=$(gum input --placeholder="Enter branch name"); then
+            echo "Branch creation cancelled" >&2
+            return 1
+        fi
+    else
+        echo "Enter branch name:" >&2
+        if ! read -r branch_name; then
+            echo "Creation cancelled" >&2
+            return 1
+        fi
     fi
-    [[ -n "$branch_name" ]] && echo "git checkout -b $branch_name && git push -u origin $branch_name"
+ 
     if [[ -n "$branch_name" ]]; then
         local default_branch=$(get_default_branch)
         local old_branch=$(get_current_branch)
@@ -821,9 +821,11 @@ action_create_branch_from_master_and_push() {
         if [[ -n "$has_changes" ]]; then
             echo "Stashing changes in $old_branch" >&2
             echo "Note: do 'git stash pop' on branch $old_branch to restore your changes" >&2
+            echo "Creating branch $branch_name from $default_branch" >&2
             echo "git stash && git checkout $default_branch && git pull && git checkout -b $branch_name && git push -u origin $branch_name"
         else
-            echo "git checkout $default_branch && git pull && git push -u origin $branch_name && git checkout -b $branch_name"
+            echo "Creating branch $branch_name from $default_branch" >&2
+            echo "git checkout $default_branch && git pull && git checkout -b $branch_name && git push -u origin $branch_name"
         fi
     fi
 }
