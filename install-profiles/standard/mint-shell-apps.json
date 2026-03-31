@@ -423,6 +423,20 @@
 		"desc": "Python library for PDF manipulation"
 	},
 	{
+		"app": "Tkinter",
+		"presence_command": "$python_bin -c 'import tkinter' >/dev/null 2>&1",
+		"package": "python3-tk",
+		"list_prerequisite": "apt-get",
+		"desc": "Python library for creating GUIs"
+	},
+	{
+		"app": "PyYAML",
+		"presence_command": "$python_bin -c 'import yaml' >/dev/null 2>&1",
+		"install_command": "install-python-package pyyaml",
+		"sudo_not_required": true,
+		"desc": "Python library for YAML parsing and emitting"
+	},
+	{
 		"app": "generic colouriser",
 		"binary": "grc",
 		"install_script": "install-grc",
