@@ -189,11 +189,12 @@ action_push_current_dir() {
     local branch=$(get_current_branch)
     check_ignored_files || return
     local message=$(get_commit_message "$branch")
+    [[ -z "$message" ]] && exit 0
     
     if has_upstream; then
-        echo "git add . && git commit -m \"$message\" && git push"
+        echo "{ git add . && git commit -m \"$message\"; true; } && git push"
     else
-        echo "git add . && git commit -m \"$message\" && git push -u origin \"$branch\""
+        echo "{ git add . && git commit -m \"$message\"; true; } && git push -u origin \"$branch\""
     fi
 }
 
@@ -202,11 +203,12 @@ action_commit_current_dir_and_push() {
     local branch=$(get_current_branch)
     check_ignored_files || return
     local message=$(get_commit_message "$branch")
+    [[ -z "$message" ]] && exit 0
     
     if has_upstream; then
-        echo "git commit -m \"$message\" && git push"
+        echo "{ git commit -m \"$message\"; true; } && git push"
     else
-        echo "git commit -m \"$message\" && git push -u origin \"$branch\""
+        echo "{ git commit -m \"$message\"; true; } && git push -u origin \"$branch\""
     fi
 }
 
@@ -215,12 +217,13 @@ action_push_all_changes() {
     local branch=$(get_current_branch)
     check_ignored_files || return
     local message=$(get_commit_message "$branch")
+    [[ -z "$message" ]] && exit 0
     local repo_root=$(git rev-parse --show-toplevel)
     
     if has_upstream; then
-        echo "cd '$repo_root' && git add . && git commit -m \"$message\" && git push"
+        echo "cd '$repo_root' && { git add . && git commit -m \"$message\"; true; } && git push"
     else
-        echo "cd '$repo_root' && git add . && git commit -m \"$message\" && git push -u origin \"$branch\""
+        echo "cd '$repo_root' && { git add . && git commit -m \"$message\"; true; } && git push -u origin \"$branch\""
     fi
 }
 
@@ -229,12 +232,13 @@ action_commit_all_and_push() {
     local branch=$(get_current_branch)
     check_ignored_files || return
     local message=$(get_commit_message "$branch")
+    [[ -z "$message" ]] && exit 0
     local repo_root=$(git rev-parse --show-toplevel)
 
     if has_upstream; then
-        echo "cd '$repo_root' && git commit -m \"$message\" && git push"
+        echo "cd '$repo_root' && { git commit -m \"$message\"; true; } && git push"
     else
-        echo "cd '$repo_root' && git commit -m \"$message\" && git push -u origin \"$branch\""
+        echo "cd '$repo_root' && { git commit -m \"$message\"; true; } && git push -u origin \"$branch\""
     fi
 }
 
