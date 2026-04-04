@@ -189,12 +189,11 @@ action_push_current_dir() {
     local branch=$(get_current_branch)
     check_ignored_files || return
     local message=$(get_commit_message "$branch")
-    [[ -z "$message" ]] && exit 0
     
     if has_upstream; then
-        echo "{ git add . && git commit -m \"$message\"; true; } && git push"
+        echo "git add . && git commit -m \"$message\" && git push"
     else
-        echo "{ git add . && git commit -m \"$message\"; true; } && git push -u origin \"$branch\""
+        echo "git add . && git commit -m \"$message\" && git push -u origin \"$branch\""
     fi
 }
 
@@ -203,12 +202,11 @@ action_commit_current_dir_and_push() {
     local branch=$(get_current_branch)
     check_ignored_files || return
     local message=$(get_commit_message "$branch")
-    [[ -z "$message" ]] && exit 0
     
     if has_upstream; then
-        echo "{ git commit -m \"$message\"; true; } && git push"
+        echo "git commit -m \"$message\" && git push"
     else
-        echo "{ git commit -m \"$message\"; true; } && git push -u origin \"$branch\""
+        echo "git commit -m \"$message\" && git push -u origin \"$branch\""
     fi
 }
 
@@ -217,13 +215,12 @@ action_push_all_changes() {
     local branch=$(get_current_branch)
     check_ignored_files || return
     local message=$(get_commit_message "$branch")
-    [[ -z "$message" ]] && exit 0
     local repo_root=$(git rev-parse --show-toplevel)
     
     if has_upstream; then
-        echo "cd '$repo_root' && { git add . && git commit -m \"$message\"; true; } && git push"
+        echo "cd '$repo_root' && git add . && git commit -m \"$message\" && git push"
     else
-        echo "cd '$repo_root' && { git add . && git commit -m \"$message\"; true; } && git push -u origin \"$branch\""
+        echo "cd '$repo_root' && git add . && git commit -m \"$message\" && git push -u origin \"$branch\""
     fi
 }
 
@@ -232,13 +229,12 @@ action_commit_all_and_push() {
     local branch=$(get_current_branch)
     check_ignored_files || return
     local message=$(get_commit_message "$branch")
-    [[ -z "$message" ]] && exit 0
     local repo_root=$(git rev-parse --show-toplevel)
 
     if has_upstream; then
-        echo "cd '$repo_root' && { git commit -m \"$message\"; true; } && git push"
+        echo "cd '$repo_root' && git commit -m \"$message\" && git push"
     else
-        echo "cd '$repo_root' && { git commit -m \"$message\"; true; } && git push -u origin \"$branch\""
+        echo "cd '$repo_root' && git commit -m \"$message\" && git push -u origin \"$branch\""
     fi
 }
 
@@ -804,20 +800,20 @@ action_create_branch_from_master() {
 }
 
 action_create_branch_from_master_and_push() {
-    local branch_name
-    if command -v gum >/dev/null 2>&1; then
-        if ! branch_name=$(gum input --placeholder="Enter branch name"); then
-            echo "Branch creation cancelled" >&2
-            return 1
-        fi
-    else
-        echo "Enter branch name:" >&2
-        if ! read -r branch_name; then
-            echo "Creation cancelled" >&2
-            return 1
-        fi
+	local branch_name
+	if command -v gum >/dev/null 2>&1; then
+	    if ! branch_name=$(gum input --placeholder="Enter branch name"); then
+	        echo "Branch creation cancelled" >&2
+	        return 1
+	    fi
+	else
+		echo "Enter branch name:" >&2WW
+	    if ! read -r branch_name; then
+	        echo "Creation cancelled" >&2
+	        return 1
+	    fi
     fi
- 
+    [[ -n "$branch_name" ]] && echo "git checkout -b $branch_name && git push -u origin $branch_name"
     if [[ -n "$branch_name" ]]; then
         local default_branch=$(get_default_branch)
         local old_branch=$(get_current_branch)
@@ -825,11 +821,9 @@ action_create_branch_from_master_and_push() {
         if [[ -n "$has_changes" ]]; then
             echo "Stashing changes in $old_branch" >&2
             echo "Note: do 'git stash pop' on branch $old_branch to restore your changes" >&2
-            echo "Creating branch $branch_name from $default_branch" >&2
             echo "git stash && git checkout $default_branch && git pull && git checkout -b $branch_name && git push -u origin $branch_name"
         else
-            echo "Creating branch $branch_name from $default_branch" >&2
-            echo "git checkout $default_branch && git pull && git checkout -b $branch_name && git push -u origin $branch_name"
+            echo "git checkout $default_branch && git pull && git push -u origin $branch_name && git checkout -b $branch_name"
         fi
     fi
 }
@@ -887,6 +881,24 @@ EOF
         # Branch is merged - safe delete
         ask_yn_n "Confirm deletion of branch" || return 1
         echo "git branch -d $selected_branch"
+    fi
+}
+
+print_sync_status() {
+    # Only meaningful if there's an upstream set
+    has_upstream || return
+
+    local branch=$(get_current_branch)
+    local upstream=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null)
+    local ahead behind
+    read -r ahead behind < <(git rev-list --left-right --count HEAD...@{u} 2>/dev/null)
+
+    [[ -z "$ahead" || -z "$behind" ]] && return
+
+    if (( ahead > 0 || behind > 0 )); then
+        echo -e "\nSync status for branch '$branch' vs $upstream:"
+        (( ahead  > 0 )) && echo "  ↑ $ahead commit(s) ahead  (unpushed)"
+        (( behind > 0 )) && echo "  ↓ $behind commit(s) behind (unpulled)"
     fi
 }
 
@@ -1090,3 +1102,6 @@ case "$action" in
 esac
 
 [[ -n "$command" ]] && execute_command "$command"
+
+# After any action, report ahead/behind status if relevant
+print_sync_status
