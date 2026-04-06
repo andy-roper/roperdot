@@ -184,6 +184,22 @@ EOT
     return 0
 }
 
+gm_commit() {
+    local message="$1"
+    git commit -m "$message" && return 0
+    # commit failed - only proceed if nothing to commit
+    git diff --cached --quiet && return 0
+    return 1
+}
+
+gm_add_commit() {
+    local message="$1"
+    git add . && git commit -m "$message" && return 0
+    # commit failed - only proceed if working tree is clean (nothing to commit)
+    git diff --cached --quiet && git diff --quiet && return 0
+    return 1
+}
+
 # Action: Push current directory (add, commit, push)
 action_push_current_dir() {
     local branch=$(get_current_branch)
@@ -191,9 +207,9 @@ action_push_current_dir() {
     local message=$(get_commit_message "$branch")
     
     if has_upstream; then
-        echo "git add . && git commit -m \"$message\" && git push"
+        echo "gm_add_commit \"$message\" && git push"
     else
-        echo "git add . && git commit -m \"$message\" && git push -u origin \"$branch\""
+        echo "gm_add_commit \"$message\" && git push -u origin \"$branch\""
     fi
 }
 
@@ -204,9 +220,9 @@ action_commit_current_dir_and_push() {
     local message=$(get_commit_message "$branch")
     
     if has_upstream; then
-        echo "git commit -m \"$message\" && git push"
+        echo "gm_commit \"$message\" && git push"
     else
-        echo "git commit -m \"$message\" && git push -u origin \"$branch\""
+        echo "gm_commit \"$message\" && git push -u origin \"$branch\""
     fi
 }
 
@@ -218,9 +234,9 @@ action_push_all_changes() {
     local repo_root=$(git rev-parse --show-toplevel)
     
     if has_upstream; then
-        echo "cd '$repo_root' && git add . && git commit -m \"$message\" && git push"
+        echo "cd '$repo_root' && gm_add_commit \"$message\" && git push"
     else
-        echo "cd '$repo_root' && git add . && git commit -m \"$message\" && git push -u origin \"$branch\""
+        echo "cd '$repo_root' && gm_add_commit \"$message\" && git push -u origin \"$branch\""
     fi
 }
 
@@ -232,9 +248,9 @@ action_commit_all_and_push() {
     local repo_root=$(git rev-parse --show-toplevel)
 
     if has_upstream; then
-        echo "cd '$repo_root' && git commit -m \"$message\" && git push"
+        echo "cd '$repo_root' && gm_commit \"$message\" && git push"
     else
-        echo "cd '$repo_root' && git commit -m \"$message\" && git push -u origin \"$branch\""
+        echo "cd '$repo_root' && gm_commit \"$message\" && git push -u origin \"$branch\""
     fi
 }
 
@@ -1016,7 +1032,7 @@ case "$action" in
 		command=git-status
 		;;
     "Show full status"*)
-        command="git status"
+        command="git status && print_sync_status"
         ;;
     "Show log"*)
         command="git log --oneline --graph --decorate --all"
