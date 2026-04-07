@@ -187,8 +187,8 @@ EOT
 gm_commit() {
     local message="$1"
     git commit -m "$message" && return 0
-    # commit failed - only proceed if nothing to commit
-    git diff --cached --quiet && return 0
+    # commit failed - only proceed if truly nothing to commit
+    git diff --cached --quiet && git diff --quiet && return 0
     return 1
 }
 
@@ -823,13 +823,13 @@ action_create_branch_from_master_and_push() {
 	        return 1
 	    fi
 	else
-		echo "Enter branch name:" >&2WW
+		echo "Enter branch name:" >&2
 	    if ! read -r branch_name; then
 	        echo "Creation cancelled" >&2
 	        return 1
 	    fi
     fi
-    [[ -n "$branch_name" ]] && echo "git checkout -b $branch_name && git push -u origin $branch_name"
+
     if [[ -n "$branch_name" ]]; then
         local default_branch=$(get_default_branch)
         local old_branch=$(get_current_branch)
@@ -839,7 +839,7 @@ action_create_branch_from_master_and_push() {
             echo "Note: do 'git stash pop' on branch $old_branch to restore your changes" >&2
             echo "git stash && git checkout $default_branch && git pull && git checkout -b $branch_name && git push -u origin $branch_name"
         else
-            echo "git checkout $default_branch && git pull && git push -u origin $branch_name && git checkout -b $branch_name"
+            echo "git checkout $default_branch && git pull && git checkout -b $branch_name && git push -u origin $branch_name"
         fi
     fi
 }
