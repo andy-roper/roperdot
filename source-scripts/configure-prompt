@@ -41,7 +41,36 @@ build_git_status_info() {
     fi
 }
 
-if [[ -n "$ROPERDOT_SHOW_EXTENDED_GIT_INFO" ]]; then
+if [[ "$ROPERDOT_SHOW_EXTENDED_GIT_INFO" == "sync-only" ]]; then
+	function set_git_info() {
+	    if ! git rev-parse --git-dir >/dev/null 2>&1; then
+	    	export GIT_STATUS_INFO=""
+	    	return
+	    fi
+
+	    local branch=$(git branch --show-current 2>/dev/null)
+	    
+	    local is_clean=false
+	    if git diff-index --quiet HEAD -- 2>/dev/null && \
+	    [[ -z $(git ls-files --others --exclude-standard 2>/dev/null) ]]; then
+	        is_clean=true
+	    fi
+        
+        local ahead=0 behind=0
+        if git rev-parse --verify @{upstream} >/dev/null 2>&1; then
+            local ahead_behind=$(git rev-list --count --left-right @{upstream}...HEAD 2>/dev/null)
+            behind=${ahead_behind%$'\t'*}
+            ahead=${ahead_behind#*$'\t'}
+        fi
+        
+        local status_indicators=""
+        [[ $ahead -gt 0 ]] && status_indicators+=" ⇡$ahead"
+        [[ $behind -gt 0 ]] && status_indicators+=" ⇣$behind"
+        local info_text="${branch}${status_indicators}"
+
+        build_git_status_info $is_clean "$info_text"
+	}
+elif [[ -n "$ROPERDOT_SHOW_EXTENDED_GIT_INFO" ]]; then
 	function set_git_info() {
 	    if ! git rev-parse --git-dir >/dev/null 2>&1; then
 	    	export GIT_STATUS_INFO=""
@@ -67,8 +96,8 @@ if [[ -n "$ROPERDOT_SHOW_EXTENDED_GIT_INFO" ]]; then
         local ahead=0 behind=0
         if git rev-parse --verify @{upstream} >/dev/null 2>&1; then
             local ahead_behind=$(git rev-list --count --left-right @{upstream}...HEAD 2>/dev/null)
-            behind=${ahead_behind%	*}
-            ahead=${ahead_behind#*	}
+            behind=${ahead_behind%$'\t'*}
+            ahead=${ahead_behind#*$'\t'}
         fi
         
         local stashes=0
@@ -91,7 +120,7 @@ if [[ -n "$ROPERDOT_SHOW_EXTENDED_GIT_INFO" ]]; then
         [[ $stashes -gt 0 ]] && status_indicators+=" *$stashes"
         local info_text="${branch}${status_indicators}"
 
-        build_git_status_info $is_clean "$branch"
+        build_git_status_info $is_clean "$info_text"
 	}
 else
 	function set_git_info() {
