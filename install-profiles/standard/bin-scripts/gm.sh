@@ -901,20 +901,29 @@ EOF
 }
 
 print_sync_status() {
-    # Only meaningful if there's an upstream set
     has_upstream || return
-
     local branch=$(get_current_branch)
+   
+    local master_ref
+    if git rev-parse --verify origin/master >/dev/null 2>&1; then
+        master_ref="origin/master"
+    elif git rev-parse --verify origin/main >/dev/null 2>&1; then
+        master_ref="origin/main"
+    else
+        return
+    fi
+ 
     local upstream=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null)
-    local ahead behind
-    read -r ahead behind < <(git rev-list --left-right --count HEAD...@{u} 2>/dev/null)
-
+    local ahead
+    ahead=$(git rev-list --count "@{u}..HEAD" 2>/dev/null)
+    local behind
+    behind=$(git rev-list --count "HEAD..${master_ref}" 2>/dev/null)
+ 
     [[ -z "$ahead" || -z "$behind" ]] && return
-
     if (( ahead > 0 || behind > 0 )); then
         echo -e "\nSync status for branch '$branch' vs $upstream:"
         (( ahead  > 0 )) && echo "  ↑ $ahead commit(s) ahead  (unpushed)"
-        (( behind > 0 )) && echo "  ↓ $behind commit(s) behind (unpulled)"
+        (( behind > 0 )) && echo "  ↓ $behind commit(s) behind master (unmerged)"
     fi
 }
 
@@ -971,10 +980,10 @@ if command -v gumx &>/dev/null; then
         "Git blame"
     	"List branches"
         "Switch branches"
-		"Push current directory (add, commit, push)"
-		"Commit current directory and push (commit, push)"
-		"Push all changes (add, commit, push)"
-		"Commit all changes and push (commit, push)"
+		"Sync current directory (add, commit, push)"
+		"Commit and push current directory (commit, push)"
+		"Sync all changes (add, commit, push)"
+		"Commit and push all changes (commit, push)"
         "Amend last commit"
         "Stash changes"
         "Apply/pop stash"
@@ -1007,10 +1016,10 @@ Show file history
 Git blame
 List branches
 Switch branches
-Push current directory (add, commit, push)
-Commit current directory and push (commit, push)
-Push all changes (add, commit, push)
-Commit all changes and push (commit, push)
+Sync current directory (add, commit, push)
+Commit and push current directory (commit, push)
+Sync all changes (add, commit, push)
+Commit and push all changes (commit, push)
 Amend last commit
 Stash changes
 Apply/pop stash
@@ -1032,7 +1041,7 @@ case "$action" in
 		command=git-status
 		;;
     "Show full status"*)
-        command="git status && print_sync_status"
+        command="git status"
         ;;
     "Show log"*)
         command="git log --oneline --graph --decorate --all"
@@ -1058,16 +1067,16 @@ case "$action" in
     "Switch branches"*)
         command=$(action_switch_branch)
         ;;
-    "Push current"*)
+    "Sync current"*)
         command=$(action_push_current_dir)
         ;;
-    "Commit current"*)
+    "Commit and push current"*)
         command=$(action_commit_current_dir_and_push)
         ;;
-    "Push all"*)
+    "Sync all"*)
         command=$(action_push_all_changes)
         ;;
-    "Commit all"*)
+    "Commit and push all"*)
         command=$(action_commit_all_and_push)
         ;;
     "Amend last commit"*)

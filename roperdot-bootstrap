@@ -40,7 +40,7 @@
 # ROPERDOT_DESKTOP_ENV: Supported values are gnome, kde, windows and mac
 # ROPERDOT_HISTORY_BY_SESSION: true if each terminal session has its own history file
 # ROPERDOT_SHOW_EXTENDED_GIT_INFO: set this to show extended git information in the prompt
-#   Setting it to sync-only will just show the number of commits ahead/behind master
+#   Setting it to behind-only will just show the number of commits behind master
 #   Setting it to another value will also display counts for staged, unstaged, untracked and conflicts
 # ROPERDOT_MAIN_GIT_REPO: directory of the main Git repository; used when auto-refreshing the repo's status
 # ROPERDOT_GIT_FETCH_INTERVAL: defines the frequency with which to refresh the main Git repository (defaults to 300 seconds)

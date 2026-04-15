@@ -53,36 +53,39 @@ periodic_git_fetch() {
     fi
 }
 
-if [[ "$ROPERDOT_SHOW_EXTENDED_GIT_INFO" == "sync-only" ]]; then
+if [[ "$ROPERDOT_SHOW_EXTENDED_GIT_INFO" == "behind-only" ]]; then
 	function set_git_info() {
 		periodic_git_fetch
+		if ! git rev-parse --git-dir >/dev/null 2>&1; then
+			export GIT_STATUS_INFO=""
+			return
+		fi
+		local branch=$(git branch --show-current 2>/dev/null)
 
-	    if ! git rev-parse --git-dir >/dev/null 2>&1; then
-	    	export GIT_STATUS_INFO=""
-	    	return
-	    fi
+		local is_clean=false
+		if git diff-index --quiet HEAD -- 2>/dev/null && \
+		[[ -z $(git ls-files --others --exclude-standard 2>/dev/null) ]]; then
+			is_clean=true
+		fi
 
-	    local branch=$(git branch --show-current 2>/dev/null)
-	    
-	    local is_clean=false
-	    if git diff-index --quiet HEAD -- 2>/dev/null && \
-	    [[ -z $(git ls-files --others --exclude-standard 2>/dev/null) ]]; then
-	        is_clean=true
-	    fi
-        
-        local ahead=0 behind=0
-        if git rev-parse --verify @{upstream} >/dev/null 2>&1; then
-            local ahead_behind=$(git rev-list --count --left-right @{upstream}...HEAD 2>/dev/null)
-            behind=${ahead_behind%$'\t'*}
-            ahead=${ahead_behind#*$'\t'}
-        fi
-        
-        local status_indicators=""
-        [[ $ahead -gt 0 ]] && status_indicators+=" ⇡$ahead"
-        [[ $behind -gt 0 ]] && status_indicators+=" ⇣$behind"
-        local info_text="${branch}${status_indicators}"
+		local master_behind=0
+		if [[ "$branch" != "master" && "$branch" != "main" ]]; then
+			local master_ref
+			if git rev-parse --verify origin/master >/dev/null 2>&1; then
+				master_ref="origin/master"
+			elif git rev-parse --verify origin/main >/dev/null 2>&1; then
+				master_ref="origin/main"
+			fi
+			if [[ -n "$master_ref" ]]; then
+				master_behind=$(git rev-list --count "HEAD..${master_ref}" 2>/dev/null)
+			fi
+		fi
 
-        build_git_status_info $is_clean "$info_text"
+		local status_indicators=""
+		[[ $master_behind -gt 0 ]] && status_indicators+=" ⇣$master_behind"
+
+		local info_text="${branch}${status_indicators}"
+		build_git_status_info $is_clean "$info_text"
 	}
 elif [[ -n "$ROPERDOT_SHOW_EXTENDED_GIT_INFO" ]]; then
 	function set_git_info() {
