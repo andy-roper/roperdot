@@ -82,7 +82,14 @@ get_parent_branch() {
     fi
     
     # Strip distances and pass to gum
-    echo "$candidates" | awk '{print $2}' | gum choose --header "Select parent branch:"
+	local branch_list=$(echo "$candidates" | awk '{print $2}')
+
+	if command -v gum &>/dev/null; then
+	    local height=$(( LINES * 55 / 100 ))
+	    echo "$branch_list" | gum choose --header "Select parent branch:" --height=$height
+	else
+	    echo "$branch_list" | fzf --exact --prompt="Select parent branch > " --height=55% --reverse
+	fi
 }
 
 get_default_branch() {
@@ -544,7 +551,13 @@ action_apply_stash() {
     fi
     
     # List stashes with fzf
-    local stash=$(git stash list | fzf --exact --prompt="Select stash > " --height=55% --reverse --preview="echo {} | cut -d: -f1 | xargs git stash show -p")
+	local stash
+	if command -v gum &>/dev/null; then
+	    local height=$(( LINES * 55 / 100 ))
+	    stash=$(git stash list | gum filter --placeholder="Select stash > " --height=$height)
+	else
+	    stash=$(git stash list | fzf --exact --prompt="Select stash > " --height=55% --reverse --preview="echo {} | cut -d: -f1 | xargs git stash show -p")
+	fi
     
     if [[ -z "$stash" ]]; then
         echo "No stash selected" >&2
@@ -637,34 +650,34 @@ action_view_history() {
         echo "Error: No commits in repository" >&2
         return 1
     fi
-    
-    local clipboard_cmd=$(get_clipboard_command)
-    local copy_key_help=""
-    
-    if [[ -n "$clipboard_cmd" ]]; then
-        copy_key_help=" | ctrl-y: copy SHA"
+
+    if command -v gum &>/dev/null; then
+        local height=$(( LINES * 55 / 100 ))
+    	# Run git log with gum
+        git log --graph --color=always --abbrev=7 --format='%C(auto)%h %an %C(blue)%s %C(yellow)%cr' | \
+            gum filter --placeholder="Commit History > " --height=$height
+    else
+        local clipboard_cmd=$(get_clipboard_command)
+        local copy_key_help=""
+        [[ -n "$clipboard_cmd" ]] && copy_key_help=" | ctrl-y: copy SHA"
+
+	    # Build fzf command with keybindings
+        local fzf_opts=(
+            --ansi --no-sort --reverse --tiebreak=index
+            --prompt="Commit History${copy_key_help} > "
+            --preview="echo {} | grep -o '[a-f0-9]\{7\}' | head -1 | xargs -I % git show --color=always %"
+            --preview-window=right:60%
+        )
+	    # Add copy keybinding if clipboard is available
+        if [[ -n "$clipboard_cmd" ]]; then
+        	fzf_opts+=(--bind="ctrl-y:execute-silent(echo {} | grep -o '[a-f0-9]\{7\}' | head -1 | $clipboard_cmd)+abort")
+        fi
+
+    	# Run git log with fzf
+        git log --graph --color=always --abbrev=7 --format='%C(auto)%h %an %C(blue)%s %C(yellow)%cr' | \
+        	fzf "${fzf_opts[@]}"
     fi
-    
-    # Build fzf command with keybindings
-    local fzf_opts=(
-        --ansi
-        --no-sort
-        --reverse
-        --tiebreak=index
-        --prompt="Commit History${copy_key_help} > "
-        --preview="echo {} | grep -o '[a-f0-9]\{7\}' | head -1 | xargs -I % git show --color=always %"
-        --preview-window=right:60%
-    )
-    
-    # Add copy keybinding if clipboard is available
-    if [[ -n "$clipboard_cmd" ]]; then
-        fzf_opts+=(--bind="ctrl-y:execute-silent(echo {} | grep -o '[a-f0-9]\{7\}' | head -1 | $clipboard_cmd)+abort")
-    fi
-    
-    # Run git log with fzf
-    git log --graph --color=always --abbrev=7 --format='%C(auto)%h %an %C(blue)%s %C(yellow)%cr' | \
-        fzf "${fzf_opts[@]}"
-    
+
     # Return empty command since this is just for viewing
     echo ""
 }
@@ -676,42 +689,43 @@ action_file_history() {
         echo "Error: No commits in repository" >&2
         return 1
     fi
-    
+
     # Select file
     local file=$(select_file "Select file to view history > ")
-    
+
     if [[ -z "$file" ]]; then
         echo "No file selected" >&2
         return 1
     fi
-    
-    local clipboard_cmd=$(get_clipboard_command)
-    local copy_key_help=""
-    
-    if [[ -n "$clipboard_cmd" ]]; then
-        copy_key_help=" | ctrl-y: copy SHA"
+
+    if command -v gum &>/dev/null; then
+        local height=$(( LINES * 55 / 100 ))
+        git log --follow --color=always --abbrev=7 --format='%C(auto)%h %an %C(blue)%s %C(yellow)%cr' -- "$file" | \
+            gum filter --placeholder="History for $file > " --height=$height
+    else
+        local clipboard_cmd=$(get_clipboard_command)
+        local copy_key_help=""
+
+        [[ -n "$clipboard_cmd" ]] && copy_key_help=" | ctrl-y: copy SHA"
+
+	    # Build fzf command with keybindings
+        local fzf_opts=(
+            --ansi --no-sort --reverse --tiebreak=index
+            --prompt="History for $file${copy_key_help} > "
+            --preview="echo {} | grep -o '[a-f0-9]\{7\}' | head -1 | xargs -I % git show --color=always % -- $file"
+            --preview-window=right:60%
+        )
+        
+	    # Add copy keybinding if clipboard is available
+        if [[ -n "$clipboard_cmd" ]]; then
+        	fzf_opts+=(--bind="ctrl-y:execute-silent(echo {} | grep -o '[a-f0-9]\{7\}' | head -1 | $clipboard_cmd)+abort")
+        fi
+
+	    # Show file history with --follow to track renames
+        git log --follow --color=always --abbrev=7 --format='%C(auto)%h %an %C(blue)%s %C(yellow)%cr' -- "$file" | \
+            fzf "${fzf_opts[@]}"
     fi
-    
-    # Build fzf command with keybindings
-    local fzf_opts=(
-        --ansi
-        --no-sort
-        --reverse
-        --tiebreak=index
-        --prompt="History for $file${copy_key_help} > "
-        --preview="echo {} | grep -o '[a-f0-9]\{7\}' | head -1 | xargs -I % git show --color=always % -- $file"
-        --preview-window=right:60%
-    )
-    
-    # Add copy keybinding if clipboard is available
-    if [[ -n "$clipboard_cmd" ]]; then
-        fzf_opts+=(--bind="ctrl-y:execute-silent(echo {} | grep -o '[a-f0-9]\{7\}' | head -1 | $clipboard_cmd)+abort")
-    fi
-    
-    # Show file history with --follow to track renames
-    git log --follow --color=always --abbrev=7 --format='%C(auto)%h %an %C(blue)%s %C(yellow)%cr' -- "$file" | \
-        fzf "${fzf_opts[@]}"
-    
+
     # Return empty command since this is just for viewing
     echo ""
 }
@@ -967,7 +981,7 @@ else
 fi
 
 # Menu options
-if command -v gumx &>/dev/null; then
+if command -v gum &>/dev/null; then
     local height=$(( LINES * 55 / 100 ))
     local menu_options=(
     	"Show abbreviated status"

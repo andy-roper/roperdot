@@ -106,7 +106,7 @@ Much of this is controlled by roperdot/source-scripts/initialize-colors which ut
 
 ## gum and fzf Integration
 
-[gum](https://github.com/charmbracelet/gum) and [fzf](https://github.com/junegunn/fzf) are used by multiple commands (cd, cdd, cdj, cds, e, gm, gi, gli, gt, je, nav, pushd, up and v) for selection of files, directories and options. The fzf plugin is also used in vim.
+[gum](https://github.com/charmbracelet/gum) and [fzf](https://github.com/junegunn/fzf) are used by multiple commands (cd, cdd, cdj, cds, e, gd, gm, gi, gli, gt, je, nav, pushd, up and v) for selection of files, directories and options. The fzf plugin is also used in vim.
 
 Additionally, fzf is used in zsh when interactively selecting commands from history using Ctrl+R.
 

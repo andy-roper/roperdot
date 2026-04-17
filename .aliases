@@ -246,7 +246,7 @@ if command -v git >/dev/null 2>&1; then
 	alias gcom='git checkout master'
 #	alias gcos='git checkout staging'
 #	alias gcod='git checkout develop'
-	alias gd='git diff'
+#	alias gd='git diff'
 	alias gda='git diff HEAD'
 	alias glg='git log --graph --oneline --decorate --all'
 	alias gld='git log --pretty=format:"%h %ad %s" --date=short --all'

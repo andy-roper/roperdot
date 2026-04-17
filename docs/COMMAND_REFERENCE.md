@@ -141,6 +141,7 @@ help <text>        # Find commands whose name/description matches the text
 
 ### Git Enhancements
 - **`clone`** - Enhanced git clone with automatic setup and navigation
+- **`gd`** - Show differences for changed files in repository
 - **`gf`** - Retrieve a file from a Git repository
 - **`git-blame-colored`** - Enhanced git blame with syntax highlighting
 - **`git-lfs`** - Used to work with large files in Git repositories (https://git-lfs.github.com)
