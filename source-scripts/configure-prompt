@@ -14,32 +14,33 @@ PROMPT_BLACK_ON_YELLOW=$(printf '\033[0;%s;%sm' "${COLOR_BLACK_CODE}" "${PROMPT_
 
 PROMPT_BLACK_BG=$((COLOR_BLACK_CODE + 10))
 
-# For Apple Terminal
-PROMPT_GREEN_INITIAL_TRIANGLE=$(printf '\033[%s;%sm' "${PROMPT_GREEN_BG}" "${COLOR_BLACK_CODE}")
-PROMPT_GREEN_ON_BLACK=$(printf '\033[0;%s;40m' "${COLOR_GREEN_CODE}")
-PROMPT_YELLOW_INITIAL_TRIANGLE=$(printf '\033[%s;%sm' "${PROMPT_YELLOW_BG}" "${COLOR_BLACK_CODE}")
-PROMPT_YELLOW_ON_BLACK=$(printf '\033[0;%s;40m' "${COLOR_YELLOW_CODE}")
+if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]]; then
+	PROMPT_GREEN_INITIAL_TRIANGLE=$(printf '\033[%s;%sm' "${PROMPT_GREEN_BG}" "${COLOR_BLACK_CODE}")
+	PROMPT_GREEN_ON_BLACK=$(printf '\033[0;%s;40m' "${COLOR_GREEN_CODE}")
+	PROMPT_YELLOW_INITIAL_TRIANGLE=$(printf '\033[%s;%sm' "${PROMPT_YELLOW_BG}" "${COLOR_BLACK_CODE}")
+	PROMPT_YELLOW_ON_BLACK=$(printf '\033[0;%s;40m' "${COLOR_YELLOW_CODE}")
 
-# For non-Apple Terminal
-PROMPT_GREEN_INITIAL_TRIANGLE_BLUE=$(printf '\033[%s;%sm' "${PROMPT_GREEN_BG}" "${COLOR_BLUE_CODE}")
-PROMPT_YELLOW_INITIAL_TRIANGLE_BLUE=$(printf '\033[%s;%sm' "${PROMPT_YELLOW_BG}" "${COLOR_BLUE_CODE}")
-
-build_git_status_info() {
-	local is_clean="$1" info_text="$2"
-    if [[ "$is_clean" == true ]]; then
-        if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]]; then
+	build_git_status_info() {
+		local is_clean="$1" info_text="$2"
+	    if [[ "$is_clean" == true ]]; then
             export GIT_STATUS_INFO="${PROMPT_GREEN_INITIAL_TRIANGLE}${PROMPT_TRIANGLE}${PROMPT_BLACK_ON_GREEN} ${info_text} ${PROMPT_GREEN_ON_BLACK}${PROMPT_TRIANGLE}${PROMPT_RESET}"
-        else
-            export GIT_STATUS_INFO="${PROMPT_GREEN_INITIAL_TRIANGLE_BLUE}${PROMPT_TRIANGLE}${PROMPT_BLACK_ON_GREEN} ${info_text} ${PROMPT_GREEN_FG}${PROMPT_TRIANGLE}${PROMPT_RESET}"
-        fi
-    else
-        if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]]; then
+	    else
             export GIT_STATUS_INFO="${PROMPT_YELLOW_INITIAL_TRIANGLE}${PROMPT_TRIANGLE}${PROMPT_BLACK_ON_YELLOW} ${info_text} ${PROMPT_YELLOW_ON_BLACK}${PROMPT_TRIANGLE}${PROMPT_RESET}"
-        else
+	    fi
+	}
+else
+	PROMPT_GREEN_INITIAL_TRIANGLE_BLUE=$(printf '\033[%s;%sm' "${PROMPT_GREEN_BG}" "${COLOR_BLUE_CODE}")
+	PROMPT_YELLOW_INITIAL_TRIANGLE_BLUE=$(printf '\033[%s;%sm' "${PROMPT_YELLOW_BG}" "${COLOR_BLUE_CODE}")
+
+	build_git_status_info() {
+		local is_clean="$1" info_text="$2"
+	    if [[ "$is_clean" == true ]]; then
+            export GIT_STATUS_INFO="${PROMPT_GREEN_INITIAL_TRIANGLE_BLUE}${PROMPT_TRIANGLE}${PROMPT_BLACK_ON_GREEN} ${info_text} ${PROMPT_GREEN_FG}${PROMPT_TRIANGLE}${PROMPT_RESET}"
+	    else
             export GIT_STATUS_INFO="${PROMPT_YELLOW_INITIAL_TRIANGLE_BLUE}${PROMPT_TRIANGLE}${PROMPT_BLACK_ON_YELLOW} ${info_text} ${PROMPT_YELLOW_FG}${PROMPT_TRIANGLE}${PROMPT_RESET}"
-        fi
-    fi
-}
+	    fi
+	}
+fi
 
 periodic_git_fetch() {
     [[ -z "$ROPERDOT_MAIN_GIT_REPO" ]] && return
@@ -54,7 +55,7 @@ periodic_git_fetch() {
 }
 
 if [[ "$ROPERDOT_SHOW_EXTENDED_GIT_INFO" == "behind-only" ]]; then
-	function set_git_info() {
+	set_git_info() {
 		periodic_git_fetch
 		if ! git rev-parse --git-dir >/dev/null 2>&1; then
 			export GIT_STATUS_INFO=""
@@ -88,7 +89,7 @@ if [[ "$ROPERDOT_SHOW_EXTENDED_GIT_INFO" == "behind-only" ]]; then
 		build_git_status_info $is_clean "$info_text"
 	}
 elif [[ -n "$ROPERDOT_SHOW_EXTENDED_GIT_INFO" ]]; then
-	function set_git_info() {
+	set_git_info() {
 		periodic_git_fetch
 
 	    if ! git rev-parse --git-dir >/dev/null 2>&1; then
@@ -142,7 +143,7 @@ elif [[ -n "$ROPERDOT_SHOW_EXTENDED_GIT_INFO" ]]; then
         build_git_status_info $is_clean "$info_text"
 	}
 else
-	function set_git_info() {
+	set_git_info() {
 		periodic_git_fetch
 
 	    if ! git rev-parse --git-dir >/dev/null 2>&1; then
@@ -169,7 +170,7 @@ set_terminal_title () {
     echo -ne "\033]0;${display_path}\007"
 }
 
-function get_starship_config() {
+get_starship_config() {
 	local STARSHIP_DIR="$HOME/.config/starship"
 
 	if [[ "$ROPERDOT_CURRENT_SHELL" = "bash" ]]; then
@@ -222,7 +223,7 @@ if [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
 		PROMPT_BLUE_ON_WHITE=$(printf '\033[%s;%sm' "${PROMPT_WHITE_BG}" "${COLOR_BLUE_CODE}")
 		PROMPT_BLACK_ON_PANEL=$(printf '\033[%sm\033[48;2;%sm' "${COLOR_BLACK_CODE}" "${PROMPT_PANEL_BG_RGB}")
 
-		function set_status_info() {
+		set_status_info() {
 		    local last_exit=$?
 		    if [[ $last_exit -eq 0 ]]; then
 		        export STATUS_INFO="${PROMPT_BLUE_ON_PANEL} ✔ ${PROMPT_RESET}"
@@ -231,7 +232,7 @@ if [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
 		    fi
 		}
 
-		function set_dir_stack_info() {
+		set_dir_stack_info() {
 		    local depth=$(dirs -p | wc -l)
 		    if [[ $depth -lt 2 ]]; then
 		        export DIR_STACK_INFO=""
@@ -255,7 +256,7 @@ if [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
 		PROMPT_BLACK_ON_MAGENTA=$(printf '\033[0;%s;%sm' "${COLOR_BLACK_CODE}" "${PROMPT_MAGENTA_BG}")
 		PROMPT_MAGENTA_FG=$(printf '\033[0;%sm' "${COLOR_MAGENTA_CODE}")
 
-		function set_status_info() {
+		set_status_info() {
 		    local last_exit=$?
 		    if [[ $last_exit -eq 0 ]]; then
 		        export STATUS_INFO="${PROMPT_MAGENTA_ON_BLACK} ✔ ${PROMPT_RESET}"
@@ -264,7 +265,7 @@ if [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
 		    fi
 		}
 
-		function set_dir_stack_info() {
+		set_dir_stack_info() {
 		    local depth=$(dirs -p | wc -l)
 		    if [[ $depth -lt 2 ]]; then
 		        export DIR_STACK_INFO=""

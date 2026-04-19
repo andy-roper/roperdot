@@ -451,10 +451,13 @@ EOT
 	local dir
 	if command -v gum >/dev/null 2>&1; then
 		local height=$(( LINES * 4 / 10 ))
+	    local cursor_up='\033[1A'
+	    local erase_line='\033[2K'
+		# The error-situation printf erases the "nothing selected" message from gum
 		if [[ $# -eq 0 ]]; then
-			dir="$(fd --type d | gum filter --placeholder='Select directory...' --height=$height)"
+			dir="$(fd --type d | gum filter --placeholder='Select directory...' --height=$height)" || { printf "${cursor_up}${erase_line}" >/dev/tty; true; }
 		else
-			dir="$(fd --type d . "$1" | gum filter --placeholder='Select directory...' --height=$height)"
+			dir="$(fd --type d . "$1" | gum filter --placeholder='Select directory...' --height=$height)" || { printf "${cursor_up}${erase_line}" >/dev/tty; true; }
 		fi
 	else
 		if [[ $# -eq 0 ]]; then
@@ -1237,7 +1240,7 @@ bindiff() {
 $diff_app: compare files in binary/hex mode
 Usage: $diff_app <filespec> <filespec>
 
-To exit vimdiff in simple mode, press ctrl-L and then do :qa!
+To exit, press ctrl-L and then do :qa!
 EOT
 		return
 	fi
@@ -1245,7 +1248,13 @@ EOT
 		echo "Required application vimdiff not found"
 		return
 	fi
-	vimdiff -y <(xxd -l1000 "$1") <(xxd -l1000 "$2") 2>/dev/null
+	# Can't use vimdiff due to "2 files to edit" message
+	local f1 f2
+	f1=$(mktemp) f2=$(mktemp)
+	xxd -l1000 "$1" > "$f1"
+	xxd -l1000 "$2" > "$f2"
+	vim "$f1" -c "vert diffsplit $f2"
+	rm -f "$f1" "$f2" >&/dev/null
 }
 
 hexdiff() {

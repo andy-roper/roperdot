@@ -392,7 +392,10 @@ else
 fi
 
 # Get the directory of the current script
-script_dir="$(cd "$(dirname "$0")" && pwd)"
+# bash:
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd)"
+# zsh:
+script_dir="${0:a:h}"
 
 # Get the name of the current script without path
 script_name="${0##*/}"

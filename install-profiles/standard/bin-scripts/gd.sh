@@ -1,5 +1,5 @@
 #
-# Description: Git Diff: ????????????????????????????????
+# Description: Git Diff: Shows git differences for changed files in a repository
 #
 # Author: Andy Roper <andyroper42@gmail.com>
 # URL: https://github.com/andy-roper/roperdot
@@ -47,6 +47,7 @@ select_with_gum() {
     local selected
     local cursor_up='\033[1A'
     local erase_line='\033[2K'
+    # The error-situation printf erases the "nothing selected" message from gum
     selected=$(printf '%s\n' "${files[@]}" \
         | gum choose \
             --header "Select a file to diff (Esc or Enter with no selection to quit)" \
@@ -72,7 +73,11 @@ reporoot=$(git rev-parse --show-toplevel)
 
 while true; do
     # Collect changed files into an array
-    mapfile -t changed < <(git diff --name-only HEAD 2>/dev/null)
+    if [[ "$ROPERDOT_CURRENT_SHELL" == "bash" ]]; then
+    	mapfile -t changed < <(git diff --name-only HEAD 2>/dev/null)
+    else
+    	changed=("${(@f)$(git diff --name-only HEAD 2>/dev/null)}")
+    fi
 
     if [[ ${#changed[@]} -eq 0 ]]; then
         echo "No changed files found."
