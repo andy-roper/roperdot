@@ -31,6 +31,9 @@ EOT
     exit 0
 fi
 
+[[ -z "$LINES" || "$LINES" -eq 0 ]] && LINES=$(tput lines 2>/dev/null) || true
+[[ -z "$LINES" || "$LINES" -eq 0 ]] && LINES=24 # sensible fallback
+
 # Cache file location
 CACHE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/cdj/dirs"
 
@@ -238,7 +241,7 @@ done <<< "$JAVA_DIRS"
 # Show in gum or fzf for selection (using cat -n for line numbers)
 COUNT=${#DISPLAY_PATHS[@]}
 if command -v gum >/dev/null 2>&1; then
-    local gum_height=$((COUNT + 2))
+    gum_height=$((COUNT + 2))
     (( gum_height > LINES / 2 )) && gum_height=$(( LINES / 2 ))
     SELECTED_PATH=$(printf "%s\n" "${DISPLAY_PATHS[@]}" | \
         gum filter --no-fuzzy --placeholder="Select Java directory: " --height="$gum_height")

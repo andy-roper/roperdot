@@ -17,6 +17,9 @@ fi
 
 . "${ROPERDOT_DIR}/source-scripts/input-functions"
 
+[[ -z "$LINES" || "$LINES" -eq 0 ]] && LINES=$(tput lines 2>/dev/null) || true
+[[ -z "$LINES" || "$LINES" -eq 0 ]] && LINES=24 # sensible fallback
+
 # Get clipboard command for the current platform
 get_clipboard_command() {
     if command -v clip.exe &>/dev/null; then
@@ -982,8 +985,8 @@ fi
 
 # Menu options
 if command -v gum &>/dev/null; then
-    local height=$(( LINES * 55 / 100 ))
-    local menu_options=(
+    height=$(( LINES * 55 / 100 ))
+    menu_options=(
     	"Show abbreviated status"
     	"Show full status"
     	"Show log"

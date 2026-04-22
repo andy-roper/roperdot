@@ -21,6 +21,10 @@ from a list. Either gum or fzf will be used for the selection if they're install
 EOT
 	exit 0
 fi
+
+[[ -z "$LINES" || "$LINES" -eq 0 ]] && LINES=$(tput lines 2>/dev/null) || true
+[[ -z "$LINES" || "$LINES" -eq 0 ]] && LINES=24 # sensible fallback
+
 if [[ $# -eq 0 ]]; then
 	if [[ $ROPERDOT_CURRENT_SHELL = zsh ]]; then
 		pwd="$(pwd)"
