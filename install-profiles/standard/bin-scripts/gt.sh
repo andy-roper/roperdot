@@ -77,6 +77,9 @@ if [[ "$ALL_FLAG" == false ]]; then
     fi
 fi
 
+[[ -z "$LINES" || "$LINES" -eq 0 ]] && LINES=$(tput lines 2>/dev/null) || true
+[[ -z "$LINES" || "$LINES" -eq 0 ]] && LINES=24
+
 # Find test class(es)
 if [[ "$LOCAL_MODE" == true ]]; then
     # Non-recursive: use only test classes in current directory

@@ -18,6 +18,8 @@ regions_list=$(aws ec2 describe-regions --query 'Regions[].RegionName' --output 
 region_options="default ($default_region)"$'\n'"$regions_list"
 
 if command -v gum >/dev/null 2>&1; then
+	[[ -z "$LINES" || "$LINES" -eq 0 ]] && LINES=$(tput lines 2>/dev/null) || true
+	[[ -z "$LINES" || "$LINES" -eq 0 ]] && LINES=24
 	height=$(( LINES / 3 ))
 	region="$(echo "$region_options" | gum choose --height=$height --header="Select a region:")"
 else

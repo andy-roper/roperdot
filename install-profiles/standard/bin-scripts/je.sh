@@ -199,6 +199,8 @@ else
 	DISPLAY_ONLY=$(echo "$DISPLAY_LIST" | cut -d'|' -f1)
 
 	if command -v gum >/dev/null 2>&1; then
+		[[ -z "$LINES" || "$LINES" -eq 0 ]] && LINES=$(tput lines 2>/dev/null) || true
+		[[ -z "$LINES" || "$LINES" -eq 0 ]] && LINES=24
 		height=$(( LINES / 3 ))
 		SELECTED_DISPLAY=$(echo "$DISPLAY_ONLY" | gum filter --height=$height --placeholder="Select Java class to edit...")
 	else

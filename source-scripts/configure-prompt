@@ -62,13 +62,11 @@ if [[ "$ROPERDOT_SHOW_EXTENDED_GIT_INFO" == "behind-only" ]]; then
 			return
 		fi
 		local branch=$(git branch --show-current 2>/dev/null)
-
 		local is_clean=false
 		if git diff-index --quiet HEAD -- 2>/dev/null && \
 		[[ -z $(git ls-files --others --exclude-standard 2>/dev/null) ]]; then
 			is_clean=true
 		fi
-
 		local master_behind=0
 		if [[ "$branch" != "master" && "$branch" != "main" ]]; then
 			local master_ref
@@ -81,10 +79,13 @@ if [[ "$ROPERDOT_SHOW_EXTENDED_GIT_INFO" == "behind-only" ]]; then
 				master_behind=$(git rev-list --count "HEAD..${master_ref}" 2>/dev/null)
 			fi
 		fi
-
+		local remote_behind=0
+		if git rev-parse --verify @{upstream} >/dev/null 2>&1; then
+			remote_behind=$(git rev-list --count HEAD..@{upstream} 2>/dev/null)
+		fi
 		local status_indicators=""
-		[[ $master_behind -gt 0 ]] && status_indicators+=" ⇣$master_behind"
-
+		[[ $master_behind -gt 0 ]] && status_indicators+=" ▼$master_behind"
+		[[ $remote_behind -gt 0 ]] && status_indicators+=" ⇣$remote_behind"
 		local info_text="${branch}${status_indicators}"
 		build_git_status_info $is_clean "$info_text"
 	}

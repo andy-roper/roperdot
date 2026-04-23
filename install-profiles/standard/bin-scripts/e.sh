@@ -61,6 +61,8 @@ call_override () {
 }
 
 files=()
+[[ -z "$LINES" || "$LINES" -eq 0 ]] && LINES=$(tput lines 2>/dev/null) || true
+[[ -z "$LINES" || "$LINES" -eq 0 ]] && LINES=24
 if [[ $# -eq 0 ]]; then
 	clip_contents=$(clippaste)
 	if [[ -n "$clip_contents" && ${#clip_contents} -le 255 && ! "$clip_contents" =~ $'\n' && ! "$clip_contents" =~ $'\t' && ! "$clip_contents" =~ [\*\?\[\$] ]]; then

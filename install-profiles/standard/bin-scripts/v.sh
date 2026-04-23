@@ -75,6 +75,10 @@ while [[ $# -gt 0 ]]; do
 		*) break ;;
 	esac
 done
+
+[[ -z "$LINES" || "$LINES" -eq 0 ]] && LINES=$(tput lines 2>/dev/null) || true
+[[ -z "$LINES" || "$LINES" -eq 0 ]] && LINES=24
+
 files=()
 if [[ $# -eq 0 ]]; then
 	clip_contents=$(clippaste)
