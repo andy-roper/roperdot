@@ -750,7 +750,8 @@ action_git_blame() {
     fi
     
     # Show git blame with color and use less for paging
-    echo "git blame --color-lines --color-by-age $file | less -R"
+    # echo "git blame --color-lines --color-by-age $file | less -R"
+    echo "git-blame-colored $file | less -R"
 }
 
 # Action: Diff vs parent
@@ -858,6 +859,50 @@ action_create_branch_from_master_and_push() {
         else
             echo "git checkout $default_branch && git pull && git checkout -b $branch_name && git push -u origin $branch_name"
         fi
+    fi
+}
+
+# Action: Create branch from current branch
+action_create_branch_from_current() {
+    local current_branch=$(get_current_branch)
+    local branch_name
+    if command -v gum >/dev/null 2>&1; then
+        if ! branch_name=$(gum input --placeholder="Enter branch name"); then
+            echo "Branch creation cancelled" >&2
+            return 1
+        fi
+    else
+        echo "Enter branch name:" >&2
+        if ! read -r branch_name; then
+            echo "Creation cancelled" >&2
+            return 1
+        fi
+    fi
+
+    if [[ -n "$branch_name" ]]; then
+        echo "git checkout -b $branch_name"
+    fi
+}
+
+# Action: Create branch from current branch and push
+action_create_branch_from_current_and_push() {
+    local current_branch=$(get_current_branch)
+    local branch_name
+    if command -v gum >/dev/null 2>&1; then
+        if ! branch_name=$(gum input --placeholder="Enter branch name"); then
+            echo "Branch creation cancelled" >&2
+            return 1
+        fi
+    else
+        echo "Enter branch name:" >&2
+        if ! read -r branch_name; then
+            echo "Creation cancelled" >&2
+            return 1
+        fi
+    fi
+
+    if [[ -n "$branch_name" ]]; then
+        echo "git checkout -b $branch_name && git push -u origin $branch_name"
     fi
 }
 
@@ -1010,6 +1055,8 @@ if command -v gum &>/dev/null; then
         "Fetch file from parent branch"
         "Create branch from master"
         "Create branch from master and push"
+        "Create branch from current"
+		"Create branch from current and push"
 		"Delete branch"
 	)
 
@@ -1046,6 +1093,8 @@ Merge to parent branch (checkout parent, merge current)
 Fetch file from parent branch
 Create branch from master
 Create branch from master and push
+Create branch from current
+Create branch from current and push
 Delete branch${admin_options:+
 ${admin_options}}
 EOF
@@ -1123,6 +1172,12 @@ case "$action" in
     "Create branch from master and push")
 		command=$(action_create_branch_from_master_and_push)
 		;;
+    "Create branch from current")
+        command=$(action_create_branch_from_current)
+        ;;
+    "Create branch from current and push")
+        command=$(action_create_branch_from_current_and_push)
+        ;;
     "Delete branch"*)
         command=$(action_delete_branch)
         ;;
