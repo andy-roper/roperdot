@@ -68,31 +68,36 @@ get_current_branch() {
 # Get parent branch (the branch this branch was created from)
 get_parent_branch() {
     local current_branch=${1:-$(git rev-parse --abbrev-ref HEAD)}
-    
-    # Get all local branches except current, sorted by commit distance
-    local candidates=$(git branch --format='%(refname:short)' | grep -v "^${current_branch}$" | while read branch; do
-        local merge_base=$(git merge-base HEAD "$branch" 2>/dev/null || echo "")
-        if [ -n "$merge_base" ]; then
-            # Count commits from merge-base to current HEAD (how far ahead you are)
-            local distance=$(git rev-list --count "$merge_base..HEAD" 2>/dev/null || echo "999999")
-            echo "$distance $branch"
-        fi
-    done | sort -n)
+    local well_known="main master develop dev trunk"
 
-    if [[ -z "$candidates" ]]; then
-    	echo $current_branch
-    	return
+    # Strategy 1: branch-meta lookup
+    local meta_file="$(git rev-parse --git-dir)/branch-meta"
+    local meta_parent=$(grep "^${current_branch}=" "$meta_file" 2>/dev/null | cut -d= -f2)
+    # Validate it still exists as a local branch
+    if [[ -n "$meta_parent" ]] && ! git show-ref --verify --quiet "refs/heads/${meta_parent}"; then
+        meta_parent=""
     fi
-    
-    # Strip distances and pass to gum
-	local branch_list=$(echo "$candidates" | awk '{print $2}')
 
-	if command -v gum &>/dev/null; then
-	    local height=$(( LINES * 55 / 100 ))
-	    echo "$branch_list" | gum choose --header "Select parent branch:" --height=$height
-	else
-	    echo "$branch_list" | fzf --exact --prompt="Select parent branch > " --height=55% --reverse
-	fi
+    # Build remaining branch list: well-known first, then alpha, excluding current and meta_parent
+    local all_branches=$(git branch --format='%(refname:short)' | grep -v "^${current_branch}$")
+    [[ -n "$meta_parent" ]] && all_branches=$(echo "$all_branches" | grep -v "^${meta_parent}$")
+
+	local wk_branches=$(echo "$all_branches" | grep -iE "^(main|master|develop|dev|trunk)$|master" | sort)
+	local other_branches=$(echo "$all_branches" | grep -ivE "^(main|master|develop|dev|trunk)$|master" | sort)
+
+    local branch_list=$(printf "%s\n%s\n%s" "$meta_parent" "$wk_branches" "$other_branches" | grep -v '^$')
+
+    if [[ -z "$branch_list" ]]; then
+        echo "$current_branch"
+        return
+    fi
+
+    if command -v gum &>/dev/null; then
+        local height=$(( LINES * 55 / 100 ))
+        echo "$branch_list" | gum choose --header "Select parent branch:" --height=$height
+    else
+        echo "$branch_list" | fzf --exact --prompt="Select parent branch > " --height=55% --reverse
+    fi
 }
 
 get_default_branch() {
@@ -750,8 +755,7 @@ action_git_blame() {
     fi
     
     # Show git blame with color and use less for paging
-    # echo "git blame --color-lines --color-by-age $file | less -R"
-    echo "git-blame-colored $file | less -R"
+    echo "git blame --color-lines --color-by-age $file | less -R"
 }
 
 # Action: Diff vs parent
@@ -859,50 +863,6 @@ action_create_branch_from_master_and_push() {
         else
             echo "git checkout $default_branch && git pull && git checkout -b $branch_name && git push -u origin $branch_name"
         fi
-    fi
-}
-
-# Action: Create branch from current branch
-action_create_branch_from_current() {
-    local current_branch=$(get_current_branch)
-    local branch_name
-    if command -v gum >/dev/null 2>&1; then
-        if ! branch_name=$(gum input --placeholder="Enter branch name"); then
-            echo "Branch creation cancelled" >&2
-            return 1
-        fi
-    else
-        echo "Enter branch name:" >&2
-        if ! read -r branch_name; then
-            echo "Creation cancelled" >&2
-            return 1
-        fi
-    fi
-
-    if [[ -n "$branch_name" ]]; then
-        echo "git checkout -b $branch_name"
-    fi
-}
-
-# Action: Create branch from current branch and push
-action_create_branch_from_current_and_push() {
-    local current_branch=$(get_current_branch)
-    local branch_name
-    if command -v gum >/dev/null 2>&1; then
-        if ! branch_name=$(gum input --placeholder="Enter branch name"); then
-            echo "Branch creation cancelled" >&2
-            return 1
-        fi
-    else
-        echo "Enter branch name:" >&2
-        if ! read -r branch_name; then
-            echo "Creation cancelled" >&2
-            return 1
-        fi
-    fi
-
-    if [[ -n "$branch_name" ]]; then
-        echo "git checkout -b $branch_name && git push -u origin $branch_name"
     fi
 }
 
@@ -1055,8 +1015,6 @@ if command -v gum &>/dev/null; then
         "Fetch file from parent branch"
         "Create branch from master"
         "Create branch from master and push"
-        "Create branch from current"
-		"Create branch from current and push"
 		"Delete branch"
 	)
 
@@ -1093,8 +1051,6 @@ Merge to parent branch (checkout parent, merge current)
 Fetch file from parent branch
 Create branch from master
 Create branch from master and push
-Create branch from current
-Create branch from current and push
 Delete branch${admin_options:+
 ${admin_options}}
 EOF
@@ -1172,12 +1128,6 @@ case "$action" in
     "Create branch from master and push")
 		command=$(action_create_branch_from_master_and_push)
 		;;
-    "Create branch from current")
-        command=$(action_create_branch_from_current)
-        ;;
-    "Create branch from current and push")
-        command=$(action_create_branch_from_current_and_push)
-        ;;
     "Delete branch"*)
         command=$(action_delete_branch)
         ;;

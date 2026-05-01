@@ -150,7 +150,9 @@ help <text>        # Find commands whose name/description matches the text
 - **`gm`** - Git Manager: interactive git workflow helper
 - **`gr`** - Navigate to git repository root directory
 - **`master`** - git checkout master
+- **`post-checkout` git hook** - stores a parent/child branch relationship in .git/branch-meta when a branch is created
 - **`push`** - git push
+- **`set-branch-parent`** - Sets what the parent is for a branch (used in the gm script)
 - **`undopush`** - Undoes a git push
 
 ### Code Utilities
