@@ -158,6 +158,35 @@ done
 at_start=true
 first_output=true
 
+# Collapse a directory down through any single-child-directory chain.
+# Prints the deepest directory that has more than one item (or any non-directory item),
+# expressed as a path relative to the given base directory.
+collapse_dir() {
+    local base="$1"
+    local dir="$2"
+    local cd_sub_dirs cd_sub_total
+
+    while true; do
+        cd_sub_dirs=()
+        while IFS= read -r sd; do
+            [[ -n "$sd" ]] && cd_sub_dirs+=("$sd")
+        done < <(get_directories "$dir")
+
+        cd_sub_total=$(find "$dir" -mindepth 1 -maxdepth 1 2>/dev/null | wc -l)
+        cd_sub_total="${cd_sub_total//[[:space:]]/}"
+
+        # If exactly one child and it is a directory (nothing else present), descend
+        if [[ ${#cd_sub_dirs[@]} -eq 1 && $cd_sub_total -eq 1 ]]; then
+            dir="${cd_sub_dirs[@]:0:1}"
+        else
+            break
+        fi
+    done
+
+    # Return path relative to base
+    echo "${${dir#${base}/}#/}"
+}
+
 while true; do
     # Get directories in current location
     directories=()
@@ -198,7 +227,8 @@ while true; do
     # Prepare directory list for fzf (basenames only)
     dir_list=()
     for dir in "${directories[@]}"; do
-        dir_list+=("${dir##*/}")
+        # dir_list+=("${dir##*/}")
+        dir_list+=("$(collapse_dir "$current_dir" "$dir")")
     done
     
     options_list=()
@@ -207,38 +237,41 @@ while true; do
     [[ "$current_dir" != "/" ]] && options_list+=("..")
     
     already_prompted=true
-    
+
     # Build the fzf input - only include options_list if it has entries
     if [[ ${#options_list[@]} -gt 0 ]]; then
-        selected=$(printf '%s\n' "${dir_list[@]}" | tac | { printf '%s\n' "${options_list[@]}"; cat; } | fzf \
-            --height=40% \
-            --layout=reverse \
-            --border \
-            --exact \
-            --prompt="Navigate > " \
-            --preview="
-                if [[ {} == '── STOP HERE ──' ]]; then
-                    echo 'Stop navigation here'
-                elif [[ {} == '── BROWSE HERE ──' ]]; then
-                    echo 'Open file manager at this location'
-                elif [[ {} == '..' ]]; then
-                    parent='${current_dir%/*}'
-                    [[ -z \$parent ]] && parent='/'
-                    ls -1 \"\$parent\" 2>/dev/null || echo 'Parent directory'
-                else
-                    ls -1 '$current_dir/{}' 2>/dev/null
-                fi
-            " \
-            --preview-window=right:50%:wrap)
+		selected=$(printf '%s\n' "${dir_list[@]}" | tac | { printf '%s\n' "${options_list[@]}"; cat; } | \
+		    PREVIEW_DIR="$current_dir" fzf \
+		        --height=40% \
+		        --layout=reverse \
+		        --border \
+		        --exact \
+		        --prompt="Navigate > " \
+				--preview='
+				    item={}
+				    if [ "$item" = "── STOP HERE ──" ]; then
+				        echo "Stop navigation here"
+				    elif [ "$item" = "── BROWSE HERE ──" ]; then
+				        echo "Open file manager at this location"
+				    elif [ "$item" = ".." ]; then
+				        parent="${PREVIEW_DIR%/*}"
+				        [ -z "$parent" ] && parent="/"
+				        ls -1 "$parent" 2>/dev/null || echo "Parent directory"
+				    else
+				        ls -1 "$PREVIEW_DIR/$item" 2>/dev/null
+				    fi
+				' \
+		        --preview-window=right:40%:wrap)
     else
-        selected=$(printf '%s\n' "${dir_list[@]}" | tac | fzf \
-            --height=40% \
-            --layout=reverse \
-            --border \
-            --exact \
-            --prompt="Navigate > " \
-            --preview="ls -1 '$current_dir/{}' 2>/dev/null" \
-            --preview-window=right:50%:wrap)
+		selected=$(printf '%s\n' "${dir_list[@]}" | tac | \
+		    PREVIEW_DIR="$current_dir" fzf \
+		        --height=40% \
+		        --layout=reverse \
+		        --border \
+		        --exact \
+		        --prompt="Navigate > " \
+		        --preview='ls -1 "$PREVIEW_DIR/"{}  2>/dev/null' \
+		        --preview-window=right:50%:wrap)
     fi
     
     [[ -z "$selected" || "$selected" == "── STOP HERE ──" ]] && break
