@@ -184,7 +184,8 @@ collapse_dir() {
     done
 
     # Return path relative to base
-    echo "${${dir#${base}/}#/}"
+    local value="${dir#${base}/}"
+	echo "${value#/}"
 }
 
 while true; do
@@ -198,7 +199,7 @@ while true; do
     total_items=$(find "$current_dir" -mindepth 1 -maxdepth 1 2>/dev/null | wc -l)
     
     # If no directories, we're done
-    [[ ${#directories[@]} -eq 0 && -z "$at_start" ]] && break
+    # [[ ${#directories[@]} -eq 0 && -z "$at_start" ]] && break
     at_start=
     
     # If only one directory and no other items, auto-descend (unless force_prompt is set)
@@ -233,19 +234,24 @@ while true; do
     
     options_list=()
     [[ -n "$already_prompted" ]] && options_list+=("── STOP HERE ──")
-    [[ -n "$ROPERDOT_DESKTOP_ENV" ]] && options_list+=("── BROWSE HERE ──")
+    if [[ -n "$ROPERDOT_DIR" ]]; then
+    	[[ -n "$ROPERDOT_DESKTOP_ENV" ]] && options_list+=("── BROWSE HERE ──")
+    else
+    	options_list+=("── BROWSE HERE ──")
+    fi
     [[ "$current_dir" != "/" ]] && options_list+=("..")
     
     already_prompted=true
 
     # Build the fzf input - only include options_list if it has entries
     if [[ ${#options_list[@]} -gt 0 ]]; then
-		selected=$(printf '%s\n' "${dir_list[@]}" | tac | { printf '%s\n' "${options_list[@]}"; cat; } | \
+		fzf_out=$(printf '%s\n' "${dir_list[@]}" | tac | { printf '%s\n' "${options_list[@]}"; cat; } | \
 		    PREVIEW_DIR="$current_dir" fzf \
 		        --height=40% \
 		        --layout=reverse \
 		        --border \
 		        --exact \
+		        --print-query \
 		        --prompt="Navigate > " \
 				--preview='
 				    item={}
@@ -263,37 +269,76 @@ while true; do
 				' \
 		        --preview-window=right:40%:wrap)
     else
-		selected=$(printf '%s\n' "${dir_list[@]}" | tac | \
+		fzf_out=$(printf '%s\n' "${dir_list[@]}" | tac | \
 		    PREVIEW_DIR="$current_dir" fzf \
 		        --height=40% \
 		        --layout=reverse \
 		        --border \
 		        --exact \
+		        --print-query \
 		        --prompt="Navigate > " \
 		        --preview='ls -1 "$PREVIEW_DIR/"{}  2>/dev/null' \
 		        --preview-window=right:50%:wrap)
     fi
-    
-    [[ -z "$selected" || "$selected" == "── STOP HERE ──" ]] && break
-    
-    if [[ "$selected" == "── BROWSE HERE ──" ]]; then
-    	fm "$current_dir"
+
+    fzf_query="${fzf_out%%$'\n'*}"
+    selected="${fzf_out#*$'\n'}"
+    [[ "$selected" == "$fzf_query" ]] && selected=""  # no match chosen
+
+    # If nothing was selected but user typed a query, treat it as a path
+    if [[ -z "$selected" && -n "$fzf_query" ]]; then
+        # Handle "..." => ../.., "...." => ../../.. etc.
+        if [[ "$fzf_query" =~ ^\.{2,}$ ]]; then
+            dots="${#fzf_query}"
+            nav_target="$current_dir"
+            for ((i = 1; i < dots; i++)); do
+                nav_target="${nav_target%/*}"
+                [[ -z "$nav_target" ]] && nav_target="/"
+            done
+            current_dir="$nav_target"
+            force_prompt=true
+            continue
+        fi
+        expanded="${fzf_query/#\~/$HOME}"
+        [[ -d "$expanded" ]] && current_dir=$(cd "$expanded" && pwd)
         force_prompt=true
         continue
     fi
+
+    [[ -z "$selected" || "$selected" == "── STOP HERE ──" ]] && break
     
+    if [[ "$selected" == "── BROWSE HERE ──" ]]; then
+    	if command -v fm &>/dev/null; then
+    		fm "$current_dir"
+    	else
+			if [[ "$OSTYPE" == "darwin"* ]]; then
+			    open "$current_dir"
+			elif grep -qi microsoft /proc/version 2>/dev/null; then
+			    win_path=$(wslpath -w "$current_dir")
+			    explorer.exe "$win_path"
+			else
+			    nautilus "$current_dir" &
+			fi
+    	fi
+        force_prompt=true
+        continue
+    fi
+
     if [[ "$selected" == ".." ]]; then
         current_dir=$(auto_ascend "$current_dir")
         force_prompt=true
         continue
     fi
     
-    # Update current directory (descending)
+    # Check if selected resolves to a real subdirectory first
     if [[ "$current_dir" == "/" ]]; then
-        current_dir="/$selected"
+        candidate="/$selected"
     else
-        current_dir="$current_dir/$selected"
+        candidate="$current_dir/$selected"
     fi
+
+    # Update current directory (descending)
+    current_dir="$candidate"
 done
 
 # If we displayed a path, add a newline before final output
