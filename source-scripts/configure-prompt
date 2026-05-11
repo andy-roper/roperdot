@@ -68,17 +68,42 @@ if [[ "$ROPERDOT_SHOW_EXTENDED_GIT_INFO" == "behind-only" ]]; then
 			is_clean=true
 		fi
 		local master_behind=0
-		if [[ "$branch" != "master" && "$branch" != "main" ]]; then
-			local master_ref
-			if git rev-parse --verify origin/master >/dev/null 2>&1; then
-				master_ref="origin/master"
-			elif git rev-parse --verify origin/main >/dev/null 2>&1; then
-				master_ref="origin/main"
-			fi
-			if [[ -n "$master_ref" ]]; then
-				master_behind=$(git rev-list --count "HEAD..${master_ref}" 2>/dev/null)
-			fi
+		meta_file="$(git rev-parse --git-dir)/branch-meta"
+		if [[ -f "$meta_file" ]]; then
+  			master_ref="$(awk -F= -v b="$branch" '$1==b {print $2; exit}' "$meta_file")"
 		fi
+		if [[ -z "$master_ref" ]]; then
+		    local candidates
+		    candidates=$(git branch -r 2>/dev/null \
+		        | sed 's/^[[:space:]]*//' \
+		        | grep -v 'HEAD' \
+		        | grep -i -E '(^|/)master$|(^|[-_])master($|[-_])|(^|/)main$')
+		    if [[ -n "$candidates" ]]; then
+		        local best_ref=""
+		        local best_base=""
+		        while IFS= read -r candidate; do
+		            candidate="${candidate// /}"
+		            local merge_base
+		            merge_base=$(git merge-base HEAD "$candidate" 2>/dev/null)
+		            if [[ -n "$merge_base" ]]; then
+		                if [[ -z "$best_base" ]] || \
+		                git merge-base --is-ancestor "$best_base" "$merge_base" 2>/dev/null; then
+		                    best_base="$merge_base"
+		                    best_ref="$candidate"
+		                fi
+		            fi
+		        done <<< "$candidates"
+		        if [[ -n "$best_ref" ]]; then
+		            master_ref="$best_ref"
+		            local parent_name="${master_ref#origin/}"
+		            echo "Setting parent of ${branch} to ${parent_name} in ${meta_file}"
+		            echo "${branch}=${parent_name}" >> "$meta_file"
+		        fi
+		    fi
+		fi
+        if [[ -n "$master_ref" ]]; then
+            master_behind=$(git rev-list --count "HEAD..${master_ref}" 2>/dev/null)
+        fi
 		local remote_behind=0
 		if git rev-parse --verify @{upstream} >/dev/null 2>&1; then
 			remote_behind=$(git rev-list --count HEAD..@{upstream} 2>/dev/null)

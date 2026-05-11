@@ -910,7 +910,11 @@ EOF
         fi
         
         if [[ "$force_delete" == "Force"* ]]; then
-            echo "git branch -D $selected_branch"
+		    if git rev-parse --verify "origin/${selected_branch}" >/dev/null 2>&1; then
+		        echo "git branch -D $selected_branch && git push origin --delete $selected_branch"
+		    else
+		        echo "git branch -D $selected_branch"
+		    fi
         else
             echo "Delete cancelled" >&2
             return 1
@@ -918,7 +922,11 @@ EOF
     else
         # Branch is merged - safe delete
         ask_yn_n "Confirm deletion of branch" || return 1
-        echo "git branch -d $selected_branch"
+        if git rev-parse --verify "origin/${selected_branch}" >/dev/null 2>&1; then
+		    echo "git branch -d $selected_branch && git push origin --delete $selected_branch"
+		else
+		    echo "git branch -d $selected_branch"
+		fi
     fi
 }
 

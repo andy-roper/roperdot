@@ -1,25 +1,29 @@
 #!/usr/bin/env bash
 # post-checkout hook: records parent branch in .git/branch-meta on branch creation
 # Arguments: <prev-head> <new-head> <branch-checkout-flag>
-
+ 
 prev_head=$1
 new_head=$2
 branch_checkout=$3
-
+ 
 # Only care about branch checkouts, not file checkouts
 [[ "$branch_checkout" != "1" ]] && exit 0
-
+ 
 # Only care about branch creation (HEAD didn't move)
 [[ "$prev_head" != "$new_head" ]] && exit 0
-
+ 
 new_branch=$(git rev-parse --abbrev-ref HEAD)
-prev_branch=$(git name-rev --name-only "$prev_head" 2>/dev/null | sed 's/~.*//')
-
+if [[ "$new_branch" =~ (^|[-_])(master|main)$ || "$new_branch" =~ ^(master|main)$ ]]; then
+    exit 0
+fi
+ 
+prev_branch=$(git rev-parse --abbrev-ref @{-1} 2>/dev/null)
+ 
 # Don't record if parent couldn't be determined
 [[ -z "$prev_branch" || "$prev_branch" == "undefined" ]] && exit 0
-
+ 
 meta_file="$(git rev-parse --git-dir)/branch-meta"
-
+ 
 # Only write if no existing entry for this branch
 if ! grep -q "^${new_branch}=" "$meta_file" 2>/dev/null; then
     echo "${new_branch}=${prev_branch}" >> "$meta_file"
