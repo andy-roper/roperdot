@@ -255,6 +255,57 @@ action_push_all_changes() {
     fi
 }
 
+# Action: Sync selected changes (add selected files, commit, push)
+action_sync_selected_changes() {
+    local branch=$(get_current_branch)
+    local repo_root=$(git rev-parse --show-toplevel)
+
+    # Get all changed/untracked files relative to repo root
+    local changed_files
+    changed_files=$(git -C "$repo_root" diff --name-only)
+    local untracked_files
+    untracked_files=$(git -C "$repo_root" ls-files --others --exclude-standard)
+    local all_files
+    all_files=$(printf "%s\n%s" "$changed_files" "$untracked_files" | grep -v '^$')
+
+    if [[ -z "$all_files" ]]; then
+        echo "Error: No changed files to sync" >&2
+        return 1
+    fi
+
+    # Multiselect files
+    local selected_files
+    if command -v gum &>/dev/null; then
+        local height=$(( LINES * 55 / 100 ))
+        selected_files=$(echo "$all_files" | gum choose --no-limit \
+            --header="Select files to sync (space to select, enter to confirm)" \
+            --height=$height)
+    else
+        selected_files=$(echo "$all_files" | fzf --multi \
+            --prompt="Select files to sync (tab to select multiple) > " \
+            --height=55% --reverse)
+    fi
+
+    if [[ -z "$selected_files" ]]; then
+        echo "No files selected" >&2
+        return 1
+    fi
+
+    check_ignored_files || return
+    local message=$(get_commit_message "$branch")
+    [[ -z "$message" ]] && return 1
+
+    # Build "git add <files>" arg list
+    local files_arg
+    files_arg=$(echo "$selected_files" | while IFS= read -r f; do printf '%q ' "$repo_root/$f"; done)
+
+    if has_upstream; then
+        echo "cd '$repo_root' && git add $files_arg && gm_commit \"$message\" && git push"
+    else
+        echo "cd '$repo_root' && git add $files_arg && gm_commit \"$message\" && git push -u origin \"$branch\""
+    fi
+}
+
 # Action: Commit all changes and push (commit, push)
 action_commit_all_and_push() {
     local branch=$(get_current_branch)
@@ -1013,6 +1064,7 @@ if command -v gum &>/dev/null; then
 		"Sync current directory (add, commit, push)"
 		"Commit and push current directory (commit, push)"
 		"Sync all changes (add, commit, push)"
+		"Sync selected changes (add, commit, push)"
 		"Commit and push all changes (commit, push)"
         "Amend last commit"
         "Stash changes"
@@ -1049,6 +1101,7 @@ Switch branches
 Sync current directory (add, commit, push)
 Commit and push current directory (commit, push)
 Sync all changes (add, commit, push)
+Sync selected changes (add, commit, push)
 Commit and push all changes (commit, push)
 Amend last commit
 Stash changes
@@ -1105,6 +1158,9 @@ case "$action" in
         ;;
     "Sync all"*)
         command=$(action_push_all_changes)
+        ;;
+    "Sync selected"*)
+        command=$(action_sync_selected_changes)
         ;;
     "Commit and push all"*)
         command=$(action_commit_all_and_push)
