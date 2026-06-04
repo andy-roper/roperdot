@@ -1073,6 +1073,7 @@ if command -v gum &>/dev/null; then
         "Merge from parent branch (fetch, merge)"
         "Merge to parent branch (checkout parent, merge current)"
         "Fetch file from parent branch"
+        "Push an empty commit"
         "Create branch from master"
         "Create branch from master and push"
 		"Delete branch"
@@ -1110,6 +1111,7 @@ Clear stashes
 Merge from parent branch (fetch, merge)
 Merge to parent branch (checkout parent, merge current)
 Fetch file from parent branch
+Push an empty commit
 Create branch from master
 Create branch from master and push
 Delete branch${admin_options:+
@@ -1186,6 +1188,9 @@ case "$action" in
     "Fetch file"*)
         command=$(action_fetch_file)
         ;;
+    "Push an empty commit"*)
+		command="git commit --allow-empty -m \"Retry\" && git push"
+		;;
     "Create branch from master")
 		command=$(action_create_branch_from_master)
 		;;
