@@ -439,7 +439,7 @@ action_switch_branch() {
         return 1
     fi
     
-    echo "git checkout $selected_branch"
+    echo "git checkout $selected_branch && git fetch --all --quiet"
 }
 
 # Action: Amend last commit
@@ -917,6 +917,46 @@ action_create_branch_from_master_and_push() {
     fi
 }
 
+action_create_branch_from_current() {
+    local branch_name
+    if command -v gum >/dev/null 2>&1; then
+        if ! branch_name=$(gum input --placeholder="Enter branch name"); then
+            echo "Branch creation cancelled" >&2
+            return 1
+        fi
+    else
+        echo "Enter branch name:" >&2
+        if ! read -r branch_name; then
+            echo "Creation cancelled" >&2
+            return 1
+        fi
+    fi
+
+    if [[ -n "$branch_name" ]]; then
+    	echo "git pull && git checkout -b $branch_name"
+    fi
+}
+
+action_create_branch_from_current_and_push() {
+	local branch_name
+	if command -v gum >/dev/null 2>&1; then
+	    if ! branch_name=$(gum input --placeholder="Enter branch name"); then
+	        echo "Branch creation cancelled" >&2
+	        return 1
+	    fi
+	else
+		echo "Enter branch name:" >&2
+	    if ! read -r branch_name; then
+	        echo "Creation cancelled" >&2
+	        return 1
+	    fi
+    fi
+
+    if [[ -n "$branch_name" ]]; then
+    	echo "git pull && git checkout -b $branch_name && git push -u $branch_name && git push -u origin $branch_name"
+    fi
+}
+
 # Action: Delete branch
 action_delete_branch() {
     local current_branch=$(get_current_branch)
@@ -1076,6 +1116,8 @@ if command -v gum &>/dev/null; then
         "Push an empty commit"
         "Create branch from master"
         "Create branch from master and push"
+        "Create branch from current"
+        "Create branch from current and push"
 		"Delete branch"
 	)
 
@@ -1114,6 +1156,8 @@ Fetch file from parent branch
 Push an empty commit
 Create branch from master
 Create branch from master and push
+Create branch from current
+Create branch from current and push
 Delete branch${admin_options:+
 ${admin_options}}
 EOF
@@ -1196,6 +1240,12 @@ case "$action" in
 		;;
     "Create branch from master and push")
 		command=$(action_create_branch_from_master_and_push)
+		;;
+    "Create branch from current branch")
+		command=$(action_create_branch_from_current)
+		;;
+    "Create branch from current branch and push")
+		command=$(action_create_branch_from_current_and_push)
 		;;
     "Delete branch"*)
         command=$(action_delete_branch)
