@@ -953,7 +953,7 @@ action_create_branch_from_current_and_push() {
     fi
 
     if [[ -n "$branch_name" ]]; then
-    	echo "git pull && git checkout -b $branch_name && git push -u $branch_name && git push -u origin $branch_name"
+    	echo "git pull && git checkout -b $branch_name && git push -u origin $branch_name"
     fi
 }
 
@@ -1241,10 +1241,10 @@ case "$action" in
     "Create branch from master and push")
 		command=$(action_create_branch_from_master_and_push)
 		;;
-    "Create branch from current branch")
+    "Create branch from current")
 		command=$(action_create_branch_from_current)
 		;;
-    "Create branch from current branch and push")
+    "Create branch from current and push")
 		command=$(action_create_branch_from_current_and_push)
 		;;
     "Delete branch"*)
