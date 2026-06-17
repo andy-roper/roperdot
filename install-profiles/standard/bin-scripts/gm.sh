@@ -1021,6 +1021,64 @@ EOF
     fi
 }
 
+# Action: Cherry-pick commits
+action_cherry_pick() {
+    local current_branch=$(get_current_branch)
+    
+    # Get list of all branches excluding current
+    local branches=$(git branch --format='%(refname:short)' | grep -v "^${current_branch}$")
+    
+    if [[ -z "$branches" ]]; then
+        echo "No other branches available" >&2
+        return 1
+    fi
+    
+    # Select the branch to cherry-pick from
+    local target_branch
+    if command -v gum &>/dev/null; then
+        local height=$(( LINES * 55 / 100 ))
+        target_branch=$(echo "$branches" | gum filter --placeholder="Select branch to cherry-pick from > " --height=$height)
+    else
+        target_branch=$(echo "$branches" | fzf --exact --prompt="Select branch to cherry-pick from > " --height=55% --reverse)
+    fi
+    
+    if [[ -z "$target_branch" ]]; then
+        echo "No branch selected" >&2
+        return 1
+    fi
+
+    # View commits specific to that branch
+    # We use HEAD..target_branch so we only see commits that aren't already in our current branch
+    local log_output
+    log_output=$(git log --abbrev=7 --format="%h  %cd  %s" --date=short HEAD.."$target_branch")
+    
+    if [[ -z "$log_output" ]]; then
+        echo "No new commits in $target_branch to cherry-pick (all are already in $current_branch)" >&2
+        return 1
+    fi
+
+    # Select commits
+    local selected_commits
+    if command -v gum &>/dev/null; then
+        local height=$(( LINES * 55 / 100 ))
+        selected_commits=$(echo "$log_output" | gum choose --no-limit --header="Select commits (space to select, enter to confirm)" --height=$height)
+    else
+        selected_commits=$(echo "$log_output" | fzf --multi --prompt="Select commits (tab to select multiple) > " --height=55% --reverse)
+    fi
+
+    if [[ -z "$selected_commits" ]]; then
+        echo "No commits selected" >&2
+        return 1
+    fi
+
+    # Extract the hashes and reverse their order
+    # git log is newest-first, but we want to apply them oldest-first to prevent conflicts
+    local hashes_arg
+    hashes_arg=$(echo "$selected_commits" | awk '{print $1}' | awk '{a[i++]=$0} END {for (j=i-1; j>=0; j--) printf "%s ", a[j]}')
+
+    echo "git cherry-pick $hashes_arg"
+}
+
 print_sync_status() {
     has_upstream || return
     local branch=$(get_current_branch)
@@ -1107,6 +1165,7 @@ if command -v gum &>/dev/null; then
 		"Sync selected changes (add, commit, push)"
 		"Commit and push all changes (commit, push)"
         "Amend last commit"
+        "Cherry-pick commits"
         "Stash changes"
         "Apply/pop stash"
         "Clear stashes"
@@ -1147,6 +1206,7 @@ Sync all changes (add, commit, push)
 Sync selected changes (add, commit, push)
 Commit and push all changes (commit, push)
 Amend last commit
+Cherry-pick commits
 Stash changes
 Apply/pop stash
 Clear stashes
@@ -1213,6 +1273,9 @@ case "$action" in
         ;;
     "Amend last commit"*)
         command=$(action_amend_commit)
+        ;;
+    "Cherry-pick commits"*)
+        command=$(action_cherry_pick)
         ;;
     "Stash changes"*)
         command=$(action_stash_changes)
