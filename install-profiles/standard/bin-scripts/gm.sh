@@ -54,7 +54,7 @@ select_file() {
     
     if command -v gum &>/dev/null; then
         local height=$(( LINES * 55 / 100 ))
-        echo "$file_list" | gum filter --placeholder="$prompt" --height=$height
+        echo "$file_list" | gum filter --no-fuzzy --placeholder="$prompt" --height=$height
     else
         echo "$file_list" | fzf --exact --prompt="$prompt" --height=55% --reverse
     fi
@@ -374,7 +374,7 @@ action_fetch_file() {
     local file
     if command -v gum &>/dev/null; then
         local height=$(( LINES * 55 / 100 ))
-        file=$(echo "$diff_files" | gum filter --placeholder="Select file to fetch from origin/$parent_branch > " --height=$height)
+        file=$(echo "$diff_files" | gum filter --no-fuzzy --placeholder="Select file to fetch from origin/$parent_branch > " --height=$height)
     else
         file=$(echo "$diff_files" | fzf --exact --prompt="Select file to fetch from origin/$parent_branch > " --height=55% --reverse)
     fi
@@ -429,7 +429,7 @@ action_switch_branch() {
     local selected_branch
     if command -v gum &>/dev/null; then
         local height=$(( LINES * 55 / 100 ))
-        selected_branch=$(echo "$branches" | gum filter --placeholder="Switch to branch > " --height=$height)
+        selected_branch=$(echo "$branches" | gum filter --no-fuzzy --placeholder="Switch to branch > " --height=$height)
     else
         selected_branch=$(echo "$branches" | fzf --exact --prompt="Switch to branch > " --height=55% --reverse)
     fi
@@ -613,7 +613,7 @@ action_apply_stash() {
 	local stash
 	if command -v gum &>/dev/null; then
 	    local height=$(( LINES * 55 / 100 ))
-	    stash=$(git stash list | gum filter --placeholder="Select stash > " --height=$height)
+	    stash=$(git stash list | gum filter --no-fuzzy --placeholder="Select stash > " --height=$height)
 	else
 	    stash=$(git stash list | fzf --exact --prompt="Select stash > " --height=55% --reverse --preview="echo {} | cut -d: -f1 | xargs git stash show -p")
 	fi
@@ -685,7 +685,7 @@ EOF
             local stash
             if command -v gum &>/dev/null; then
                 local height=$(( LINES * 55 / 100 ))
-                stash=$(git stash list | gum filter --placeholder="Select stash to drop > " --height=$height)
+                stash=$(git stash list | gum filter --no-fuzzy --placeholder="Select stash to drop > " --height=$height)
             else
                 stash=$(git stash list | fzf --exact --prompt="Select stash to drop > " --height=55% --reverse)
             fi
@@ -714,7 +714,7 @@ action_view_history() {
         local height=$(( LINES * 55 / 100 ))
     	# Run git log with gum
         git log --graph --color=always --abbrev=7 --format='%C(auto)%h %an %C(blue)%s %C(yellow)%cr' | \
-            gum filter --placeholder="Commit History > " --height=$height
+            gum filter --no-fuzzy --placeholder="Commit History > " --height=$height
     else
         local clipboard_cmd=$(get_clipboard_command)
         local copy_key_help=""
@@ -760,7 +760,7 @@ action_file_history() {
     if command -v gum &>/dev/null; then
         local height=$(( LINES * 55 / 100 ))
         git log --follow --color=always --abbrev=7 --format='%C(auto)%h %an %C(blue)%s %C(yellow)%cr' -- "$file" | \
-            gum filter --placeholder="History for $file > " --height=$height
+            gum filter --no-fuzzy --placeholder="History for $file > " --height=$height
     else
         local clipboard_cmd=$(get_clipboard_command)
         local copy_key_help=""
@@ -807,6 +807,74 @@ action_git_blame() {
     
     # Show git blame with color and use less for paging
     echo "git blame --color-lines --color-by-age $file | less -R"
+}
+
+# Action: Side-by-side diff of a single file (local vs HEAD or vs parent branch)
+action_diff_file() {
+    # Check if there are any commits
+    if ! git log -n 1 &>/dev/null; then
+        echo "Error: No commits in repository" >&2
+        return 1
+    fi
+
+    # Select file
+    local file=$(select_file "Select file to diff > ")
+
+    if [[ -z "$file" ]]; then
+        echo "No file selected" >&2
+        return 1
+    fi
+
+    # select_file returns a path relative to the current directory, but
+    # git cat-file/git show need a path relative to the repo root
+    local repo_prefix=$(git rev-parse --show-prefix)
+    local repo_file="${repo_prefix}${file}"
+
+    # Prompt for comparison target
+    local choice
+    if command -v gum &>/dev/null; then
+        local height=$(( LINES * 55 / 100 ))
+        choice=$(gum choose --header="Compare $file against:" --height=$height \
+            "Last commit (HEAD)" \
+            "Parent branch (origin)")
+    else
+        choice=$(cat <<EOF | fzf --prompt="Compare $file against: > " --height=55% --reverse
+Last commit (HEAD)
+Parent branch (origin)
+EOF
+)
+    fi
+
+    if [[ -z "$choice" ]]; then
+        echo "No option selected" >&2
+        return 1
+    fi
+
+    local ref
+    case "$choice" in
+        "Last commit"*)
+            ref="HEAD"
+            ;;
+        "Parent branch"*)
+            local parent_branch=$(get_parent_branch)
+            if [[ -z "$parent_branch" ]]; then
+                echo "No parent branch selected" >&2
+                return 1
+            fi
+            echo "Fetching from origin..." >&2
+            git fetch origin --quiet
+            ref="origin/$parent_branch"
+            ;;
+    esac
+
+    # Make sure the file actually exists at that ref
+    if ! git cat-file -e "${ref}:${repo_file}" 2>/dev/null; then
+        echo "Error: $file does not exist at $ref" >&2
+        return 1
+    fi
+
+    # Side-by-side colored diff (requires GNU diffutils >= 3.6 for --color)
+    echo "diff -y --color=always -W \"\$(tput cols)\" <(git show ${ref}:\"$repo_file\") \"$file\" | less -R"
 }
 
 # Action: Diff vs parent
@@ -972,7 +1040,7 @@ action_delete_branch() {
     local selected_branch
     if command -v gum &>/dev/null; then
         local height=$(( LINES * 55 / 100 ))
-        selected_branch=$(echo "$branches" | gum filter --placeholder="Select branch to delete > " --height=$height)
+        selected_branch=$(echo "$branches" | gum filter --no-fuzzy --placeholder="Select branch to delete > " --height=$height)
     else
         selected_branch=$(echo "$branches" | fzf --exact --prompt="Select branch to delete > " --height=55% --reverse)
     fi
@@ -1037,7 +1105,7 @@ action_cherry_pick() {
     local target_branch
     if command -v gum &>/dev/null; then
         local height=$(( LINES * 55 / 100 ))
-        target_branch=$(echo "$branches" | gum filter --placeholder="Select branch to cherry-pick from > " --height=$height)
+        target_branch=$(echo "$branches" | gum filter --no-fuzzy --placeholder="Select branch to cherry-pick from > " --height=$height)
     else
         target_branch=$(echo "$branches" | fzf --exact --prompt="Select branch to cherry-pick from > " --height=55% --reverse)
     fi
@@ -1157,6 +1225,7 @@ if command -v gum &>/dev/null; then
         "View commit history"
         "Show file history"
         "Git blame"
+        "Diff file (local vs commit)"
     	"List branches"
         "Switch branches"
 		"Sync current directory (add, commit, push)"
@@ -1198,6 +1267,7 @@ Diff vs parent branch
 View commit history
 Show file history
 Git blame
+Diff file (local vs commit)
 List branches
 Switch branches
 Sync current directory (add, commit, push)
@@ -1249,6 +1319,9 @@ case "$action" in
         ;;
     "Git blame"*)
         command=$(action_git_blame)
+        ;;
+    "Diff file"*)
+        command=$(action_diff_file)
         ;;
     "List branches"*)
         command="git --no-pager branch -a"
