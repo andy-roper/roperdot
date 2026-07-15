@@ -332,6 +332,26 @@ action_merge_from_parent() {
     echo "git fetch && git merge origin/$parent_branch"
 }
 
+# Action: Rebase from parent branch
+action_rebase_from_parent() {
+    local parent_branch=$(get_parent_branch)
+
+    if [[ -z "$parent_branch" ]]; then
+        echo "No parent branch selected" >&2
+        return 1
+    fi
+
+    local current_branch=$(get_current_branch)
+    local has_changes=$(git status --porcelain)
+    if [[ -n "$has_changes" ]]; then
+        echo "Stashing changes in $current_branch" >&2
+        echo "Note: do 'git stash pop' once the rebase is complete to restore your changes" >&2
+        echo "git stash && git fetch && git rebase origin/$parent_branch"
+    else
+        echo "git fetch && git rebase origin/$parent_branch"
+    fi
+}
+
 # Action: Merge current branch to parent
 action_merge_to_parent() {
     local current_branch=$(get_current_branch)
@@ -1239,6 +1259,7 @@ if command -v gum &>/dev/null; then
         "Apply/pop stash"
         "Clear stashes"
         "Merge from parent branch (fetch, merge)"
+        "Rebase from parent branch (fetch, rebase)"
         "Merge to parent branch (checkout parent, merge current)"
         "Fetch file from parent branch"
         "Push an empty commit"
@@ -1281,6 +1302,7 @@ Stash changes
 Apply/pop stash
 Clear stashes
 Merge from parent branch (fetch, merge)
+Rebase from parent branch (fetch, rebase)
 Merge to parent branch (checkout parent, merge current)
 Fetch file from parent branch
 Push an empty commit
@@ -1361,6 +1383,9 @@ case "$action" in
         ;;
     "Merge from"*)
         command=$(action_merge_from_parent)
+        ;;
+    "Rebase from"*)
+        command=$(action_rebase_from_parent)
         ;;
     "Merge to"*)
         command=$(action_merge_to_parent)
