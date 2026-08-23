@@ -1,277 +1,221 @@
-#!/usr/bin/env perl
-# Description: Shows space used by subdirectories in human-readable format
-# Author: Andy Roper <andyroper42@gmail.com>
-# URL: https://github.com/andy-roper/roperdot
+#!/usr/bin/env python3
 
-use strict;
+import argparse
+import fnmatch
+import os
+import re
+import sys
+from concurrent.futures import ProcessPoolExecutor
 
-use File::Find;
-use File::Spec;
-use Getopt::Long;
-use Getopt::Long qw(:config bundling);
-use Cwd;
+def make_glob_matcher(glob):
+    if glob is None:
+        return None
+    return re.compile(fnmatch.translate(glob), re.IGNORECASE)
 
-my @dirList;
-my %dirSize;
-my %formattedSize;
-my $sizeTotal;
-my $dotSize = 0;
 
-my $ascending;
-my $descending;
-my $humanReadable;
-my $omitTotal;
-my $needHelp;
-my $verbose;
-my $fullPath;
-my $processChildren;
-my $suppressZeroBytes;
-my $presentDir;
+def list_subdirs(path):
+    try:
+        with os.scandir(path) as it:
+            return [e.name for e in it if e.is_dir(follow_symlinks=False)]
+    except OSError:
+        return []
 
-my $result = GetOptions(
-	"a|asc"      => \$ascending,
-	"c|children" => \$processChildren,
-	"d|desc"     => \$descending,
-	"f|full"     => \$fullPath,
-	"p|present"  => \$presentDir,
-	"r|readable" => \$humanReadable,
-	"t|terse"    => \$omitTotal,
-	"v|verbose"  => \$verbose,
-	"z|zero"     => \$suppressZeroBytes,
-	"h|help|?"   => \$needHelp
-);
-showHelp() if (!$result || $needHelp);
 
-my ($dir, $fileGlob);
-if ($#ARGV >= 0) {
-	my $arg = $ARGV[0];
-	if ($arg =~ /[*]/) {
-		if ($arg =~ /^(.*)\/(.*?)$/) {
-			$dir = $1;
-			$fileGlob = $2;
-		}
-		else {
-			$dir = ".";
-			$fileGlob = $arg;
-		}
-	}
-	else {
-		$dir = $arg;
-	}
-}
-else {
-	$dir = ".";
-}
-if ($fileGlob) {
-	$fileGlob =~ s/\./\\./g;
-	$fileGlob =~ s/\*/.*/g;
-	$fileGlob = qr/^${fileGlob}$/i;
-}
-showHelp() if (! -d $dir);
-my $maxLen = 0;
-my $dirPrefix;
-if ($fullPath) {
-	if ($dir eq ".") {
-		$dirPrefix = cwd() . "/";
-	}
-	elsif ($dir =~ /^\//) {
-		$dirPrefix = $dir;
-	}
-	else {
-		$dirPrefix = cwd() . "/";
-	}
-#	$dirPrefix = ($dir eq "." ? cwd() : $dir) . "/";
-}
+def immediate_size(path, glob_re, verbose):
+    total = 0
+    lines = []
+    try:
+        with os.scandir(path) as it:
+            for e in it:
+                if e.is_file(follow_symlinks=False):
+                    if glob_re is None or glob_re.match(e.name):
+                        try:
+                            sz = e.stat(follow_symlinks=False).st_size
+                        except OSError:
+                            continue
+                        total += sz
+                        if verbose:
+                            lines.append(f"{sz} {e.path}")
+    except OSError:
+        pass
+    return total, lines
 
-print "dirPrefix: $dirPrefix\n" if ($verbose);
+def recursive_size(path, glob_re, verbose):
+    total = 0
+    lines = []
+    try:
+        with os.scandir(path) as it:
+            for e in it:
+                try:
+                    if e.is_dir(follow_symlinks=False):
+                        sub_total, sub_lines = recursive_size(e.path, glob_re, verbose)
+                        total += sub_total
+                        lines.extend(sub_lines)
+                    elif e.is_file(follow_symlinks=False):
+                        if glob_re is None or glob_re.match(e.name):
+                            sz = e.stat(follow_symlinks=False).st_size
+                            total += sz
+                            if verbose:
+                                lines.append(f"{sz} {e.path}")
+                except OSError:
+                    continue
+    except OSError:
+        pass
+    return total, lines
 
-if ($processChildren) {
-	opendir(PARENTDIR, $dir) or die $!;
-	while (my $f = readdir(PARENTDIR)) {
-		next if ($f =~ /\.{1,2}$/);
-		$f = File::Spec->catfile($dir, $f);
-		$f =~ s/^\.\///;
-		if (-d $f) {
-			processDir($f)
-		}
-		elsif (!$fileGlob || $f =~ $fileGlob) {
-			my $size = (-s $f);
-			print "$size $f\n" if ($verbose);
-			$dotSize += $size;
-		}
-	}
-	closedir(PARENTDIR);
-	$dirSize{"."} = $dotSize;
-}
-else {
-	processDir($dir);
-}
 
-my $total = $dirSize{"."};
-$formattedSize{"."} = formatNumber($total);
-foreach my $d (@dirList) {
-	if ($processChildren) {
-		next if ($d =~ /\.\.$/);
-		if ($d =~ /\.$/) {
-			$total += $dirSize{$d} if (!$omitTotal);
-			$formattedSize{$d} = formatNumber($dirSize{$d});
-			next;
-		}
-	}
-	else {
-		next if ($d =~ /\.{1,2}$/);
-	}
-	$sizeTotal = 0;
-	find({ wanted => \&processFile }, ( $d ));
-	$dirSize{$d} = $sizeTotal;
-	$total += $sizeTotal if (!$omitTotal);
-	$formattedSize{$d} = formatNumber($sizeTotal);
-}
+def compute_item(item, glob_re, verbose):
+    name, path, kind = item
+    if kind == "dot":
+        size, lines = immediate_size(path, glob_re, verbose)
+    else:
+        size, lines = recursive_size(path, glob_re, verbose)
+    return name, size, lines
 
-$total = formatNumber($total) if (!$omitTotal);
-my $format = "%${maxLen}s  %s\n";
-if ($suppressZeroBytes) {
-	foreach my $d (keys %dirSize) {
-		delete $dirSize{$d} if (!$dirSize{$d});
-	}
-}
-if ($ascending) {
-	foreach my $d (sort { $dirSize{$a} <=> $dirSize{$b} } keys %dirSize) {
-		printf $format, $formattedSize{$d}, formatDirName($d);
-	}
-}
-elsif ($descending) {
-	foreach my $d (sort { $dirSize{$b} <=> $dirSize{$a} } keys %dirSize) {
-		printf $format, $formattedSize{$d}, formatDirName($d);
-	}
-}
-else {
-	foreach my $d (sort {lc $a cmp lc $b} keys %dirSize) {
-		printf $format, $formattedSize{$d}, formatDirName($d);
-	}
-}
-printf $format, $total, "TOTAL" if (!$omitTotal);
-exit 0;
+def discover_items(target_dir, recurse, current_only):
+    items = [(".", target_dir, "dot")]
+    if current_only:
+        return items
+    for child in list_subdirs(target_dir):
+        child_path = os.path.join(target_dir, child)
+        if recurse:
+            items.append((f"{child}/.", child_path, "dot"))
+            for gc in list_subdirs(child_path):
+                items.append((f"{child}/{gc}", os.path.join(child_path, gc), "recursive"))
+        else:
+            items.append((child, child_path, "recursive"))
+    return items
 
-sub processDir {
-	my $dotSize = 0;
-	my $dir = shift;
-	opendir(DIR, $dir) or die $!;
-	while (my $f = readdir(DIR)) {
-		next if ($f =~ /\.{1,2}$/);
-		$f = File::Spec->catfile($dir, $f);
-		$f =~ s/^\.\///;
-		if (-d $f) {
-			print "dir: $f\n" if ($verbose);
-			push @dirList, $f if (!$presentDir);
-		}
-		elsif (!$fileGlob || $f =~ $fileGlob) {
-			my $size = (-s $f);
-			print "$size $f\n" if ($verbose);
-			$dotSize += $size;
-		}
-	}
-	closedir(DIR);
-	if ($processChildren) {
-		$dirSize{"$dir/."} = $dotSize;
-		push @dirList, "$dir/.";
-	}
-	else {
-		$dirSize{"."} = $dotSize;
-	}
-}
 
-sub processFile {
-	if (! -d $_ && (!$fileGlob || $_ =~ $fileGlob)) {
-		my $size = (-s $_);
-		print "$size $_\n" if ($verbose);
-		$sizeTotal += $size;
-	}
-}
+def commify(n):
+    return f"{n:,}"
 
-sub formatDirName {
-	my $d = shift;
-	if ($dirPrefix) {
-		if ($d eq ".") {
-			if ($dirPrefix eq $dir) {
-				return "$dirPrefix/.";
-			}
-			if ($dir eq ".") {
-				return "$dirPrefix.";
-			}
-			return "$dirPrefix$dir/.";
-		}
-		if ($dirPrefix eq $dir) {
-			return $d;
-		}
-		return "$dirPrefix$d";
-	}
-	else {
-		if ($d eq ".") {
-			if ($dir eq ".") {
-				return ".";
-			}
-			return "$dir/.";
-		}
-		return $d;
-	}
-}
 
-sub formatNumber {
-	my $n = shift;
-	if ($humanReadable) {
-		return humanReadable($n);
-	}
-	else {
-		return commify($n);
-	}
-}
+def human_readable(n):
+    suffixes = ["", "K", "M", "G", "T", "P", "E"]
+    idx = 0
+    n = float(n)
+    while n >= 1024 and idx < len(suffixes) - 1:
+        n /= 1024
+        idx += 1
+    if idx > 0 and n < 10:
+        return f"{n:.1f}{suffixes[idx]}"
+    return f"{int(n)}{suffixes[idx]}"
 
-sub commify {
-	local $_ = shift;
-	1 while s/^(-?\d+)(\d{3})/$1,$2/;
-	$maxLen = length($_) if (length($_) > $maxLen);
-	return $_;
-}
 
-sub humanReadable {
-	my $n = shift;
-	my @suffix = ( "", "K", "M", "G", "T", "P", "E" );
-	my $suffixIndex = 0;
-	while ($n >= 1024) {
-		$n /= 1024;
-		++$suffixIndex;
-	}
-	my $h;
-	if ($suffixIndex > 0 && $n < 10) {
-		$h = sprintf("%.1f%s", $n, $suffix[$suffixIndex]);
-	}
-	else {
-		$h = sprintf("%d%s", $n, $suffix[$suffixIndex]);
-	}
-	$maxLen = length($h) if (length($h) > $maxLen);
-	return $h;
-}
+def format_number(n, human):
+    return human_readable(n) if human else commify(n)
 
-sub showHelp {
-	print <<EOT;
-u: show size in bytes for files
+def parse_target(arg):
+    if "*" in arg:
+        if "/" in arg:
+            d, g = arg.rsplit("/", 1)
+            return (d or "."), g
+        return ".", arg
+    return arg, None
+
+
+def build_arg_parser():
+    p = argparse.ArgumentParser(add_help=False)
+    p.add_argument("-a", "--asc", action="store_true")
+    p.add_argument("-c", "--current", action="store_true")
+    p.add_argument("-d", "--desc", action="store_true")
+    p.add_argument("-f", "--full", action="store_true")
+    p.add_argument("-h", "--human", action="store_true")
+    p.add_argument("-p", "--parallel", action="store_true")
+    p.add_argument("-r", "--recurse", action="store_true")
+    p.add_argument("-t", "--terse", action="store_true")
+    p.add_argument("-v", "--verbose", action="store_true")
+    p.add_argument("-z", "--zero", action="store_true")
+    p.add_argument("--help", "-?", action="store_true", dest="need_help")
+    p.add_argument("target", nargs="?", default=".")
+    return p
+
+def show_help():
+    print("""u: show size in bytes for files
 Usage: u [OPTION] ... [FILE]
 
 Options:
--a, --asc       Sort output in ascending size order
--c, --children  Process child directories of target
--d, --desc      Sort output in descending size order
+-a, --asc       Sort output in ascending size order; implies --parallel
+-c, --current   Process only files in the current directory
+-d, --desc      Sort output in descending size order; implies --parallel
 -f, --full      Full path
--r, --readable  Show output in human-readable format
--p, --present   Process only files in the present directory
+-h, --human     Show output in human-readable format
+-p, --parallel  Compute sizes concurrently; output is buffered until done
+-r, --recurse   Process child directories of target
 -t, --terse     Omit grand total
 -v, --verbose   Print diagnostic information
 -z, --zero      Suppress zero-byte directories
 
-u will show the size in bytes of the FILEs (or for the current directory by
-default). If a directory is specified, sizes will be listed for the directory
-and each of its subdirectories.
-EOT
-	exit 0;
-}
+u will show the size in bytes of the files (or for the current directory
+by default). If a directory is specified, sizes will be listed for the
+directory and each of its subdirectories.""")
+
+def main():
+    args = build_arg_parser().parse_args()
+    if args.need_help:
+        show_help()
+        return
+
+    target_dir, glob = parse_target(args.target)
+    if not os.path.isdir(target_dir):
+        show_help()
+        sys.exit(1)
+
+    glob_re = make_glob_matcher(glob)
+    sort_by_size = args.asc or args.desc
+    parallel = args.parallel or sort_by_size
+    human = args.human
+
+    dir_prefix = (os.path.abspath(target_dir) + "/") if args.full else None
+
+    def display_name(name):
+        return (dir_prefix + name) if dir_prefix else name
+
+    items = discover_items(target_dir, args.recurse, args.current)
+    items.sort(key=lambda t: t[0].lower())
+
+    fixed_fmt = "%4s  %s" if human else "%15s  %s"
+
+    def emit(fmt, name, size, lines):
+        for ln in lines:
+            print(ln)
+        print(fmt % (format_number(size, human), display_name(name)))
+
+    total = 0
+    if not parallel:
+        for item in items:
+            name, size, lines = compute_item(item, glob_re, args.verbose)
+            total += size
+            if not (args.zero and size == 0):
+                emit(fixed_fmt, name, size, lines)
+        if not args.terse:
+            print(fixed_fmt % (format_number(total, human), "TOTAL"))
+        return
+
+    results = []
+    with ProcessPoolExecutor() as ex:
+        futs = [ex.submit(compute_item, item, glob_re, args.verbose) for item in items]
+        for fut in futs:
+            results.append(fut.result())
+    total = sum(r[1] for r in results)
+
+    if sort_by_size:
+        results.sort(key=lambda r: r[1], reverse=args.desc)
+    else:
+        results.sort(key=lambda r: r[0].lower())
+
+    shown = [r for r in results if not (args.zero and r[1] == 0)]
+    formatted_total = format_number(total, human)
+    widths = [len(format_number(r[1], human)) for r in shown] + [len(formatted_total)]
+    width = max(widths) if widths else len(formatted_total)
+    dyn_fmt = f"%{width}s  %s"
+
+    for name, size, lines in shown:
+        emit(dyn_fmt, name, size, lines)
+    if not args.terse:
+        print(dyn_fmt % (formatted_total, "TOTAL"))
+
+
+if __name__ == "__main__":
+    main()
