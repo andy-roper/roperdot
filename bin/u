@@ -16,7 +16,7 @@ def make_glob_matcher(glob):
 def list_subdirs(path):
     try:
         with os.scandir(path) as it:
-            return [e.name for e in it if e.is_dir(follow_symlinks=False)]
+            return [e.name for e in it if e.is_dir(follow_symlinks=True)]
     except OSError:
         return []
 
@@ -30,7 +30,7 @@ def immediate_size(path, glob_re, verbose):
                 if e.is_file(follow_symlinks=False):
                     if glob_re is None or glob_re.match(e.name):
                         try:
-                            sz = e.stat(follow_symlinks=False).st_size
+                            sz = e.stat(follow_symlinks=True).st_size
                         except OSError:
                             continue
                         total += sz
@@ -47,13 +47,13 @@ def recursive_size(path, glob_re, verbose):
         with os.scandir(path) as it:
             for e in it:
                 try:
-                    if e.is_dir(follow_symlinks=False):
+                    if e.is_dir(follow_symlinks=True):
                         sub_total, sub_lines = recursive_size(e.path, glob_re, verbose)
                         total += sub_total
                         lines.extend(sub_lines)
-                    elif e.is_file(follow_symlinks=False):
+                    elif e.is_file(follow_symlinks=True):
                         if glob_re is None or glob_re.match(e.name):
-                            sz = e.stat(follow_symlinks=False).st_size
+                            sz = e.stat(follow_symlinks=True).st_size
                             total += sz
                             if verbose:
                                 lines.append(f"{sz} {e.path}")

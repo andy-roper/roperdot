@@ -19,6 +19,7 @@ roperdot/
 ├── apps-and-packages/           # Included/modified supporting applications
 ├── bin/                         # Portable scripts (Perl, Python, shell)
 ├── examples/                    # Example scripts
+├── lib/                         # Libraries used by scripts
 ├── os-bin/                      # OS-specific scripts
 ├── source-scripts/              # Utility scripts (sourced in other scripts)
 ├── 

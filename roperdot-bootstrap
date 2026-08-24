@@ -171,6 +171,10 @@ if ! command -v python >/dev/null 2>&1 && [[ -f /usr/bin/python3 ]]; then
     ln -sf /usr/bin/python3 ~/.config/roperdot/extra-bin/python
 fi
 
+if command -v python3 >/dev/null 2>&1 || command -v python >/dev/null 2>&1; then
+    export PYTHONPATH="${ROPERDOT_DIR}/lib${PYTHONPATH:+:${PYTHONPATH}}"
+fi
+
 do_timing "phase 2b"
 # if command -v npm >/dev/null 2>&1 && [[ ! "$PATH" =~ npm ]]; then
 # 	npmdir="$(npm bin -g 2>/dev/null)"

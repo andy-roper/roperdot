@@ -1,7 +1,14 @@
-#!/usr/bin/env perl
-# Description: Compares directories
-# Author: Andy Roper <andyroper42@gmail.com>
-# URL: https://github.com/andy-roper/roperdot
+#!/usr/bin/env python3
+"""
+Description: Compare directories (or files of pre-computed hashes) and report or delete duplicate files
+
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
+
+Deletion safety note: when --delete is used, matching duplicate files ARE
+removed immediately unless --suppress (dry-run) is also given. There is no
+confirmation prompt: this matches the original script's behavior.
+"""
 
 # TO DO
 # MAYBE add capability to add to an MD5 info file:
@@ -14,376 +21,166 @@
 #   volume is specified and it matches
 #   What if a file was renamed? Any way to handle besides a full scan?
 
-use strict;
-use Cwd;
-use Getopt::Long;
-use Digest::MD5;
-use Data::Dumper;
+from __future__ import annotations
 
-my $help;
-my $dirsep= ($^O !~ /mswin/ || $ENV{'ROPERDOT_OS_ENV'} eq "msys" ? "/" : "\\");
-my $recursing = 0;
-my $suppressing = 0;
-my $printing = 0;
-my $deleting = 0;
-my $onlyOther = 0;
-my $verbose = 0;
-my $volumeName;
-my @deleteDirs;
-my @fileGroup;
-my @fdata;
+import argparse
+import os
+import sys
+from collections import defaultdict
+from pathlib import Path
 
-GetOptions(
-	'delete=s' => \@deleteDirs,
-	'help|?'   => \$help,
-	'other'    => \$onlyOther,
-	'print'    => \$printing,
-	'suppress' => \$suppressing,
-	'recurse'  => \$recursing,
-	'verbose'  => \$verbose,
-	'volume=s' => \$volumeName
-);
-
-help() if ($help);
-
-if (scalar @deleteDirs > 0 && scalar @ARGV == 0) {
-	print "Error: When enabling deletion, you must include at least one directory not flagged for file deletion.\n";
-	exit 1;
-}
-
-foreach (@ARGV) {
-	push @fileGroup, {
-		path => $_,
-		deleteDupes => 0
-	};
-}
-foreach (@deleteDirs) {
-	push @fileGroup, {
-		path => $_,
-		deleteDupes => 1
-	};
-}
-
-$deleting = 1 if (scalar @deleteDirs > 0);
-
-push @fileGroup, { path => cwd(), deleteDupes => 0 } if (scalar @fileGroup == 0);
-
-help() if ($onlyOther && scalar @fileGroup == 1);
-
-# %fileInfo: key = file size
-# each element in the hash will be an array of hashes:
-#    "name": string
-#    "deleteEligible": boolean (integer)
-#    "md5": string; populated from hash info file or when looking for duplicates
-
-my %fileInfo;
-
-my $mask;
-my $fgIndex = 0;
-foreach (@fileGroup) {
-	my $path = $_->{path};
-	print "Processing " . $path . "\n" if ($verbose);
-	parseFullPath(\$path, \$mask);
-	$_->{path} = $path;
-	print "Path: " . $_->{path} . ", mask: $mask\n" if ($verbose);
-	if ($printing) {
-		printFileGroup($fgIndex++, $mask);
-	}
-	else {
-		processFileGroup($fgIndex++, $mask);
-	}
-}
-
-print Dumper %fileInfo if ($verbose);
-print "Built hash of files; checking for duplicates\n" if ($verbose);
-lookForDupes();
-
-exit 0;
-
-sub lookForDupes {
-	foreach my $key (keys %fileInfo) {
-		my $files = $fileInfo{$key};
-		next if (scalar @{$files} == 1);
-		# Skip processing if $onlyOther is true and all files with the same size have the same fgIndex
-		if ($onlyOther) {
-			my $skip = 1;
-			my $fgIndex = -1;
-			foreach my $fInfo (@{$files}) {
-				if ($fgIndex == -1) {
-					$fgIndex = $fInfo->{fgIndex};
-				}
-				elsif ($fInfo->{fgIndex} != $fgIndex) {
-					$skip = 0;
-					last;
-				}
-			}
-			next if ($skip);
-		}
-		
-		my %hashList;
-		# Store hash of array of file info references by MD5 hash codes
-		foreach my $fInfo (@{$files}) {
-			my $md5 = ($fInfo->{md5} ? $fInfo->{md5} : getMD5Hash($fInfo->{name}));
-			if ($hashList{$md5}) {
-				push @{$hashList{$md5}}, $fInfo;
-			}
-			else {
-				$hashList{$md5} = [
-					$fInfo
-				];
-			}
-		}
-		# Process each array in %hashList with more than one element,
-		# i.e. 2 or more files with the same MD5 hash
-		foreach my $md5 (keys %hashList) {
-			my $md5List = $hashList{$md5};
-			next if (scalar @{$md5List} == 1);
-			print "process dupes for hash $md5\n" if ($verbose);
-			# Process duplicates
-			if ($deleting) {
-				print "deleting\n" if ($verbose);
-				my @filesToDelete;
-				my @filesToKeep;
-				foreach my $fInfo (@{$md5List}) {
-					if ($fileGroup[$fInfo->{fgIndex}]->{deleteDupes}) {
-						push @filesToDelete, $fInfo->{name};
-					}
-					else {
-						push @filesToKeep, $fInfo->{name};
-					}
-				}
-				print "filesToKeep: " . (scalar @filesToKeep) . ", filesToDelete: " . (scalar @filesToDelete) . "\n" if ($verbose);
-				# Only delete files if there's at least one duplicate that won't be deleted
-				if (scalar @filesToKeep > 0) {
-					my $x = "";
-					foreach my $name (@filesToKeep) {
-						$x .= ($x ? "\t" : "") . $name;
-					}
-					foreach my $name (@filesToDelete) {
-						$x .= ($x ? "\t" : "") . "$name (deleted)";
-						unlink $name if (!$suppressing);
-					}
-					print "$x\n";
-					next;
-				}
-			}
-			my $x = "";
-			foreach my $fInfo (@{$md5List}) {
-				$x .= ($x ? "\t" : "") . $fInfo->{name};
-			}
-			print "$x\n";
-		}
-	}
-}
-
-sub printFileGroup {
-	my ($fgIndex, $mask) = @_;
-
-	if (!(-d $fileGroup[$fgIndex]->{path})) {
-		print "Error: directory argument required when printing\n";
-		exit 1;
-	}
-	processDirToPrint("", $fgIndex, $mask);
-}
+import fsutil
 
 
-sub processFileGroup {
-	my ($fgIndex, $mask) = @_;
-	
-	if (-d $fileGroup[$fgIndex]->{path}) {
-		processDir($fileGroup[$fgIndex]->{path}, $fgIndex, $mask);
-	}
-	else {
-		processHashInfoFile($fileGroup[$fgIndex]->{path}, $fgIndex);
-	}
-}
+class FileGroup:
+    __slots__ = ("path", "mask", "delete_dupes", "is_hash_file")
 
-sub processDir {
-	my ($d, $fgIndex, $mask) = @_;
-	
-	opendir(DIR, "$d");
-	my @f = readdir(DIR);
-	closedir(DIR);
-	foreach (@f) {
-		next if ($_ =~ /^\.{1,2}$/);
-		my $x = "$d/$_";
-		if (-d $x) {
-			processDir($x, $fgIndex, $mask) if $recursing;
-		}
-		elsif (!$mask or $_ =~ /$mask/i) {
-			my $size = getFileSize($x);
-			next if (!$size);
-			if ($fileInfo{$size}) {
-				push @{$fileInfo{$size}}, {
-					name => $x,
-					fgIndex => $fgIndex
-				}
-			}
-			else {
-				$fileInfo{$size} =[
-					{
-						name => $x,
-						fgIndex => $fgIndex
-					}
-				];
-			}
-		}
-	}
-}
+    def __init__(self, path, delete_dupes):
+        self.path = path
+        self.mask = None
+        self.delete_dupes = delete_dupes
+        self.is_hash_file = False
 
-sub processDirToPrint {
-	my ($relDir, $fgIndex, $mask) = @_;
+def parse_args():
+    p = argparse.ArgumentParser(
+        prog="dc",
+        description="Compare directories by content and report (or delete) duplicate files.",
+    )
+    p.add_argument("paths", nargs="*", help="directories, file masks, or hash-info files to compare")
+    p.add_argument("-d", "--delete", action="append", default=[], metavar="DIR",
+                    help="flag a directory's duplicate files for deletion (repeatable)")
+    p.add_argument("-o", "--other", action="store_true",
+                    help="only report duplicates that span more than one file group")
+    p.add_argument("-p", "--print", dest="printing", action="store_true",
+                    help="print size/md5/path for each file instead of comparing")
+    p.add_argument("-s", "--suppress", action="store_true",
+                    help="with --delete, show what would be deleted without deleting")
+    p.add_argument("-r", "--recurse", action="store_true", help="recurse into subdirectories")
+    p.add_argument("-v", "--verbose", action="store_true", help="verbose output")
+    p.add_argument("--volume", metavar="NAME",
+                    help="with --print, use this volume name instead of the base path")
+    args = p.parse_args()
+    if args.delete and not args.paths:
+        p.error("when using --delete you must include at least one directory not flagged for deletion")
+    return args
 
-	my $dir = $fileGroup[$fgIndex]->{path} . ($relDir ? "/$relDir" : "");
-	opendir(DIR, $dir);
-	my @f = readdir(DIR);
-	closedir(DIR);
-	foreach (@f) {
-		next if ($_ =~ /^\.{1,2}$/);
-		my $fullPath = "$dir/$_";
-		if (-d $fullPath) {
-			processDirToPrint(($relDir ? "$relDir/$_" : $_), $fgIndex, $mask) if $recursing;
-		}
-		elsif (!$mask or $_ =~ /$mask/i) {
-			my $size = getFileSize($fullPath);
-			next if (!$size);
-			my $md5 = getMD5Hash($fullPath);
-			if ($volumeName) {
-				print "$size\t$md5\t$volumeName/" . ($relDir ? "$relDir/$_" : $_) . "\n";
-			}
-			else {
-				print "$size\t$md5\t$fullPath\n";
-			}
-		}
-	}
-}
+def build_file_groups(args) -> list:
+    groups = [FileGroup(path, False) for path in args.paths]
+    groups += [FileGroup(path, True) for path in args.delete]
+    if not groups:
+        groups = [FileGroup(str(Path.cwd()), False)]
+    for g in groups:
+        directory, mask = fsutil.split_path_mask(g.path)
+        g.path = directory
+        g.mask = mask
+        g.is_hash_file = not Path(directory).is_dir()
+    if args.other and len(groups) < 2:
+        print("Error: --other requires more than one file group", file=sys.stderr)
+        sys.exit(1)
+    return groups
 
-sub getFileSize {
-	my $filePath = shift;
-	my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime,
-	 $mtime, $ctime, $blksize, $blocks) = stat $filePath;
-	return $size;
-}
 
-sub getMD5Hash {
-	my $filePath = shift;
-	open(hFile, $filePath);
-	binmode(hFile);
-	my $md5 = Digest::MD5->new->addfile(*hFile)->hexdigest;
-    close(hFile);
-    return $md5;
-}
+def do_print(groups, recurse, volume, verbose):
+    for idx, g in enumerate(groups):
+        if not Path(g.path).is_dir():
+            print(f"Error: directory argument required when printing: {g.path}", file=sys.stderr)
+            sys.exit(1)
+        files = list(fsutil.walk_files(g.path, recurse=recurse, mask=g.mask))
+        if verbose:
+            print(f"Group {idx}: hashing {len(files)} files under {g.path}", file=sys.stderr)
+        hashes = fsutil.hash_files_parallel(files, on_error="warn")
+        for f in sorted(files):
+            size = fsutil.get_size(f)
+            md5 = hashes.get(str(f))
+            rel = str(f)[len(g.path) + 1:]
+            shown = f"{volume}/{rel}" if volume else str(f)
+            print(f"{size}\t{md5}\t{shown}")
 
-# Expected file format:
-# size  md5  filePathAndName
-sub processHashInfoFile {
-	my ($f, $fgIndex) = @_;
-	
-	open(hFile, $f) or die "Can't open $f: $!";
-	while (<hFile>) {
-		chomp;
-		$_ =~ /(\w+)\s+(\w+)\s+(.*)$/;
-		my ($size, $md5, $f) = ($1, $2, $3);
-		if ($fileInfo{$size}) {
-			push @{$fileInfo{$size}}, {
-				name => $f,
-				fgIndex => $fgIndex
-			}
-		}
-		else {
-			$fileInfo{$size} = [
-				{
-					name => $f,
-					fgIndex => $fgIndex,
-					md5 => $md5
-				}
-			];
-		}
-	}
-	close(hFile);
-}
+def build_file_info(groups, recurse, verbose):
+    """Return {size: [ {name, fg_index, md5(optional)} ]}."""
+    file_info = defaultdict(list)
+    for fg_index, g in enumerate(groups):
+        if verbose:
+            print(f"Processing group {fg_index}: {g.path}", file=sys.stderr)
+        if g.is_hash_file:
+            load_hash_info_file(g.path, fg_index, file_info)
+            continue
+        for f in fsutil.walk_files(g.path, recurse=recurse, mask=g.mask):
+            size = fsutil.get_size(f)
+            if not size:
+                continue
+            file_info[size].append({"name": str(f), "fg_index": fg_index})
+    return file_info
 
-sub parseDir {
-	my $p = shift;
 
-	# replace backlashes	
-	$p =~ s/\\/\//g;
-	# compress doubled dirseps
-	$p =~ s/\/+/\//g;
-	# remove trailing slash
-	$p =~ s/\/$//g;
-	# return empty string if contains pattern characters
-	$p = "" if ($p =~ /[*?]/);
-	return $p;
-}
+def load_hash_info_file(path, fg_index, file_info):
+    """Expected line format: size<TAB>md5<TAB>path"""
+    with open(path, "r", encoding="utf-8", errors="replace") as f:
+        for line in f:
+            parts = line.rstrip("\n").split(None, 2)
+            if len(parts) != 3:
+                continue
+            size, md5, name = parts
+            file_info[int(size)].append({"name": name, "fg_index": fg_index, "md5": md5})
 
-sub parseFullPath {
-	my ($p, $m) = @_;
-	
-	if (!(-d $$p)) {
-		my ($v1, $v2) = ($$p =~ /^(.*\/)([^\/]*?)$/);
-	
-		if ($v1 eq "") {
-			$$m = $$p;
-			$$p = cwd();
-			$$p =~ s/\\/\//g;
-		}
-		else {
-			$$p = $v1;
-			$$m = $v2;
-		}
-		if ($$m !~ /\*|\?/) {
-			$$p = parseDir($$p) . $$m;
-			$$m = "";
-			return;
-		}
-		$$m = dos_to_regex($$m);
-	}
-	$$p = parseDir($$p);
-}
+def find_duplicates(file_info, groups, only_other, deleting, suppress, verbose):
+    # Hash every candidate file across every size-group in one parallel
+    # batch, rather than one small batch per size-group.
+    to_hash = [
+        e["name"]
+        for entries in file_info.values() if len(entries) > 1
+        for e in entries if "md5" not in e
+    ]
+    if verbose:
+        print(f"Hashing {len(to_hash)} candidate files for duplicate detection", file=sys.stderr)
+    hashes = fsutil.hash_files_parallel(to_hash, on_error="warn")
 
-sub dos_to_regex {
-	my $m = shift;
-	# replace *.* with *
-	$m =~ s/\*\.\*/\*/g;
-	# replace . with \.
-	$m =~ s/\./\\\./g;
-	# replace * with .*
-	$m =~ s/\*/\.\*/g;
-	# replace $ with \$
-	$m =~ s/\$/\\\$/g;
-	# replace ? with .
-	$m =~ s/\?/./g;
-	# put ^ at beginning and $ at end
-	return "^$m\$";
-}
+    for size, entries in sorted(file_info.items()):
+        if len(entries) < 2:
+            continue
+        if only_other and len({e["fg_index"] for e in entries}) < 2:
+            continue
 
-sub help {
-	print <<EOT;
-dc: compare directories and generate a list of duplicate files
-Usage: dc [-hros?] [-ve] [filegroup] [[-d] <filegroup>] [...]
-       dc -p [-vo <volumeName>] [filegroup] [...]
+        by_md5 = defaultdict(list)
+        for e in entries:
+            md5 = e.get("md5") or hashes.get(e["name"])
+            if md5 is not None:
+                by_md5[md5].append(e)
 
-dc (directory compare) compares files within one or more directories by content
-and generates a list of duplicate files.  It can also be used to compare
-directories to files containing a list of file sizes, MD5 hashcodes and
-filenames, or to compare multiple files containing sizes, hashcodes and
-filenames.
+        for dupes in by_md5.values():
+            if len(dupes) > 1:
+                report_duplicate_group(dupes, groups, deleting, suppress)
 
-Options
--d or --delete      use this switch before a directory to indicate that files
-                    in that directory that are duplicates of files in other
-                    directories should be automatically deleted.
--h or --help or -?  print help
--o or --other       suppress comparison of files within a directory; only check
-                    for duplicates in other directories
--p or --print       print file sizes, MD5 hashes and paths instead of comparing
--r or --recurse     recurse subdirectories
--s or --suppress    use with -d to print output as though deletion were being
-                    done without actually deleting the files
--ve or --verbose    verbose output
--vo or --volume     specify volume name to print instead of the base path when
-                    printing
-EOT
-	exit 0;
-}
+def report_duplicate_group(dupes, groups, deleting, suppress):
+    if deleting:
+        to_delete = [e["name"] for e in dupes if groups[e["fg_index"]].delete_dupes]
+        to_keep = [e["name"] for e in dupes if not groups[e["fg_index"]].delete_dupes]
+        if to_keep:
+            line_parts = list(to_keep)
+            for name in to_delete:
+                line_parts.append(f"{name} (deleted)")
+                if not suppress:
+                    try:
+                        os.unlink(name)
+                    except OSError as e:
+                        print(f"Error deleting {name}: {e}", file=sys.stderr)
+            print("\t".join(line_parts))
+            return
+    print("\t".join(e["name"] for e in dupes))
+
+
+def main():
+    args = parse_args()
+    groups = build_file_groups(args)
+    deleting = bool(args.delete)
+
+    if args.printing:
+        do_print(groups, args.recurse, args.volume, args.verbose)
+        return
+
+    file_info = build_file_info(groups, args.recurse, args.verbose)
+    find_duplicates(file_info, groups, args.other, deleting, args.suppress, args.verbose)
+
+
+if __name__ == "__main__":
+    main()

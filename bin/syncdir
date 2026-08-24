@@ -1,345 +1,197 @@
-#!/usr/bin/env perl
-# Description: Syncs the files in a source directory with a target directory
-# Author: Andy Roper <andyroper42@gmail.com>
-# URL: https://github.com/andy-roper/roperdot
+#!/usr/bin/env python3
+"""
+Description: Syncs the files in a source directory with a target directory
 
-use strict;
-use utf8;
+Author: Andy Roper <andyroper42@gmail.com>
+URL: https://github.com/andy-roper/roperdot
 
-# TO DO
-# Get Unicode/UTF-8 printing working: still printing bad characters like for
-# Comedy/'Allo 'Allo!/'Allo 'Allo! - s05e10 - René - Under an Assumed Nose.avi
-# Science Fiction/Star Trek - The Next Generation/Star Trek - The Next Generation - s03e13 - D?j? Q.mkv
+Comparison is based on modification time (not content hashing).
 
-# Process dir listing differently for Windows vs Mac OS/Linux
-# Maybe need to eval require?  eval { require Win32::LongPath }
+Deletion safety note: files present in the target but not in the source ARE
+deleted immediately once sync runs, unless --nocopy (display-only mode) is
+given. There is no confirmation prompt — this matches the original script's
+behavior.
+"""
 
-use File::Spec;
-use File::Path;
-use File::Copy "cp";
-use Getopt::Long;
+from __future__ import annotations
 
-my $windows = ($^O =~ /win/i && $ENV{'ROPERDOT_OS_ENV'} ne "msys");
-eval { require Win32::LongPath; } if ($windows);
+import argparse
+import os
+import re
+import sys
+from pathlib import Path
 
-binmode(STDOUT, ":utf8");
+import fsutil
 
-my $verbose = 0;
-my $displayOnly = 0;
-my $forceCopy = 0;
-my $disableRecursion = 0;
-my @excludeDirArgs;
-my $excludePattern;
-my $printing = 0;
-my $targetDataFile;
-my $srcDir;
-my $targetDir;
-my $outputDir;
-my @excludeDirs;
-my $processFile;
-my $help;
-my $volumeName;
-my %targetHash;
-my @srcFiles;
+DB_FILE_PATTERN = re.compile(r"\.db$", re.IGNORECASE)
 
-GetOptions(
-	'disable'    => \$disableRecursion,
-	'force'      => \$forceCopy,
-	'help|?'     => \$help,
-	'verbose'    => \$verbose,
-	'nocopy'     => \$displayOnly,
-	'xdir=s'     => \@excludeDirArgs,
-	'xpattern=s' => \$excludePattern,
-	'print=s'    => \$volumeName,
-	'target=s'   => \$targetDataFile,
-	'output=s'   => \$outputDir
-);
+def parse_args():
+    p = argparse.ArgumentParser(
+        prog="syncdir",
+        description="Synchronize a target directory with a source directory.",
+    )
+    p.add_argument("src_dir", nargs="?", help="source directory")
+    p.add_argument("target_dir", nargs="?", help="target directory")
+    p.add_argument("-d", "--disable", action="store_true", help="disable directory recursion")
+    p.add_argument("-f", "--force", action="store_true",
+                    help="always copy files present in both dirs, ignoring mtime comparison")
+    p.add_argument("-n", "--nocopy", action="store_true", help="display only; make no changes")
+    p.add_argument("-p", "--print", dest="print_volume", metavar="VOLUME",
+                    help="print file/mtime data for target_dir tagged with VOLUME, then exit")
+    p.add_argument("-o", "--output", dest="output_dir",
+                    help="write new/changed files here instead of into target_dir")
+    p.add_argument("-t", "--target-data", dest="target_data_file",
+                    help="a data file (from a previous --print run) describing files on other volumes")
+    p.add_argument("--xdir", action="append", default=[], dest="exclude_dirs",
+                    help="a directory to exclude (repeatable)")
+    p.add_argument("--xpattern", dest="exclude_pattern", help="a filename regex to exclude")
+    p.add_argument("-v", "--verbose", action="store_true", help="verbose output")
+    args = p.parse_args()
 
-help() if ($help);
+    if args.print_volume:
+        if not args.src_dir:
+            p.error("--print requires a directory argument")
+    elif not args.src_dir or not args.target_dir:
+        p.error("src_dir and target_dir are required (unless using --print)")
+    return args
 
-$printing = 1 if ($volumeName);
-$verbose = 1 if ($displayOnly);
-
-my $recursing = !($disableRecursion);
-
-foreach my $dir (@excludeDirArgs) {
-	push @excludeDirs, lc(fixPath($dir));
-}
-
-printFileDataForDir(shift) if ($printing);
-
-($srcDir, $targetDir) = @ARGV;
-$srcDir = fixPath($srcDir);
-$targetDir = fixPath($targetDir);
-help() if ($targetDir eq "" or $srcDir eq "");
-if (!(-d $targetDir)) {
-	print "Error: $targetDir does not exist";
-	exit 1;
-}
-if (!(-e $srcDir)) {
-	print "Error: $srcDir does not exist";
-	exit 1;
-}
-
-push @excludeDirs, "$srcDir/system volume information";
-push @excludeDirs, "$srcDir/\$recycle.bin";
-
-processDataFile($targetDataFile, \%targetHash) if ($targetDataFile);
-
-$processFile = \&processSourceFile;
-my $strOffset = length($srcDir) + 1;
-processDir($srcDir);
-
-$processFile = \&processTargetFile;
-$strOffset = length($targetDir) + 1;
-my $inOutputDir = 0;
-processDir($targetDir);
-
-if ($outputDir) {
-	$outputDir = fixPath($outputDir);
-	$strOffset = length($outputDir) + 1;
-	$inOutputDir = 1;
-#	print "\n\n\n\n\n\noutputDir: $outputDir\n" if ($verbose);
-	processDir($outputDir);
-}
+def do_print_mode(target_dir, volume, exclude_dirs, exclude_pattern, recurse):
+    target_dir = fsutil.fix_path(target_dir)
+    if not Path(target_dir).is_dir():
+        print(f"Error: {target_dir} does not exist", file=sys.stderr)
+        sys.exit(1)
+    for f in fsutil.walk_files(
+        target_dir, recurse=recurse, exclude_dirs=exclude_dirs,
+        exclude_pattern=exclude_pattern, skip_pattern=DB_FILE_PATTERN,
+    ):
+        rel = str(f)[len(target_dir) + 1:]
+        mtime = fsutil.get_mtime(f)
+        print(f"{volume}\t{rel}\t{mtime}")
 
 
-#print "\n\n\n\n\n";
-#print "srcDir: $srcDir\ntargetDir: $targetDir\noutputDir: $outputDir\n\n\n\n\n";
-#foreach my $f (sort @srcFiles) {
-#	print "srcFiles: $f\n";
-#}
-#print "\n\n\n\n\n";
-#foreach my $f (sort keys %targetHash) {
-#	print "targetHash file: $f\n";
-#	print "targetHash inOutputDir: " . $targetHash{$f}->{inOutputDir} . "\n";
-#}
-#print "\n\n\n\n\n";
+def load_target_data_file(path):
+    """Data file format: volume<TAB>relPath<TAB>modTime, from a previous --print run."""
+    target_hash = {}
+    with open(path, "r", encoding="utf-8", errors="replace") as f:
+        for line in f:
+            parts = line.rstrip("\n").split("\t")
+            if len(parts) != 3:
+                continue
+            volume, rel_path, mod_time = parts
+            target_hash[rel_path] = {
+                "volume": volume, "mod_time": float(mod_time), "in_output_dir": False,
+            }
+    return target_hash
 
-#print "targetHash:\n";
-#foreach my $f (sort keys %targetHash) {
-#	print "$f\n";
-#}
 
-foreach my $f (@srcFiles) {
-	my $target = $targetHash{$f};
-	if ($target) {
-		my $srcFile = "$srcDir/$f";
-		my $targetFile =  ($target->{inOutputDir} ? $outputDir: $targetDir) . "/$f";
-		my $targetVolume = $target->{volume};
-		my $targetModTime = $target->{modTime};
-		$targetModTime = getModTime($targetFile) if (!$targetModTime);
-		my $srcModTime = getModTime($srcFile);
-		if ($srcModTime > $targetModTime) {
-#			print "srcModTime: $srcModTime, targetModTime: $targetModTime\n" if ($verbose);
-			if ($targetVolume) {
-				print "Need to copy \"$srcFile\" to $targetVolume and update the target data file\n";
-			}
-			else {
-				copyFileToTarget($f);
-			}
-		}
-		delete $targetHash{$f};
-	}
-	else {
-#		print "$f not in targetHash\n" if ($verbose);
-		copyFileToTarget($f, 1);
-	}
-}
-for my $f (keys %targetHash) {
-	my $data = $targetHash{$f};
-	if ($targetHash{$f}->{volume}) {
-		print "Need to delete \"$srcDir/$f\" from " . $targetHash{$f}->{volume} . " and update the target data file\n";
-	}
-	else {
-		my $targetFile = "$targetDir/$f";
-		print "Deleting $targetFile\n" if ($verbose);
-		unlink "$targetFile" if (!$displayOnly);
-	}
-}
+def index_target_dir(root, recurse, exclude_dirs, exclude_pattern, in_output_dir, target_hash):
+    for f in fsutil.walk_files(
+        root, recurse=recurse, exclude_dirs=exclude_dirs,
+        exclude_pattern=exclude_pattern, skip_pattern=DB_FILE_PATTERN,
+    ):
+        rel = str(f)[len(root) + 1:]
+        target_hash[rel] = {"volume": "", "mod_time": None, "in_output_dir": in_output_dir}
 
-exit 0;
+def main():
+    args = parse_args()
+    exclude_dirs = {fsutil.fix_path(d).lower() for d in args.exclude_dirs}
+    exclude_pattern = re.compile(args.exclude_pattern) if args.exclude_pattern else None
+    recurse = not args.disable
+    verbose = args.verbose or args.nocopy
 
-sub copyFileToTarget {
-	my ($f, $newFile) = @_;
-	my $dir = ($outputDir ? $outputDir : $targetDir);
-	my $targetFile = "$dir/$f";
-#	print "copyFileToTarget dir: $dir\n" if ($verbose);
-#	print "copyFileToTarget targetFile: $targetFile\n" if ($verbose);
-	if ($newFile) {
-		my @dirs = split /\//, $f;
-		my $path = $dir;
-		for (my $i = 0; $i < scalar @dirs - 1; $i++) {
-			$path .= "/" . $dirs[$i];
-			if (!(-d $path)) {
-				print "Creating directory $path\n" if ($verbose);
-				mkdir $path if (!$displayOnly);
-			}
-		}
-	}
-	print "Copying to $targetFile\n" if ($verbose);
-	return if ($displayOnly);
-	my $srcFile = "$srcDir/$f";
-	if ($windows) {
-		$srcFile =~ s/\//\\/g;
-		$targetFile =~ s/\//\\/g;
-	}
-	cp($srcFile, $targetFile);
-}
+    if args.print_volume:
+        do_print_mode(args.src_dir, args.print_volume, exclude_dirs, exclude_pattern, recurse)
+        return
 
-sub fixPath {
-	my $path = shift;
-	$path = File::Spec->rel2abs($path);
-	$path =~ s/\\/\//g;
-	$path =~ s/\/+$//;
-	return $path;
-}
+    src_dir = fsutil.fix_path(args.src_dir)
+    target_dir = fsutil.fix_path(args.target_dir)
+    output_dir = fsutil.fix_path(args.output_dir) if args.output_dir else None
 
-sub getModTime {
-	my $x = shift;
-	my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime,
-	 $mtime, $ctime, $blksize, $blocks) = stat $x;
-	return $mtime;
-}
+    if not Path(target_dir).is_dir():
+        print(f"Error: {target_dir} does not exist", file=sys.stderr)
+        sys.exit(1)
+    if not Path(src_dir).exists():
+        print(f"Error: {src_dir} does not exist", file=sys.stderr)
+        sys.exit(1)
 
-sub processDir {
-	my $path = shift;
+    exclude_dirs.add(f"{src_dir}/system volume information".lower())
+    exclude_dirs.add(f"{src_dir}/$recycle.bin".lower())
 
-	my $pathToProcess = (length($path) == 2 ? "$path/" : $path);
+    target_hash = load_target_data_file(args.target_data_file) if args.target_data_file else {}
 
-	my @files;
-	my @dirs;
+    src_files = [
+        str(f)[len(src_dir) + 1:]
+        for f in fsutil.walk_files(
+            src_dir, recurse=recurse, exclude_dirs=exclude_dirs,
+            exclude_pattern=exclude_pattern, skip_pattern=DB_FILE_PATTERN,
+        )
+    ]
 
-	if ($windows) {
-		my $dir = Win32::LongPath->new();
-		$dir->opendirL($pathToProcess);
-		foreach my $f ($dir->readdirL()) {
-			next if ($f =~ /^\.{1,2}$/);
-			push @files, $f;
-		}
-		$dir->closedirL();
-	}
-	else {
-		opendir(DIR, $pathToProcess) or die "Unable to open $pathToProcess: $!";
-		@files = grep { !/^\.{1,2}$/ } readdir(DIR);
-		closedir(DIR);
-	}
+    index_target_dir(target_dir, recurse, exclude_dirs, exclude_pattern, False, target_hash)
+    if output_dir:
+        index_target_dir(output_dir, recurse, exclude_dirs, exclude_pattern, True, target_hash)
 
-	@files = map { $path . '/' . $_ } @files;
+    to_copy: list[tuple[str, str]] = []
+    remote_copy_notes: list[str] = []
 
-	for my $f (@files) {
-		if (-d $f) {
-			if ($recursing) {
-				my $skipDir = 0;
-				foreach my $dir (@excludeDirs) {
-					if ($dir eq lc($f)) {
-						$skipDir = 1;
-						last;
-					}
-				}
-				processDir($f) if (!$skipDir);
-			}
-		}
-		else {
-			if ($f !~ /\.db$/i) {
-				&$processFile($f) if (!$excludePattern || $f !~ $excludePattern);
-			}
-		}
-	}
-}
+    for rel in src_files:
+        entry = target_hash.pop(rel, None)
+        src_file = f"{src_dir}/{rel}"
+        if entry is None:
+            dest_root = output_dir or target_dir
+            to_copy.append((src_file, f"{dest_root}/{rel}"))
+            continue
 
-sub printFileDataForDir {
-	$targetDir = shift;
-	help() if ($targetDir eq "");
-	if (!(-d $targetDir)) {
-		print "Error: $targetDir does not exist";
-		exit 1;
-	}
-	$targetDir =~ s/\\/\//g;
-	$targetDir =~ s/\/$//g;
-	$processFile = \&printFileData;
-	processDir($targetDir);
-	exit 0;
-}
+        dest_root = output_dir if entry["in_output_dir"] else target_dir
+        target_file = f"{dest_root}/{rel}"
+        if args.force:
+            to_copy.append((src_file, target_file))
+            continue
 
-sub printFileData {
-	my $f = shift;
-	my $relPath = substr($f, length($targetDir) + 1);
-	my $modTime = getModTime($f);
-	print "$volumeName\t$relPath\t$modTime\n";
-}
+        target_mtime = entry["mod_time"]
+        if target_mtime is None:
+            try:
+                target_mtime = fsutil.get_mtime(target_file)
+            except OSError:
+                target_mtime = 0
+        src_mtime = fsutil.get_mtime(src_file)
+        if src_mtime > target_mtime:
+            if entry["volume"]:
+                remote_copy_notes.append(
+                    f'Need to copy "{src_file}" to {entry["volume"]} and update the target data file'
+                )
+            else:
+                to_copy.append((src_file, target_file))
 
-sub processDataFile {
-	my $targetDataFile = shift;
-	my $targetFileHash = shift;
-	open hFile, "<:encoding(utf8)", $targetDataFile;
-	while (<hFile>) {
-		chomp;
-#		print "line: $_\n" if ($verbose);
-		$_ =~ /^(.*)\t(.*)\t(.*)$/;
-		my ($volumeName, $relPath, $modTime) = ($1, $2, $3);
-		my %hashValue = (
-			volume => $volumeName,
-			modTime => $modTime
-		);
-#	print "processDataFile $relPath\n" if ($verbose);
-		$targetFileHash->{$relPath} = \%hashValue;
-	}
-	close hFile;
-}
+    for note in remote_copy_notes:
+        print(note)
 
-sub processSourceFile {
-	my $srcFile = shift;
-	$srcFile = substr($srcFile, $strOffset);
-#	print "processSourceFile $srcFile\n" if ($verbose);
-	push @srcFiles, $srcFile;
-}
+    if verbose:
+        print(f"Copying {len(to_copy)} file(s)" + (" (display only)" if args.nocopy else ""))
+    if to_copy and not args.nocopy:
+        errors = fsutil.copy_files_parallel(to_copy, verbose=verbose)
+        if errors:
+            print(f"{len(errors)} file(s) failed to copy", file=sys.stderr)
+    elif to_copy and args.nocopy:
+        for src_file, target_file in to_copy:
+            print(f"Would copy {src_file} -> {target_file}")
 
-sub processTargetFile {
-	my $targetFile = shift;
-	$targetFile = substr($targetFile, $strOffset);
-#	print "processTargetFile $targetFile\n" if ($verbose);
-	my %hashValue = (
-		volume => "",
-		inOutputDir => $inOutputDir
-	);
-	$targetHash{$targetFile} = \%hashValue;
-}
+    for rel, entry in target_hash.items():
+        if entry["volume"]:
+            print(f'Need to delete "{src_dir}/{rel}" from {entry["volume"]} and update the target data file')
+            continue
+        dest_root = output_dir if entry["in_output_dir"] else target_dir
+        target_file = f"{dest_root}/{rel}"
+        if args.nocopy:
+            print(f"Would delete {target_file}")
+        else:
+            if verbose:
+                print(f"Deleting {target_file}")
+            try:
+                os.unlink(target_file)
+            except OSError as e:
+                print(f"Error deleting {target_file}: {e}", file=sys.stderr)
 
-sub help {
-	print <<EOT;
-syncdir: synchronize source and target directories
-Usage:
-syncdir [-dfnv] [-xd <dir>] [-xp <pattern>] [-t <dataFile>] [-o <outputDir>] <srcDir> <targetDir>
-syncdir -p <volumeName> [-dv] [-xd <dir>] [-xp <pattern>] <targetDir>
 
-Options:
--d or --disable    disable directory recursion
--f or --force      force copy: when a file exists in both directories, force a
-                   copy of the file from the source to the target
--n or --nocopy     display only
--p or --print      print data to be used in a target data file by future
-                   syncdir executions; the next argument will be the volume
-                   name for the volume
--o or --output     specify the directory in which to place new and changed
-                   files from the source
--t or --target     specify a target data file; this file will contain data for
-                   files that can span multiple volumes
--v or --verbose    enable verbose output
--xd or --xdir      specify a directory to exclude
--xp or --xpattern  specify a file pattern to exclude
-
-syncdir will synchronize the directory targetDir with the directory srcDir such
-that targetDir will contain the same files that are in the srcDir.
-
-Files which are in targetDir that are not in srcDir will be deleted from
-targetDir.
-
-Files which are in srcDir which are not in targetDir will be copied to
-targetDir.
-
-Files which exist in both directories but are newer in srcDir will be copied to
-targetDir.
-EOT
-	exit 1;
-}
+if __name__ == "__main__":
+    main()
