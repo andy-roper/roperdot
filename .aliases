@@ -103,7 +103,7 @@ if [[ $ROPERDOT_OS_ENV = ubuntu && $ROPERDOT_DESKTOP_ENV = windows ]]; then
 fi
 
 alias disks="df -P -kH"
-alias dfh="df -h"
+alias df="df -h"
 
 alias ln='ln -i'
 
@@ -126,9 +126,12 @@ alias flush=sync
 alias j='jobs -l'
 alias md='mkdir -p'
 alias rd=rmdir
-alias now='date +"%T"'
+alias now='date +"%F %T"'
 alias curdate='date +"%x"'
 alias path="printenv PATH | tr ':' '\n'"
+alias chown='chown --preserve-root'
+alias chmod='chmod --preserve-root'
+alias chgrp='chgrp --preserve-root'
 
 if [[ $ROPERDOT_DESKTOP_ENV = windows ]] && command -v choco.exe >/dev/null 2>&1; then
 	alias choco='choco.exe'
@@ -138,8 +141,8 @@ fi
 #   sleep 10; alert
 command -v notify-send >/dev/null 2>&1 && alias alert='notify-send --urgency=low -i "$([ $? -eq 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
-# define ports alias if lsof if present
-command -v lsof >/dev/null 2>&1 && alias ports='lsof -i -P | grep -i "listen"'
+# Using sed to remove trailing whitespace to prevent line-wrapping caused by using generic colouriser
+alias ports='grc --colour=on ss -tulpn | sed -E "s/([ \t]|\x1b\[[0-9;]*m)+\$//"'
 
 command -v dig >/dev/null 2>&1 && alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
 
@@ -182,7 +185,7 @@ alias psmem10='ps aux | sort -nr -k 4 | head -10'
 alias pscpu='ps aux | sort -nr -k 3'
 alias pscpu10='ps aux | sort -nr -k 3 | head -10'
 
-alias meminfo='free -m -l -t'
+alias meminfo='free -m -l -t -h'
 
 [[ -f /var/log/Xorg.0.log ]] && alias gpumeminfo='grep -i --color memory /var/log/Xorg.0.log'
 
