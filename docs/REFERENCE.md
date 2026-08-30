@@ -233,6 +233,13 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" to pro
 
 - Integrate eza, a modern ls alternative: https://github.com/eza-community/eza
 
+  - Example calls:
+    - eza --icons --group-directories-first
+
+    - eza -lah --icons --group-directories-first
+
+    - eza --tree --icons
+
 - Integrate bat, a modern cat alternative: https://github.com/sharkdp/bat
 
 - Other apps to evaluate and possibly integrate:
