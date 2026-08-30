@@ -1420,7 +1420,8 @@ case "$action" in
         fi
         ;;
     "Squash commits")
-		command="cd ~/roperdot && git add . && git commit -m \"Fix\" && git rebase -i HEAD~2 && git push --force-with-lease"
+#		command="cd ~/roperdot && git add . && git commit -m \"Fix\" && git rebase -i HEAD~2 && git push --force-with-lease"
+		command="cd ~/roperdot && git add . && git commit --amend --no-edit && git push --force-with-lease"
 		;;
     *)
         echo "No action selected" >&2

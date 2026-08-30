@@ -18,7 +18,8 @@
 		"app": "openssh-server",
 		"presence_command": "pgrep -q sshd",
 		"install_script": "install-openssh-server",
-		"desc": "OpenSSH server daemon for secure remote shell access"
+		"desc": "OpenSSH server daemon for secure remote shell access",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "p7zip",
@@ -118,15 +119,13 @@
 		"presence_command": "[[ -f ~/.nvm ]]",
 		"install_script": "install-nvm",
 		"sudo_not_required": true,
-		"desc": "Node version manager",
-		"exclusionGroups": ["work"]
+		"desc": "Node version manager"
 	},
 	{
 		"app": "Node.js",
 		"binary": "node",
 		"install_script": "install-node",
-		"desc": "JavaScript run-time environment that executes JavaScript code server-side",
-		"exclusionGroups": ["work"]
+		"desc": "JavaScript run-time environment that executes JavaScript code server-side"
 	},
 	{
 		"app": "pipx",
@@ -255,6 +254,13 @@
 		"list_prerequisite": "brew",
 		"install_script": "install-jq",
 		"desc": "Utility like sed for JSON data"
+	},
+	{
+		"app": "xmllint",
+		"binary": "xmllint",
+		"install_script": "install-xmllint",
+		"sudo_not_required": true,
+		"desc": "Tool for parsing and beautifying XML"
 	},
 	{
 		"app": "xmltodict",

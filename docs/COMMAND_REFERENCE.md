@@ -53,18 +53,22 @@ help <text>        # Find commands whose name/description matches the text
 - **`.....`** - `cd ../../../..`
 
 ### Listing
-- **`ls` (enhanced)** - Enhanced formatting, colors, and sorting options
+- **`ls` (enhanced)** - Enhanced formatting, colors, and sorting options; uses [`eza`](https://github.com/eza-community/eza) if it's installed
 - **`l`** - Same as standard `ls -al`
 - **`la`** - ls showing permissions in octal
 - **`lb`** - ls with one filename per line
 - **`lf`** - ls that shows full paths to files, one filename per line
 - **`lfr`** - Recursive lf
-- **`lh`** - Similar to `ls -alh`, but shows 5 digits of precision for sizes
+- **`lg`** - List new/modified files under the current directory in a git repository
+- **`lgf`** - List all new/modified files in a git repository
+- **`lh`** - Similar to `ls -alh`, but shows 5 digits of precision for sizes (only defined if [`eza`](https://github.com/eza-community/eza) if is not installed)
 - **`lsd`** - ls that only shows directories
 - **`lsz`** - ls sorted by size ascending
 - **`lt`** - ls sorted by modified time ascending
 - **`lw`** - Same as standard ls
 - **`recent`** - List recently modified files
+- **`tree`** - Lists names of files and directories recursively using a tree format
+- **`treed`** - Lists details for files and directories recursively using a tree format
 - **`u`** - Show space used by subdirectories in human-readable formatting
 
 ### File Manipulation

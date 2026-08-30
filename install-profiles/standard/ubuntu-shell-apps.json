@@ -12,7 +12,8 @@
 		"binary": "sshd",
 		"install_script": "install-openssh-server",
 		"list_prerequisite": "apt-get",
-		"desc": "OpenSSH server daemon for secure remote shell access"
+		"desc": "OpenSSH server daemon for secure remote shell access",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "net-tools",
@@ -315,14 +316,12 @@
 	{
 	    "app": "GnuPG",
 	    "binary": "gpg",
-	    "desc": "Open-source alternative to PGP",
-	    "groups": ["work"]
+	    "desc": "Open-source alternative to PGP"
 	},
 	{
 	    "app": "software-properties-common",
 	    "binary": "software-properties-common",
-	    "desc": "Package for managing Personal Package Archives",
-	    "groups": ["work"]
+	    "desc": "Package for managing Personal Package Archives"
 	},
 	{
 	    "app": "Terraform",

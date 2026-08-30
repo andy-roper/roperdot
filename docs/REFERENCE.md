@@ -130,6 +130,7 @@ roperdot makes use of a number of excellent third party terminal applications.
 ### Shell Customization
 
 - **[`diff-so-fancy`](https://github.com/so-fancy/diff-so-fancy)** - Formatter and colorizer for git diff
+- **[`eza`](https://github.com/eza-community/eza)** - Modern, colorized replacement for `ls` with icons, git status, and tree views
 - **`grc`** - [Generic colouriser](https://github.com/garabik/grc) for command output
 - **`pygmentize`** - [Pygments](https://pygments.org/) - Syntax highlighter
 - **[`starship`](https://starship.rs/)** - Modern cross-shell prompt
@@ -230,15 +231,6 @@ In 2025, I updated my dotfiles to incorporate the concept of app "groups" to pro
 - Revisit issue with being repeatedly asked for the sudo password when installing WSL/Ubuntu shell apps (apt-file, git-lfs, fd-find, jq, shellcheck, speedtest-cli)
 
   - The sudo keepalive approach in install_shell_apps didn't work
-
-- Integrate eza, a modern ls alternative: https://github.com/eza-community/eza
-
-  - Example calls:
-    - eza --icons --group-directories-first
-
-    - eza -lah --icons --group-directories-first
-
-    - eza --tree --icons
 
 - Integrate bat, a modern cat alternative: https://github.com/sharkdp/bat
 
