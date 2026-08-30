@@ -28,7 +28,13 @@ fi
 
 if [[ "$ROPERDOT_CUSTOM_LS" = true ]]; then
 	if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
-		if [[ $ROPERDOT_OS_ENV = darwin && "$(command -v ls)" = "/bin/ls" ]]; then
+		if command -v eza >/dev/null 2>&1; then
+			alias ls='set -f;__ls -lA --group-directories-first --time-style=long-iso --git'
+			alias lw='set -f;__ls -GA --group-directories-first'
+			alias lt='set -f;__ls -lA --time-style=long-iso --sort new'
+			alias lsz='set -f;__ls -lA --group-directories-first --time-style=long-iso --sort size --reverse'
+			alias lb='set -f;__ls -1 -A'
+		elif [[ $ROPERDOT_OS_ENV = darwin && "$(command -v ls)" = "/bin/ls" ]]; then
 			alias ls='set -f;__ls -lA'
 			alias lw='set -f;__ls -A'
 		else
@@ -41,7 +47,13 @@ if [[ "$ROPERDOT_CUSTOM_LS" = true ]]; then
 		alias l='set -f;ls'
 		alias pl='set -f;pwd;ls'
 	else
-		if [[ $ROPERDOT_OS_ENV = darwin && "$(command -v ls)" = "/bin/ls" ]]; then
+		if command -v eza >/dev/null 2>&1; then
+			alias ls='set -F;__ls -lA --group-directories-first --time-style=long-iso --git'
+			alias lw='set -F;__ls -GA --group-directories-first'
+			alias lt='set -F;__ls -lA --time-style=long-iso --sort new'
+			alias lsz='set -F;__ls -lA --group-directories-first --time-style=long-iso --sort size --reverse'
+			alias lb='set -F;__ls -1 -A'
+		elif [[ $ROPERDOT_OS_ENV = darwin && "$(command -v ls)" = "/bin/ls" ]]; then
 			alias ls='set -F;__ls -lA'
 			alias lw='noglob __ls -A'
 		else
@@ -93,6 +105,16 @@ if [[ "$ROPERDOT_CUSTOM_RM" = true ]]; then
 	fi
 else
 	alias rm='rm -i -v'
+fi
+
+if command -v eza >/dev/null 2>&1; then
+	alias tree='eza --tree --icons'
+	alias treed='eza --tree --icons --git -l --time-style=long-iso'
+	if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
+		alias lfr='set -f;__lfr'
+	else
+		alias lfr='set -F;__lfr'
+	fi
 fi
 
 command -v help >/dev/null 2>&1 || alias help=helprd
@@ -151,8 +173,10 @@ alias ud='u -d'
 
 # define aliases to disable globbing first
 if [[ $ROPERDOT_CURRENT_SHELL = bash ]]; then
-	alias lf='set -f;lf'
-	alias lfr='set -f;lf -r'
+	if ! command -v eza >/dev/null 2>&1; then
+		alias lf='set -f;lf'
+		alias lfr='set -f;lf -r'
+	fi
 	alias ff='set -f;_ff'
 	alias ftr='set -f;_ftr'
 	if command -v fdfind >/dev/null 2>&1 || command -v fd >/dev/null 2>&1; then
@@ -164,8 +188,10 @@ if [[ $ROPERDOT_CURRENT_SHELL = bash ]]; then
 		alias ft='_ft'
 	fi
 else
-	alias lf='set -F;lf'
-	alias lfr='set -F;lf -r'
+	if ! command -v eza >/dev/null 2>&1; then
+		alias lf='set -F;lf'
+		alias lfr='set -F;lf -r'
+	fi
 	alias ff='set -F;_ff'
 	alias ftr='set -F;_ftr'
 	if command -v fdfind >/dev/null 2>&1 || command -v fd >/dev/null 2>&1; then

@@ -1,7 +1,29 @@
-#!/usr/bin/env bash
+#
+# Description: Install script for eza
+#
+# Author: Andy Roper <andyroper42@gmail.com>
+# URL: https://github.com/andy-roper/roperdot
+#
 
-sudo mkdir -p /etc/apt/keyrings
-wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
-echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
-sudo apt update
-sudo apt install -y eza
+if [[ "$ROPERDOT_OS_ENV" = "darwin" ]] && command -v brew >/dev/null 2>&1; then
+    brew install eza
+elif command -v apt >/dev/null 2>&1; then
+    sudo mkdir -p /etc/apt/keyrings
+    wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
+    sudo apt update
+    sudo apt install -y eza
+elif command -v dnf >/dev/null 2>&1; then
+    sudo dnf install -y eza
+elif command -v yum >/dev/null 2>&1; then
+    sudo yum install -y eza
+else
+    echo "install-eza: no supported package manager found (brew/apt/dnf/yum)" >&2
+    return 1
+fi
+
+# Add export of EZA_COLORS to roperdot-loader
+local roperdot_loader="$HOME/.config/roperdot/roperdot-loader"
+if ! grep -q 'EZA_COLORS' "$roperdot_loader" 2>/dev/null; then
+    echo 'export EZA_COLORS="ur=92:uw=92:ux=92:ue=92:gr=33:gw=33:gx=33:tr=91:tw=91:tx=91"' >> "$roperdot_loader"
+fi

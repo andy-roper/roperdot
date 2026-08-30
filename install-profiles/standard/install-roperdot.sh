@@ -479,10 +479,11 @@ EOT
 roperdot includes customized ls behavior in the shell to:
 * Expand instances in paths of "..." to "../.."
 * Show the contents of a symlink directory argument instead of the symlink itself
-* Use the -d switch for non-directory arguments to suppress single-level recursion into directories
 Note: ls will execute without custom behavior if data is piped to it, if its output is redirected, or it's called from another function or script.
 EOT
 	ask_yn_n "Use custom ls behavior" y "$ROPERDOT_CUSTOM_LS" && ROPERDOT_CUSTOM_LS=true
+
+	ask_yn_n "List directories instead of their contents (default to using -d)" y "$ROPERDOT_LIST_DIRS_NOT_CONTENTS" && ROPERDOT_LIST_DIRS_NOT_CONTENTS=true
 
 	cat <<EOT
 roperdot includes customized cd behavior in the shell to:
@@ -686,6 +687,7 @@ export ROPERDOT_PROFILES=$ROPERDOT_PROFILES
 export ROPERDOT_CUSTOM_CD=$ROPERDOT_CUSTOM_CD
 export ROPERDOT_CUSTOM_CP=$ROPERDOT_CUSTOM_CP
 export ROPERDOT_CUSTOM_LS=$ROPERDOT_CUSTOM_LS
+export ROPERDOT_LIST_DIRS_NOT_CONTENTS=$ROPERDOT_LIST_DIRS_NOT_CONTENTS
 export ROPERDOT_CUSTOM_MV=$ROPERDOT_CUSTOM_MV
 export ROPERDOT_CUSTOM_RM=$ROPERDOT_CUSTOM_RM
 export ROPERDOT_COLOR_SCHEME="${ROPERDOT_COLOR_SCHEME:-default}"

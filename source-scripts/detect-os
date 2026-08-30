@@ -138,18 +138,7 @@ fi
 
 # Session-specific checks (always run these)
 if [[ "$ROPERDOT_DESKTOP_ENV" = "windows" ]]; then
-	# Single PowerShell call for both admin rights and desktop version
-	read -r is_admin desktop_version < <(powershell.exe -NoProfile -Command "
-		\$currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
-		\$principal = New-Object Security.Principal.WindowsPrincipal(\$currentUser)
-		\$isAdmin = \$principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-		\$caption = (Get-CimInstance Win32_OperatingSystem).Caption
-		\$version = if (\$caption -match 'Windows ([0-9]+)') { \$Matches[1] } else { '' }
-		Write-Output \"\$isAdmin|\$version\"
-	" 2>/dev/null | tr -d '\r\n' | awk -F'|' '{print $1, $2}')
-	
-	[[ "$is_admin" == "True" ]] && export HAS_ADMIN_RIGHTS=true
-	ROPERDOT_DESKTOP_VERSION="$desktop_version"
+	source "$(dirname "${BASH_SOURCE[0]:-$0}")/detect-os-windows"
 elif [[ "$ROPERDOT_OS_TYPE" = "windows" ]]; then
 	net session >/dev/null 2>&1 && HAS_ADMIN_RIGHTS=true
 fi

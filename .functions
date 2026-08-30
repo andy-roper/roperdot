@@ -73,10 +73,10 @@ EOT
 		if [[ $# -eq 0 ]]; then
 			clip_contents=$(clippaste)
 			if [[ -n "$clip_contents" && ${#clip_contents} -le 255 && ! "$clip_contents" =~ $'\n' && ! "$clip_contents" =~ $'\t' && ! "$clip_contents" =~ [\*\?\[\$] ]]; then
-			    if [[ -d "$clip_contents" ]]; then
-			    	cd "$clip_contents"
-			    	clipclear
-			    	return
+				if [[ -d "$clip_contents" ]]; then
+					cd "$clip_contents"
+					clipclear
+					return
 				fi
 			fi
 		fi
@@ -127,11 +127,11 @@ EOT
 		fi
 		
 		if [[ "$1" = "-" || "$1" = "--" ]]; then
-		    \cd "$1" || return 1
-		    return
+			\cd "$1" || return 1
+			return
 		elif [[ "$1" =~ ^- ]]; then
-		    \cd "$@" || return 1
-		    return
+			\cd "$@" || return 1
+			return
 		fi
 
 		p="$(abs-path "$1")"
@@ -170,7 +170,9 @@ if [[ "$ROPERDOT_CUSTOM_LS" = true ]]; then
 	__ls() {
 		# Determine which ls command to use
 		local LS_CMD
-		if [[ "$ROPERDOT_OS_ENV" = "darwin" ]] && command -v gls >/dev/null 2>&1; then
+		if command -v eza >/dev/null 2>&1; then
+			LS_CMD="eza"
+		elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]] && command -v gls >/dev/null 2>&1; then
 			LS_CMD="gls"
 		else
 			LS_CMD='\ls'
@@ -178,7 +180,19 @@ if [[ "$ROPERDOT_CUSTOM_LS" = true ]]; then
 		
 		# Turn globbing back on
 		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && set +f || set +F
-		local arg arg_str
+
+		if [[ -n "$ROPERDOT_LIST_DIRS_NOT_CONTENTS" ]]; then
+			# If any argument is a glob pattern, list matched directories themselves
+			# instead of recursing into their contents (same effect -d has for a
+			# literal directory argument). Checked up front so it applies whether or
+			# not we take the early-return (piped/nested-call) path below.
+			local arg has_pattern=""
+			for arg in "$@"; do
+				[[ "$arg" =~ [*] ]] && { has_pattern=1; break; }
+			done
+		fi
+
+		local arg_str
 		# If ls is called by a function or script or via a pipe, execute it without customization
 		if [[ ! -t 1 ||
 		( "$ROPERDOT_CURRENT_SHELL" = "bash" && ${#FUNCNAME[@]} -gt 1 ) ||
@@ -187,41 +201,34 @@ if [[ "$ROPERDOT_CUSTOM_LS" = true ]]; then
 				arg="$(escape-arg "$arg")"
 				arg_str+=" $arg"
 			done
+			[[ -n "$has_pattern" ]] && arg_str="-d $arg_str"
 			eval "$LS_CMD $arg_str"
 			return $?
 		fi
-		local d switches=()
-		while [[ "$1" =~ ^- ]]; do
-			[[ "$1" == "--" ]] && shift && break
-			switches+=("$1")
-			shift
-		done
-		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && shopt -s dotglob || setopt glob_dots
-		if [[ $# -eq 0 ]]; then
-			eval "$LS_CMD $LS_SWITCHES ${switches[@]}"
+
+		local d args=() CMD_SWITCHES
+		if [[ "$LS_CMD" = eza ]]; then
+			CMD_SWITCHES="--icons"
 		else
-			local re="\.\.\."
-			for arg in "$@"; do
-				while [[ "$arg" =~ $re ]]; do
-					arg="${arg//.../../..}"
-				done
-				if [[ -d "$arg" ]]; then
-					[[ -L "$arg" ]] && arg+="/"
-				else
-					[[ "$arg" != "." ]] && switches+=("-d")
-				fi
-#				local arg_escaped="${arg// /\\ }"
-#				arg_escaped="${arg_escaped//'/\\'}"
-				local arg_escaped="$(escape-arg "$arg")"
-	            eval $LS_CMD $LS_SWITCHES ${switches[@]} "$arg_escaped"
-			done
+			CMD_SWITCHES="$LS_SWITCHES"
 		fi
+		[[ -n "$has_pattern" ]] && CMD_SWITCHES+=" -d"
+		local re="\.\.\."
+		for arg in "$@"; do
+			while [[ "$arg" =~ $re ]]; do
+				arg="${arg//.../../..}"
+			done
+			[[ -d "$arg" && -L "$arg" ]] && arg+="/"
+			local arg_escaped="$(escape-arg "$arg")"
+			args+=("$arg_escaped")
+		done
+		eval "$LS_CMD $CMD_SWITCHES ${args[@]}"
 		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && shopt -u dotglob || setopt no_glob_dots
 	}
 else
-    __ls() {
-        ls "$@"
-    }
+	__ls() {
+		ls "$@"
+	}
 fi
 
 if [[ "$ROPERDOT_CUSTOM_CP" = true ]]; then
@@ -254,8 +261,8 @@ if [[ "$ROPERDOT_CUSTOM_CP" = true ]]; then
 		# Use cwd as target if:
 		# if only have one argument, use_cwd=true
 		# if last argument is not a directory and have 2 arguments:
-		#    2nd arg is pattern => use_cwd=true
-		#    2nd arg is file and 1st arg is not file => use_cwd=true
+		#	2nd arg is pattern => use_cwd=true
+		#	2nd arg is file and 1st arg is not file => use_cwd=true
 		local re="\.\.\."
 		if [[ $# -eq 1 ]]; then
 			use_cwd=true
@@ -451,8 +458,8 @@ EOT
 	local dir
 	if command -v gum >/dev/null 2>&1; then
 		local height=$(( LINES * 4 / 10 ))
-	    local cursor_up='\033[1A'
-	    local erase_line='\033[2K'
+		local cursor_up='\033[1A'
+		local erase_line='\033[2K'
 		# The error-situation printf erases the "nothing selected" message from gum
 		if [[ $# -eq 0 ]]; then
 			dir="$(fd --type d | gum filter --placeholder='Select directory...' --height=$height)" || { printf "${cursor_up}${erase_line}" >/dev/tty; true; }
@@ -471,101 +478,256 @@ EOT
 	fi
 }
 
-lsd() {
-	if [[ -n "$1" ]]; then
-		ls "$1" | grep "^d"
-	else
-		ls | grep "^d"
-	fi
-}
+if command -v eza >/dev/null 2>&1; then
+	function lf() {
+		if [[ ! -t 1 ||
+		( "$ROPERDOT_CURRENT_SHELL" = "bash" && ${#FUNCNAME[@]} -gt 1 ) ||
+		( "$ROPERDOT_CURRENT_SHELL" = "zsh" && $#funcstack -ne 1 ) ]]; then
+			eza --absolute -1 "$@"
+		else
+			eza --absolute --icons -1 "$@"
+		fi
+	}
 
-# List all files, long format, colorized, permissions in octal
-function la() {
-	if [[ "$ROPERDOT_OS_ENV" = "darwin" ]] && command -v gls >/dev/null 2>&1; then
-		# Use gls (GNU ls) - gets ISO date format
-		__ls -l --group-directories-first --time-style=long-iso "$@" | awk '
-		{
-		   k = 0;
-		   for (i = 0; i <= 8; i++)
-		      k += ((substr($1, i + 2, 1)~/[rwx]/) * 2^(8 - i));
-		   if (k)
-		      printf("%0o ", k);
-		   printf(" %9s  %10s %5s  %6s  %s %s %s\n", $3, $6, $7, $5, $8, $9, $10);
-		}'
-	elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
-		# BSD ls - gets separate month/day/year fields, __ls will filter GNU flags
-		__ls -l --group-directories-first --time-style=long-iso "$@" | awk '
-		{
-		   k = 0;
-		   for (i = 0; i <= 8; i++)
-		      k += ((substr($1, i + 2, 1)~/[rwx]/) * 2^(8 - i));
-		   if (k)
-		      printf("%0o ", k);
-		   printf(" %9s  %3s %2s %5s  %6s  %s %s %s\n", $3, $6, $7, $8, $5, $9, $10, $11);
-		}'
-	else
-		# Linux/other - assume GNU ls with ISO date format  
-		__ls -l --group-directories-first --time-style=long-iso "$@" | awk '
-		{
-		   k = 0;
-		   for (i = 0; i <= 8; i++)
-		      k += ((substr($1, i + 2, 1)~/[rwx]/) * 2^(8 - i));
-		   if (k)
-		      printf("%0o ", k);
-		   printf(" %9s  %10s %5s  %6s  %s %s %s\n", $3, $6, $7, $5, $8, $9, $10);
-		}'
-	fi
-}
+	__lfr() {
+		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && set +f || set +F
+		local -a patterns=("$@")
+		[[ ${#patterns[@]} -eq 0 ]] && patterns=("*")
+		local -a find_expr=()
+		local first=1 pat
+		for pat in "${patterns[@]}"; do
+			if [[ $first -eq 1 ]]; then
+				find_expr+=(-iname "$pat")
+				first=0
+			else
+				find_expr+=(-o -iname "$pat")
+			fi
+		done
+		local -a matches=()
+		while IFS= read -r -d '' f; do
+			matches+=("$f")
+		done < <(find . -mindepth 1 \( "${find_expr[@]}" \) -print0 2>/dev/null | sort -z)
+		if [[ ${#matches[@]} -eq 0 ]]; then
+			echo "lfr: no matches for: ${patterns[*]}" >&2
+		elif [[ ! -t 1 ||
+		( "$ROPERDOT_CURRENT_SHELL" = "bash" && ${#FUNCNAME[@]} -gt 1 ) ||
+		( "$ROPERDOT_CURRENT_SHELL" = "zsh" && $#funcstack -ne 1 ) ]]; then
+			eza --absolute -1 -d --no-quotes --sort=none "${matches[@]}"
+		else
+			eza --absolute --icons -1 -d --no-quotes --color=always --sort=none "${matches[@]}"
+		fi
+		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && shopt -u dotglob || setopt no_glob_dots
+	}
 
-lh() {
-    __ls -la --color=always --time-style=long-iso --group-directories-first "$@" | awk '
-    BEGIN {
-        OFS = " "
-    }
-    NR == 1 {
-        if ($1 == "total") {
-            total_kb = $2
-            total_bytes = total_kb * 1024
-            
-            if (total_bytes >= 1073741824) {
-                # GB range -> show in MB
-                printf "total %.0fM\n", total_bytes/1048576
-            } else if (total_bytes >= 1048576 || total_bytes >= 100000) {
-                # MB range OR bytes that would be 6+ digits -> show in KB
-                printf "total %.0fK\n", total_bytes/1024
-            } else {
-                # Smaller totals -> show in bytes (≤5 digits)
-                printf "total %dB\n", total_bytes
-            }
-        } else {
-            print
-        }
-        next
-    }
-    {
-        # Convert size to human readable (shift down one unit level, max 5 digits)
-        size = $5
-        if (size >= 1073741824) {
-            # GB range -> show in MB
-            human = sprintf("%.0fM", size/1048576)
-        } else if (size >= 1048576 || size >= 100000) {
-            # MB range OR bytes that would be 6+ digits -> show in KB
-            human = sprintf("%.0fK", size/1024)
-        } else {
-            # Smaller files -> show in bytes (≤5 digits)
-            human = sprintf("%dB", size)
-        }
-        
-        # Print with proper column alignment
-        printf "%-11s %2s %-8s %-8s %8s %s %s", $1, $2, $3, $4, human, $6, $7
-        
-        # Handle filename and any remaining fields (like symlink targets)
-        for(i=8; i<=NF; i++) {
-            printf " %s", $i
-        }
-        printf "\n"
-    }'
-}
+	lsd() {
+		eza -D --icons -1 -A -l --time-style=long-iso "${1:-.}"
+	}
+
+	# List all files, long format, colorized, permissions in octal
+	la() {
+		__ls -l -o --group-directories-first --time-style=long-iso "$@"
+	}
+
+	__lg_impl() {
+		local label="$1" relative_to_cwd="$2"; shift 2
+		local -a pathspec=("$@")
+
+		if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+			echo "$label: not inside a git repository" >&2
+			return 1
+		fi
+		local toplevel
+		toplevel="$(git rev-parse --show-toplevel)"
+
+		local realpath_cmd=""
+		if [[ "$relative_to_cwd" = 1 ]]; then
+			if command -v realpath >/dev/null 2>&1 && realpath --relative-to=. . >/dev/null 2>&1; then
+				realpath_cmd="realpath"
+			elif command -v grealpath >/dev/null 2>&1; then
+				realpath_cmd="grealpath"
+			fi
+		fi
+
+		local -a matches=() deleted=()
+		local git_status file_path resolved
+		while IFS= read -r -d '' entry; do
+			git_status="${entry:0:2}"
+			file_path="${entry:3}"
+			if [[ -n "$realpath_cmd" ]]; then
+				resolved="$("$realpath_cmd" --relative-to="$PWD" -- "$toplevel/$file_path")"
+			else
+				resolved="$file_path"
+			fi
+			# A deleted file (index and/or worktree "D") no longer exists on disk,
+			# so eza can't stat it — bucket it separately instead of passing it through.
+			if [[ "$git_status" == D* || "$git_status" == " D" ]]; then
+				deleted+=("$resolved")
+			else
+				matches+=("$resolved")
+			fi
+			if [[ "$git_status" == R* || "$git_status" == C* ]]; then
+				IFS= read -r -d '' _
+			fi
+		done < <(git -C "$toplevel" status --porcelain=v1 --untracked-files=all -z "${pathspec[@]}")
+
+		if [[ ${#matches[@]} -eq 0 && ${#deleted[@]} -eq 0 ]]; then
+			echo "$label: no changed or new files" >&2
+			return 0
+		fi
+
+		local -a eza_args=(-l --group-directories-first --time-style=long-iso --git --no-quotes --sort=none)
+		local use_color=1
+		if [[ ! -t 1 ||
+		( "$ROPERDOT_CURRENT_SHELL" = "bash" && ${#FUNCNAME[@]} -gt 1 ) ||
+		( "$ROPERDOT_CURRENT_SHELL" = "zsh" && $#funcstack -ne 1 ) ]]; then
+			use_color=0
+		else
+			eza_args+=(--icons --color=always)
+		fi
+
+		if [[ ${#matches[@]} -gt 0 ]]; then
+			if [[ "$relative_to_cwd" = 1 ]]; then
+				eza "${eza_args[@]}" "${matches[@]}"
+			else
+				# matches are relative to the repo root — run eza from there so they resolve
+				( cd "$toplevel" && eza "${eza_args[@]}" "${matches[@]}" )
+			fi
+		fi
+
+		if [[ ${#deleted[@]} -gt 0 ]]; then
+			local label_pad=2 d
+			if [[ ${#matches[@]} -gt 0 ]]; then
+				# Other (non-deleted) rows were also printed above — measure the real
+				# column width eza used (permissions + size + owner + date + time +
+				# git-status, whatever glyphs/padding it settled on) with a second,
+				# throwaway --color=never call so "deleted" lines up with those rows.
+				# (Piping the colored run itself through command substitution to
+				# measure it made eza drop the color codes, so this stays separate.)
+				local -a measure_args=("${eza_args[@]}" --color=never)
+				local measure_line first_match prefix_width
+				for first_match in "${matches[@]}"; do break; done
+				if [[ "$relative_to_cwd" = 1 ]]; then
+					measure_line="$(eza "${measure_args[@]}" "${matches[@]}" | head -n1)"
+				else
+					measure_line="$( ( cd "$toplevel" && eza "${measure_args[@]}" "${matches[@]}" ) | head -n1)"
+				fi
+				prefix_width=$(( ${#measure_line} - ${#first_match} ))
+				(( prefix_width < 0 )) && prefix_width=0
+				label_pad=$(( prefix_width - 7 )) # "deleted" is 7 characters
+				(( label_pad < 1 )) && label_pad=1
+			fi
+			# else: every change is a deletion, so there's nothing to line up with —
+			# just use a plain two-space gap.
+
+			for d in "${deleted[@]}"; do
+				if [[ "$use_color" = 1 ]]; then
+					printf '\033[31mdeleted\033[0m%*s%s\n' "$label_pad" '' "$d"
+				else
+					printf 'deleted%*s%s\n' "$label_pad" '' "$d"
+				fi
+			done
+		fi
+	}
+
+	lgf() { __lg_impl lgf 0; }
+	lg()  { __lg_impl lg 1 -- "$PWD"; }
+else
+	lsd() {
+		if [[ -n "$1" ]]; then
+			ls "$1" | grep "^d"
+		else
+			ls | grep "^d"
+		fi
+	}
+
+	lh() {
+		__ls -la --color=always --time-style=long-iso --group-directories-first "$@" | awk '
+		BEGIN {
+			OFS = " "
+		}
+		NR == 1 {
+			if ($1 == "total") {
+				total_kb = $2
+				total_bytes = total_kb * 1024
+				
+				if (total_bytes >= 1073741824) {
+					# GB range -> show in MB
+					printf "total %.0fM\n", total_bytes/1048576
+				} else if (total_bytes >= 1048576 || total_bytes >= 100000) {
+					# MB range OR bytes that would be 6+ digits -> show in KB
+					printf "total %.0fK\n", total_bytes/1024
+				} else {
+					# Smaller totals -> show in bytes (≤5 digits)
+					printf "total %dB\n", total_bytes
+				}
+			} else {
+				print
+			}
+			next
+		}
+		{
+			# Convert size to human readable (shift down one unit level, max 5 digits)
+			size = $5
+			if (size >= 1073741824) {
+				# GB range -> show in MB
+				human = sprintf("%.0fM", size/1048576)
+			} else if (size >= 1048576 || size >= 100000) {
+				# MB range OR bytes that would be 6+ digits -> show in KB
+				human = sprintf("%.0fK", size/1024)
+			} else {
+				# Smaller files -> show in bytes (≤5 digits)
+				human = sprintf("%dB", size)
+			}
+			
+			# Print with proper column alignment
+			printf "%-11s %2s %-8s %-8s %8s %s %s", $1, $2, $3, $4, human, $6, $7
+			
+			# Handle filename and any remaining fields (like symlink targets)
+			for(i=8; i<=NF; i++) {
+				printf " %s", $i
+			}
+			printf "\n"
+		}'
+	}
+
+	# List all files, long format, colorized, permissions in octal
+	la() {
+		if [[ "$ROPERDOT_OS_ENV" = "darwin" ]] && command -v gls >/dev/null 2>&1; then
+			# Use gls (GNU ls) - gets ISO date format
+			__ls -l --group-directories-first --time-style=long-iso "$@" | awk '
+			{
+			   k = 0;
+			   for (i = 0; i <= 8; i++)
+				  k += ((substr($1, i + 2, 1)~/[rwx]/) * 2^(8 - i));
+			   if (k)
+				  printf("%0o ", k);
+			   printf(" %9s  %10s %5s  %6s  %s %s %s\n", $3, $6, $7, $5, $8, $9, $10);
+			}'
+		elif [[ "$ROPERDOT_OS_ENV" = "darwin" ]]; then
+			# BSD ls - gets separate month/day/year fields, __ls will filter GNU flags
+			__ls -l --group-directories-first --time-style=long-iso "$@" | awk '
+			{
+			   k = 0;
+			   for (i = 0; i <= 8; i++)
+				  k += ((substr($1, i + 2, 1)~/[rwx]/) * 2^(8 - i));
+			   if (k)
+				  printf("%0o ", k);
+			   printf(" %9s  %3s %2s %5s  %6s  %s %s %s\n", $3, $6, $7, $8, $5, $9, $10, $11);
+			}'
+		else
+			# Linux/other - assume GNU ls with ISO date format  
+			__ls -l --group-directories-first --time-style=long-iso "$@" | awk '
+			{
+			   k = 0;
+			   for (i = 0; i <= 8; i++)
+				  k += ((substr($1, i + 2, 1)~/[rwx]/) * 2^(8 - i));
+			   if (k)
+				  printf("%0o ", k);
+			   printf(" %9s  %10s %5s  %6s  %s %s %s\n", $3, $6, $7, $5, $8, $9, $10);
+			}'
+		fi
+	}
+fi
 
 if [[ $ROPERDOT_CURRENT_SHELL = bash ]]; then
 	dir_stack_chevrons() {
@@ -582,10 +744,10 @@ pushd() {
 	if [[ $# -eq 0 ]]; then
 		clip_contents=$(clippaste)
 		if [[ -n "$clip_contents" && ${#clip_contents} -le 255 && ! "$clip_contents" =~ $'\n' && ! "$clip_contents" =~ $'\t' && ! "$clip_contents" =~ [\*\?\[\$] ]]; then
-		    if [[ -d "$clip_contents" ]]; then
-		    	builtin pushd "$clip_contents" >/dev/null
-		    	clipclear
-		    	return
+			if [[ -d "$clip_contents" ]]; then
+				builtin pushd "$clip_contents" >/dev/null
+				clipclear
+				return
 			fi
 		fi
 
@@ -895,35 +1057,35 @@ EOT
 }
 
 man() {
-    if [[ $# -eq 0 || "$1" == "-?" || "$1" == "-h" || "$1" == "--help" ]]; then
-        cat <<EOT
+	if [[ $# -eq 0 || "$1" == "-?" || "$1" == "-h" || "$1" == "--help" ]]; then
+		cat <<EOT
 man: show colorized man page for a command
 Usage: man <command>
 If the command is cd, cp, ls, mv or rm and the corresponding environment variable
 is set to true to enable custom behavior (e.g. ROPERDOT_CUSTOM_LS), additional
 help will display after the man page content.
 EOT
-        return
-    fi
-    
-    local cmd="${@: -1}"
-    if [[ $cmd =~ ^(cd|cp|ls|mv|rm)$ ]]; then
-	    local cmd_upper=$(echo "$cmd" | tr '[:lower:]' '[:upper:]')
-	    local custom_var="ROPERDOT_CUSTOM_${cmd_upper}"
-	    
-	    if eval "[[ \"\${$custom_var}\" == \"true\" ]]" && [[ -f "${ROPERDOT_DIR}/config/man-additions/$cmd.groff" ]]; then
-	        local tmpfile=$(mktemp)
-	        local manfile=$(command man -w "$@" 2>/dev/null)
-	        
-	        if [[ -n "$manfile" ]]; then
-	            # Existing man page - append custom content
-		        if [[ "$manfile" == *.gz ]]; then
-		            zcat "$manfile" > "$tmpfile"
-		        else
-		            cat "$manfile" > "$tmpfile"
-		        fi
-	    	    # Reset indentation, disable justification, add separator, then custom content
-		        cat >> "$tmpfile" <<'EOF'
+		return
+	fi
+	
+	local cmd="${@: -1}"
+	if [[ $cmd =~ ^(cd|cp|ls|mv|rm)$ ]]; then
+		local cmd_upper=$(echo "$cmd" | tr '[:lower:]' '[:upper:]')
+		local custom_var="ROPERDOT_CUSTOM_${cmd_upper}"
+		
+		if eval "[[ \"\${$custom_var}\" == \"true\" ]]" && [[ -f "${ROPERDOT_DIR}/config/man-additions/$cmd.groff" ]]; then
+			local tmpfile=$(mktemp)
+			local manfile=$(command man -w "$@" 2>/dev/null)
+			
+			if [[ -n "$manfile" ]]; then
+				# Existing man page - append custom content
+				if [[ "$manfile" == *.gz ]]; then
+					zcat "$manfile" > "$tmpfile"
+				else
+					cat "$manfile" > "$tmpfile"
+				fi
+				# Reset indentation, disable justification, add separator, then custom content
+				cat >> "$tmpfile" <<'EOF'
 .in 0
 .na
 .nh
@@ -931,158 +1093,158 @@ EOT
 \l'\n[LL]u'
 .sp
 EOF
-		    else
-		        # No man page (e.g., cd) - create standalone page
-		        cat > "$tmpfile" <<EOF
+			else
+				# No man page (e.g., cd) - create standalone page
+				cat > "$tmpfile" <<EOF
 .TH ${cmd_upper} 1 "Custom Documentation"
 .in 0
 .na
 .nh
 EOF
-		    fi
-	        cat "${ROPERDOT_DIR}/config/man-additions/$cmd.groff" >> "$tmpfile"
-	        
-	        # Process combined groff source through nroff with colors
-	        # Use -rLL and -rLT to control width based on COLUMNS
-	        LESS_TERMCAP_mb=$'\e'"[${COLOR_BRRED_CODE}m" \
-	        LESS_TERMCAP_md=$'\e'"[01;${COLOR_BLUE_CODE}m" \
-	        LESS_TERMCAP_me=$'\e[0m' \
-	        LESS_TERMCAP_se=$'\e[0m' \
-	        LESS_TERMCAP_so=$'\e'"[${COLOR_BRWHITE_CODE}m" \
-	        LESS_TERMCAP_ue=$'\e[0m' \
-	        LESS_TERMCAP_us=$'\e'"[04;${COLOR_BRMAGENTA_CODE}m" \
-	        GROFF_NO_SGR=1 \
-	        nroff -c -man -rLL=${COLUMNS:-80}n -rLT=${COLUMNS:-80}n "$tmpfile" 2>/dev/null | \
-	        LESS_TERMCAP_mb=$'\e'"[${COLOR_BRRED_CODE}m" \
-	        LESS_TERMCAP_md=$'\e'"[01;${COLOR_BLUE_CODE}m" \
-	        LESS_TERMCAP_me=$'\e[0m' \
-	        LESS_TERMCAP_se=$'\e[0m' \
-	        LESS_TERMCAP_so=$'\e'"[${COLOR_BRWHITE_CODE}m" \
-	        LESS_TERMCAP_ue=$'\e[0m' \
-	        LESS_TERMCAP_us=$'\e'"[04;${COLOR_BRMAGENTA_CODE}m" \
-	        less -R
-	        
-	        rm -f "$tmpfile" >/dev/null
-	        return
-	    fi
+			fi
+			cat "${ROPERDOT_DIR}/config/man-additions/$cmd.groff" >> "$tmpfile"
+			
+			# Process combined groff source through nroff with colors
+			# Use -rLL and -rLT to control width based on COLUMNS
+			LESS_TERMCAP_mb=$'\e'"[${COLOR_BRRED_CODE}m" \
+			LESS_TERMCAP_md=$'\e'"[01;${COLOR_BLUE_CODE}m" \
+			LESS_TERMCAP_me=$'\e[0m' \
+			LESS_TERMCAP_se=$'\e[0m' \
+			LESS_TERMCAP_so=$'\e'"[${COLOR_BRWHITE_CODE}m" \
+			LESS_TERMCAP_ue=$'\e[0m' \
+			LESS_TERMCAP_us=$'\e'"[04;${COLOR_BRMAGENTA_CODE}m" \
+			GROFF_NO_SGR=1 \
+			nroff -c -man -rLL=${COLUMNS:-80}n -rLT=${COLUMNS:-80}n "$tmpfile" 2>/dev/null | \
+			LESS_TERMCAP_mb=$'\e'"[${COLOR_BRRED_CODE}m" \
+			LESS_TERMCAP_md=$'\e'"[01;${COLOR_BLUE_CODE}m" \
+			LESS_TERMCAP_me=$'\e[0m' \
+			LESS_TERMCAP_se=$'\e[0m' \
+			LESS_TERMCAP_so=$'\e'"[${COLOR_BRWHITE_CODE}m" \
+			LESS_TERMCAP_ue=$'\e[0m' \
+			LESS_TERMCAP_us=$'\e'"[04;${COLOR_BRMAGENTA_CODE}m" \
+			less -R
+			
+			rm -f "$tmpfile" >/dev/null
+			return
+		fi
 	fi
-    LESS_TERMCAP_mb=$'\e'"[${COLOR_BRRED_CODE}m" \
-    LESS_TERMCAP_md=$'\e'"[01;${COLOR_BLUE_CODE}m" \
-    LESS_TERMCAP_me=$'\e[0m' \
-    LESS_TERMCAP_se=$'\e[0m' \
-    LESS_TERMCAP_so=$'\e'"[${COLOR_BRWHITE_CODE}m" \
-    LESS_TERMCAP_ue=$'\e[0m' \
-    LESS_TERMCAP_us=$'\e'"[04;${COLOR_BRMAGENTA_CODE}m" \
-    command man "$@"
+	LESS_TERMCAP_mb=$'\e'"[${COLOR_BRRED_CODE}m" \
+	LESS_TERMCAP_md=$'\e'"[01;${COLOR_BLUE_CODE}m" \
+	LESS_TERMCAP_me=$'\e[0m' \
+	LESS_TERMCAP_se=$'\e[0m' \
+	LESS_TERMCAP_so=$'\e'"[${COLOR_BRWHITE_CODE}m" \
+	LESS_TERMCAP_ue=$'\e[0m' \
+	LESS_TERMCAP_us=$'\e'"[04;${COLOR_BRMAGENTA_CODE}m" \
+	command man "$@"
 }
 
 alias h &>/dev/null && unalias h
 
 h() {
-    if command -v fzf &> /dev/null; then
-    	if [[ "$1" == "-?" || "$1" == "-h" || "$1" == "--help" ]]; then
-    		cat <<-EOT
+	if command -v fzf &> /dev/null; then
+		if [[ "$1" == "-?" || "$1" == "-h" || "$1" == "--help" ]]; then
+			cat <<-EOT
 				h: interactive reverse history search
 				Usage: h
 
 				You can access history similarly by pressing Ctrl+R.
 				EOT
 			return
-    	fi
-        local selected num
-        if [[ -n "$ZSH_VERSION" ]]; then
-            selected=($(fc -rl 1 | awk '{ cmd=$0; sub(/^[ \t]*[0-9]+\**[ \t]+/, "", cmd); if (!seen[cmd]++) print $0 }' | fzf --height 40% --no-sort --exact -n2..,.. --scheme=history))
-            if [[ -n "$selected" ]]; then
-                num=$selected[1]
-                if [[ -n "$num" ]]; then
-                    fc -e - "$num"
-                fi
-            fi
-        elif [[ -n "$BASH_VERSION" ]]; then
-            selected=$(fc -rl 1 | awk '{ cmd=$0; sub(/^[ \t]*[0-9]+\**[ \t]+/, "", cmd); if (!seen[cmd]++) print $0 }' | fzf --height 40% --no-sort --exact -n2..,.. --scheme=history | sed 's/^[ ]*[0-9]*\**[ ]*//')
-            if [[ -n "$selected" ]]; then
-                history -s "$selected"
-                echo "$selected"
-            fi
-        fi
-    else
-    	if [[ "$1" == "-?" || "$1" == "-h" || "$1" == "--help" ]]; then
-    		cat <<-EOT
+		fi
+		local selected num
+		if [[ -n "$ZSH_VERSION" ]]; then
+			selected=($(fc -rl 1 | awk '{ cmd=$0; sub(/^[ \t]*[0-9]+\**[ \t]+/, "", cmd); if (!seen[cmd]++) print $0 }' | fzf --height 40% --no-sort --exact -n2..,.. --scheme=history))
+			if [[ -n "$selected" ]]; then
+				num=$selected[1]
+				if [[ -n "$num" ]]; then
+					fc -e - "$num"
+				fi
+			fi
+		elif [[ -n "$BASH_VERSION" ]]; then
+			selected=$(fc -rl 1 | awk '{ cmd=$0; sub(/^[ \t]*[0-9]+\**[ \t]+/, "", cmd); if (!seen[cmd]++) print $0 }' | fzf --height 40% --no-sort --exact -n2..,.. --scheme=history | sed 's/^[ ]*[0-9]*\**[ ]*//')
+			if [[ -n "$selected" ]]; then
+				history -s "$selected"
+				echo "$selected"
+			fi
+		fi
+	else
+		if [[ "$1" == "-?" || "$1" == "-h" || "$1" == "--help" ]]; then
+			cat <<-EOT
 				h: list recent command history
 				Usage: h
 
 				You can interactively select commands by pressing Ctrl+R.
 				EOT
 			return
-    	fi
-        fc -l -50
-        echo "Press Ctrl+R to interactively select a command from history"
-    fi
+		fi
+		fc -l -50
+		echo "Press Ctrl+R to interactively select a command from history"
+	fi
 }
 
 if [[ "$ROPERDOT_DESKTOP_ENV" = windows ]]; then
 	appdata_wsl="$(win-env-linux-path APPDATA)"
 
 	mount-drive() {
-        if [[ $# -eq 0 || "$1" == "-?" || "$1" == "-h" || "$1" == "--help" ]]; then
-            cat <<EOT
+		if [[ $# -eq 0 || "$1" == "-?" || "$1" == "-h" || "$1" == "--help" ]]; then
+			cat <<EOT
 mount-drive: mount a drive in Windows
 Usage: mount-drive <drive-letter>
 This script will mount the specified drive letter to /mnt/<drive-letter>. If
 the drive is already mounted, it will be unmounted first.
 EOT
-            return
-        fi
-        
-        local drive="${1:l}"
-        local mount_point="/mnt/$drive"
-        
-        # Unmount if already mounted
-        while mountpoint -q "$mount_point" 2>/dev/null; do
-            sudo umount "$mount_point"
-        done
-        
-        [[ ! -d "$mount_point" ]] && sudo mkdir -p "$mount_point"
-        
-        # Mount with metadata option for proper timestamp preservation
-        sudo mount -t drvfs -o rw,noatime,uid=1000,gid=1000,metadata,case=off "${drive:u}:" "$mount_point"
+			return
+		fi
+		
+		local drive="${1:l}"
+		local mount_point="/mnt/$drive"
+		
+		# Unmount if already mounted
+		while mountpoint -q "$mount_point" 2>/dev/null; do
+			sudo umount "$mount_point"
+		done
+		
+		[[ ! -d "$mount_point" ]] && sudo mkdir -p "$mount_point"
+		
+		# Mount with metadata option for proper timestamp preservation
+		sudo mount -t drvfs -o rw,noatime,uid=1000,gid=1000,metadata,case=off "${drive:u}:" "$mount_point"
 	}
 
 	apply-mapped-drive() {
 		local winpath="$1"
-	    local distro_name unc_path mapped_drive
-	    
-	    distro_name="$WSL_DISTRO_NAME"
-	    unc_path="\\\\wsl.localhost\\${distro_name}"
-	    
-	    # Check if there's a mapped drive to this UNC path
-	    # Handle both "OK Z:" and "   Z:" formats (status column may be empty)
-	    mapped_drive=$(net.exe use 2>/dev/null | grep -i "wsl.localhost\\\\${distro_name}" | awk '{for(i=1;i<=NF;i++) if($i ~ /^[A-Z]:$/) print $i}' | tr -d '\r')
-	    
-	    if [[ -n "$mapped_drive" ]]; then
-	        winpath="${winpath//${unc_path}/${mapped_drive}}"
-	    fi
+		local distro_name unc_path mapped_drive
+		
+		distro_name="$WSL_DISTRO_NAME"
+		unc_path="\\\\wsl.localhost\\${distro_name}"
+		
+		# Check if there's a mapped drive to this UNC path
+		# Handle both "OK Z:" and "   Z:" formats (status column may be empty)
+		mapped_drive=$(net.exe use 2>/dev/null | grep -i "wsl.localhost\\\\${distro_name}" | awk '{for(i=1;i<=NF;i++) if($i ~ /^[A-Z]:$/) print $i}' | tr -d '\r')
+		
+		if [[ -n "$mapped_drive" ]]; then
+			winpath="${winpath//${unc_path}/${mapped_drive}}"
+		fi
 
-	    printf '%s' "$winpath"
+		printf '%s' "$winpath"
 	}
 
 	pwdwin() {
-	    if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
-	        cat <<EOT
+		if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "-?" ]]; then
+			cat <<EOT
 pwdwin: Show the present working directory as a Windows path
 Usage: pwdwin
 EOT
-	        return
-	    fi
-	    
-	    local winpath
-	    winpath=$(wslpath -w "$(pwd)")
-	    
-	    if [[ "$winpath" == *wsl.localhost* ]]; then
-	    	winpath="$(apply-mapped-drive "$winpath")"
-	    fi
-	    
-	    printf '%s\n' "$winpath"
+			return
+		fi
+		
+		local winpath
+		winpath=$(wslpath -w "$(pwd)")
+		
+		if [[ "$winpath" == *wsl.localhost* ]]; then
+			winpath="$(apply-mapped-drive "$winpath")"
+		fi
+		
+		printf '%s\n' "$winpath"
 	}
 
 	winpath() {
@@ -1093,13 +1255,13 @@ Usage: winpath <file>
 EOT
 			return
 		fi
-        
-        local winpath
-        winpath=$(wslpath -w "$1")
-        if [[ "$winpath" == *wsl.localhost* ]]; then
-	    	winpath="$(apply-mapped-drive "$winpath")"
-	    fi
-	    printf '%s\n' "$winpath"
+		
+		local winpath
+		winpath=$(wslpath -w "$1")
+		if [[ "$winpath" == *wsl.localhost* ]]; then
+			winpath="$(apply-mapped-drive "$winpath")"
+		fi
+		printf '%s\n' "$winpath"
 	}
 
 	claude_cache="${appdata_wsl}/Claude/Cache/Cache_Data"
@@ -1177,7 +1339,7 @@ If you're within a 'src' subdirectory, only directories under that src are shown
 
 Options:
   --build   Rebuild the directory cache
-  filter    Optional case-insensitive filter for directory list
+  filter	Optional case-insensitive filter for directory list
 
 Display format:
   - Within src tree: Shows package path
@@ -1188,7 +1350,7 @@ is built from entire 'code' directory.
 
 Additional directories:
   You can include additional directories (without .java files) by listing them in:
-    ~/.config/cdj/additional-dirs.txt
+	~/.config/cdj/additional-dirs.txt
   
   Format: One absolute path per line (tilde expansion supported)
 EOT
@@ -1262,64 +1424,64 @@ hexdiff() {
 }
 
 jsondiff() {
-    if [[ $# -lt 2 ]]; then
+	if [[ $# -lt 2 ]]; then
 		cat <<EOT
 jsondiff: compare two JSON files side-by-side
 Usage: jsondiff file1.json file2.json [width]
 EOT
-        return 1
-    fi
+		return 1
+	fi
 
-    if ! command -v jq >/dev/null 2>&1; then
-        echo "Error: jsondiff requires jq" >&2
-        return 1
-    fi
+	if ! command -v jq >/dev/null 2>&1; then
+		echo "Error: jsondiff requires jq" >&2
+		return 1
+	fi
 
-    local file1="$1"
-    local file2="$2" 
-    local width="${3:-0}"  # 0 = auto-width
-    local temp1=$(mktemp)
-    local temp2=$(mktemp)
-    
-    # Normalize JSON
-    jq --sort-keys . "$file1" > "$temp1" || {
-        echo "Invalid JSON: $file1" >&2
-        rm -f "$temp1" "$temp2" >/dev/null
-        return 1
-    }
-    jq --sort-keys . "$file2" > "$temp2" || {
-        echo "Invalid JSON: $file2" >&2
-        rm -f "$temp1" "$temp2" >/dev/null
-        return 1
-    }
-    
-    if command -v ydiff >/dev/null 2>&1; then
-        if [[ "$width" = "0" ]]; then
-            diff -u --label="$file1" --label="$file2" "$temp1" "$temp2" | ydiff -s
-        else
-            diff -u --label="$file1" --label="$file2" "$temp1" "$temp2" | ydiff -s -w "$width"
-        fi
-    else
-        diff -u --label="$file1" --label="$file2" "$temp1" "$temp2"
-    fi
-    
-    rm -f "$temp1" "$temp2" >/dev/null
+	local file1="$1"
+	local file2="$2" 
+	local width="${3:-0}"  # 0 = auto-width
+	local temp1=$(mktemp)
+	local temp2=$(mktemp)
+	
+	# Normalize JSON
+	jq --sort-keys . "$file1" > "$temp1" || {
+		echo "Invalid JSON: $file1" >&2
+		rm -f "$temp1" "$temp2" >/dev/null
+		return 1
+	}
+	jq --sort-keys . "$file2" > "$temp2" || {
+		echo "Invalid JSON: $file2" >&2
+		rm -f "$temp1" "$temp2" >/dev/null
+		return 1
+	}
+	
+	if command -v ydiff >/dev/null 2>&1; then
+		if [[ "$width" = "0" ]]; then
+			diff -u --label="$file1" --label="$file2" "$temp1" "$temp2" | ydiff -s
+		else
+			diff -u --label="$file1" --label="$file2" "$temp1" "$temp2" | ydiff -s -w "$width"
+		fi
+	else
+		diff -u --label="$file1" --label="$file2" "$temp1" "$temp2"
+	fi
+	
+	rm -f "$temp1" "$temp2" >/dev/null
 }
 
 fm_archive () {
-    local f="$1"
-    if [[ -n "$(is-archive "$f")" ]]; then
-        destdir=$(mktemp -d)
-        pushd "$destdir" || exit 1
-        extract-archive "$f" >/dev/null 2>&1
-        popd || exit 1
-        fm "$destdir"
-    elif [[ "$ROPERDOT_OS_ENV" = "darwin" && "$1" =~ \.dmg$ ]]; then
-        mount_dir="$(mount-dmg "$f")"
-        [[ -n "$mount_dir" ]] && fm "$mount_dir"
-    elif [[ "$ROPERDOT_OS_ENV" = "ubuntu" || "$ROPERDOT_OS_ENV" = "mint" ]] && [[ "$f" =~ \.iso$ ]]; then
-        mount-iso-readonly "$f"
-    else
-        echo "Cannot browse $f with file manager"
-    fi
+	local f="$1"
+	if [[ -n "$(is-archive "$f")" ]]; then
+		destdir=$(mktemp -d)
+		pushd "$destdir" || exit 1
+		extract-archive "$f" >/dev/null 2>&1
+		popd || exit 1
+		fm "$destdir"
+	elif [[ "$ROPERDOT_OS_ENV" = "darwin" && "$1" =~ \.dmg$ ]]; then
+		mount_dir="$(mount-dmg "$f")"
+		[[ -n "$mount_dir" ]] && fm "$mount_dir"
+	elif [[ "$ROPERDOT_OS_ENV" = "ubuntu" || "$ROPERDOT_OS_ENV" = "mint" ]] && [[ "$f" =~ \.iso$ ]]; then
+		mount-iso-readonly "$f"
+	else
+		echo "Cannot browse $f with file manager"
+	fi
 }

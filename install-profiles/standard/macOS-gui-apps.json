@@ -18,7 +18,7 @@
 		"package": "tunnelblick",
 		"package_manager": "brew",
 		"desc": "OpenVPN VPN client",
-		"groups": ["development"]
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Google Chrome",
@@ -152,15 +152,15 @@
 		"app": "Postman",
 		"package": "postman",
 		"package_manager": "brew",
-		"groups": ["development"],
-		"desc": "REST client"
+		"desc": "REST client",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Lens",
 		"package": "lens",
 		"package_manager": "brew",
-		"groups": ["development"],
-		"desc": "Kubernetes management app"
+		"desc": "Kubernetes management app",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "SoapUI",
@@ -214,7 +214,8 @@
 		"app": "Cyberduck",
 		"package": "cyberduck",
 		"package_manager": "brew",
-		"desc": "FTP client"
+		"desc": "FTP client",
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "VLC",
@@ -257,7 +258,7 @@
 		"package": "rectangle",
 		"package_manager": "brew",
 		"desc": "Tool for enhancing resizing and moving windows",
-		"groups": ["development"]
+		"exclusionGroups": ["work"]
 	},
 	{
 		"app": "Gyazo",
