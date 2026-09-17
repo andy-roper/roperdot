@@ -54,7 +54,7 @@ alias burn='drutil burn -noverify'
 alias vburn='drutil burn'
 
 if command -v brew >/dev/null 2>&1; then
-	alias update-brew="brew update && brew upgrade && brew cleanup && brew doctor && npm-check -g -u"
+	alias update-brew="brew update && brew upgrade && brew cleanup && brew doctor && npm outdated -g --depth=0; npm update -g"
 	export HOMEBREW_NO_INSECURE_REDIRECT=1
 	export HOMEBREW_NO_ANALYTICS=1
 
@@ -69,15 +69,6 @@ if command -v brew >/dev/null 2>&1; then
 	if [[ $ROPERDOT_CURRENT_SHELL = bash ]]; then
 		# Source bash completion
 		[[ -r "$brew_prefix/etc/profile.d/bash_completion.sh" ]] && . "$brew_prefix/etc/profile.d/bash_completion.sh"
-		
-		if command -v hub >/dev/null 2>&1; then
-			if [[ -r "$brew_prefix/etc/bash_completion.d/hub.bash_completion.sh" ]]; then
-				source "$brew_prefix/etc/bash_completion.d/hub.bash_completion.sh";
-			fi
-			alias git=hub
-		fi
-	else
-		command -v hub >/dev/null 2>&1 && alias git=hub
 	fi
 
 	unset brew_prefix
@@ -139,8 +130,7 @@ alias hide-desktop="defaults write com.apple.finder CreateDesktop -bool false &&
 alias show-desktop="defaults write com.apple.finder CreateDesktop -bool true && killall Finder"
 
 # Add tab completion for "defaults read|write NSGlobalDomain"
-# You could just use "-g" instead, but I like being explicit
-complete -v >/dev/null 2>&1 && complete -W "NSGlobalDomain" defaults
+[[ -n "$BASH_VERSION" ]] && complete -W "NSGlobalDomain" defaults
 
 if [[ -x /usr/libexec/java_home ]]; then
 	export java_home="$(/usr/libexec/java_home 2>/dev/null)"
@@ -198,7 +188,7 @@ EOT
 	ffmpeg -i "$1" -vcodec libvpx -acodec libvorbis -isync -copyts -aq 80 -threads 3 -qmax 30 -y "$2" "$1.webm"
 }
 
-alias afk="/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resources/CGSession -suspend"
+alias afk='osascript -e "tell application \"System Events\" to keystroke \"q\" using {control down, command down}"'
 
 # Alter rm's behavior to move files to Trash by calling rm_to_trash
 

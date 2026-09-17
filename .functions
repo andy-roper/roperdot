@@ -519,6 +519,48 @@ if command -v eza >/dev/null 2>&1; then
 		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && shopt -u dotglob || setopt no_glob_dots
 	}
 
+	function lfs() {
+		local -a cols=(-l --no-permissions --no-user --no-time)
+		if [[ ! -t 1 ||
+		( "$ROPERDOT_CURRENT_SHELL" = "bash" && ${#FUNCNAME[@]} -gt 1 ) ||
+		( "$ROPERDOT_CURRENT_SHELL" = "zsh" && $#funcstack -ne 1 ) ]]; then
+			eza --absolute "${cols[@]}" "$@"
+		else
+			eza --absolute --icons "${cols[@]}" "$@"
+		fi
+	}
+
+	__lfsr() {
+		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && set +f || set +F
+		local -a patterns=("$@")
+		[[ ${#patterns[@]} -eq 0 ]] && patterns=("*")
+		local -a find_expr=()
+		local first=1 pat
+		for pat in "${patterns[@]}"; do
+			if [[ $first -eq 1 ]]; then
+				find_expr+=(-iname "$pat")
+				first=0
+			else
+				find_expr+=(-o -iname "$pat")
+			fi
+		done
+		local -a matches=()
+		while IFS= read -r -d '' f; do
+			matches+=("$f")
+		done < <(find . -mindepth 1 \( "${find_expr[@]}" \) -print0 2>/dev/null | sort -z)
+		local -a cols=(-l --no-permissions --no-user --no-time)
+		if [[ ${#matches[@]} -eq 0 ]]; then
+			echo "lfsr: no matches for: ${patterns[*]}" >&2
+		elif [[ ! -t 1 ||
+		( "$ROPERDOT_CURRENT_SHELL" = "bash" && ${#FUNCNAME[@]} -gt 1 ) ||
+		( "$ROPERDOT_CURRENT_SHELL" = "zsh" && $#funcstack -ne 1 ) ]]; then
+			eza --absolute "${cols[@]}" -d --no-quotes --sort=none "${matches[@]}"
+		else
+			eza --absolute --icons "${cols[@]}" -d --no-quotes --color=always --sort=none "${matches[@]}"
+		fi
+		[[ "$ROPERDOT_CURRENT_SHELL" = bash ]] && shopt -u dotglob || setopt no_glob_dots
+	}
+
 	lsd() {
 		eza -D --icons -1 -A -l --time-style=long-iso "${1:-.}"
 	}

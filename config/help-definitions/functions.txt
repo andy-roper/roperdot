@@ -23,6 +23,8 @@ hexdiff: Compares files in binary/hex mode
 is-archive: Tests if a filename is an archive file
 jsondiff: Compares JSON files
 la: ls showing permissions in octal
+lf: ls showing full path
+lfs: ls showing full path and file size
 lh: ls -alh showing 5 digits of precision for sizes
 lsd: ls that only shows directories
 mdd: Creates a directory and changes directory into it
