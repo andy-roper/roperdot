@@ -249,10 +249,17 @@ if [[ "$ROPERDOT_CURRENT_SHELL" = zsh ]]; then
 	fi
 	[[ -e ~/.config/roperdot/zsh-suffix-aliases ]] && . ~/.config/roperdot/zsh-suffix-aliases
 
-	# Configure completion quoting for better VS Code compatibility
+	# Directory ant target completion behavior
 	zstyle ':completion:*' special-dirs true
-	zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 	zstyle ':completion:*' quote-style shell
+	zstyle ':completion:*' group-name ''
+	zstyle ':completion:*:cd*' tag-order local-directories directory-stack path-directories
+	zstyle ':completion:*:*:make:*' tag-order 'targets'
+
+	# Matching logic: case-insensitive, substring/partial matching
+	zstyle ':completion:*' matcher-list \
+	  'm:{a-zA-Z}={A-Za-z}' \
+	  'm:{a-zA-Z}={A-Za-z} l:|=* r:|=*'
 fi
 
 do_timing "phase 4"
@@ -485,8 +492,6 @@ if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
 	shopt -s nocaseglob
 else
 	unsetopt case_glob
-	# Do case-insensitive tab completion in zsh
-	zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*'
 fi
 
 # Autocorrect for arguments supplied to cd and for directory names to match a glob
@@ -609,9 +614,9 @@ unset oracle_dir
 if [[ "$ROPERDOT_DESKTOP_ENV" == "windows" ]]; then
 	export IDEA_BIN=$(find "/mnt/c/Program Files/JetBrains" -maxdepth 3 -type f -name "idea64.exe" 2>/dev/null | head -1)
 elif [[ "$ROPERDOT_DESKTOP_ENV" == "mac" ]]; then
-	if [[ -d "/Applications/IntelliJ IDEA" ]]; then
+	if [[ -d "/Applications/IntelliJ IDEA.app" ]]; then
 		export IDEA_BIN="/Applications/IntelliJ IDEA.app/Contents/MacOS/idea"
-	elif [[ -d "/Applications/IntelliJ IDEA CE" ]]; then
+	elif [[ -d "/Applications/IntelliJ IDEA CE.app" ]]; then
 		export IDEA_BIN="/Applications/IntelliJ IDEA CE.app/Contents/MacOS/idea"
 	fi
 else

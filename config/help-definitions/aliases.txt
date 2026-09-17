@@ -43,7 +43,8 @@ json-to-string-clip: Converts JSON to a quotes string and write the output to th
 killn: Kills processes whose path contains a string, e.g. "killn node"
 l: Same as standard ls -al
 lb: ls with one filename per line
-lfr: Recursive lf
+lfr: recursive ls showing full path
+lfsr: recursive ls showing full path and file size
 localip: Prints the machine's ip address on the local network (en0 on Macs, eth0 for others)
 ls (customized): Shows symlink directory contents instead of listing the symlink itself; uses -d for non-directory arguments to suppress single-level recursion into directories
 lsz: ls sorted by size ascending (only for bash 4.x+ or zsh)

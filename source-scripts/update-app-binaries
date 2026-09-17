@@ -608,6 +608,7 @@ EOT
     create_binary_script_mac excel "open -a \"Microsoft Excel\""
     create_binary_script_mac powerpoint "open -a \"Microsoft PowerPoint\""
     create_binary_script_mac macdown "open -a MacDown"
+    create_binary_script_mac typora "open -a Typora"
     
     default_app=show-file
     create_text_editor_script text-editor-app sublime-text textwrangler textedit
@@ -626,7 +627,7 @@ EOT
     create_app_script word-processor-app opendoc
     create_app_script spreadsheet-app opendoc
     create_app_script presentation-app opendoc
-    create_text_editor_script markdown-app macdown
+    create_text_editor_script markdown-app typora macdown
     default_app=list-archive
     create_app_script comic-viewer-app simplecomic betterzip archiveutility
 

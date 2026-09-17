@@ -32,7 +32,7 @@ if [[ "$ROPERDOT_CUSTOM_LS" = true ]]; then
 			alias ls='set -f;__ls -lA --group-directories-first --time-style=long-iso --git'
 			alias lw='set -f;__ls -GA --group-directories-first'
 			alias lt='set -f;__ls -lA --time-style=long-iso --sort new'
-			alias lsz='set -f;__ls -lA --group-directories-first --time-style=long-iso --sort size --reverse'
+			alias lsz='set -f;__ls -lA --group-directories-first --time-style=long-iso --sort size'
 			alias lb='set -f;__ls -1 -A'
 		elif [[ $ROPERDOT_OS_ENV = darwin && "$(command -v ls)" = "/bin/ls" ]]; then
 			alias ls='set -f;__ls -lA'
@@ -51,7 +51,7 @@ if [[ "$ROPERDOT_CUSTOM_LS" = true ]]; then
 			alias ls='set -F;__ls -lA --group-directories-first --time-style=long-iso --git'
 			alias lw='set -F;__ls -GA --group-directories-first'
 			alias lt='set -F;__ls -lA --time-style=long-iso --sort new'
-			alias lsz='set -F;__ls -lA --group-directories-first --time-style=long-iso --sort size --reverse'
+			alias lsz='set -F;__ls -lA --group-directories-first --time-style=long-iso --sort size'
 			alias lb='set -F;__ls -1 -A'
 		elif [[ $ROPERDOT_OS_ENV = darwin && "$(command -v ls)" = "/bin/ls" ]]; then
 			alias ls='set -F;__ls -lA'
@@ -112,8 +112,10 @@ if command -v eza >/dev/null 2>&1; then
 	alias treed='eza --tree --icons --git -l --time-style=long-iso'
 	if [[ "$ROPERDOT_CURRENT_SHELL" = bash ]]; then
 		alias lfr='set -f;__lfr'
+		alias lfsr='set -f;__lfsr'
 	else
 		alias lfr='set -F;__lfr'
+		alias lfsr='set -F;__lfsr'
 	fi
 fi
 
