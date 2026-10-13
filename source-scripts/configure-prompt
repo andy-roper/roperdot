@@ -43,14 +43,18 @@ else
 fi
 
 periodic_git_fetch() {
-    [[ -z "$ROPERDOT_MAIN_GIT_REPO" ]] && return
+    # Fetch whichever repo we're in (worktree-safe via the common git dir) so
+    # remote refs like origin/master stay current for the behind counts.
+    local common_dir
+    common_dir=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || return
 
-    local fetch_head="${ROPERDOT_MAIN_GIT_REPO}/.git/FETCH_HEAD"
+    local fetch_head="${common_dir}/FETCH_HEAD"
     local interval=${ROPERDOT_GIT_FETCH_INTERVAL:-300}
 
     if [[ ! -f "$fetch_head" ]] || \
     [[ $(( $(date +%s) - $(date -r "$fetch_head" +%s) )) -gt $interval ]]; then
-        ( git -C "$ROPERDOT_MAIN_GIT_REPO" fetch --all --quiet & ) 2>/dev/null
+        # GIT_TERMINAL_PROMPT=0 keeps a background fetch from hanging on a credential prompt
+        ( GIT_TERMINAL_PROMPT=0 git --git-dir="$common_dir" fetch --all --quiet & ) 2>/dev/null
     fi
 }
 
@@ -126,7 +130,16 @@ if [[ "$ROPERDOT_SHOW_EXTENDED_GIT_INFO" == "behind-only" ]]; then
         fi
 
         if [[ -n "$master_ref" ]]; then
-            master_behind=$(git -C "$repo_root" rev-list --count "HEAD..${master_ref}" 2>/dev/null)
+            # Always measure against the remote parent. If branch-meta recorded a
+            # local branch (e.g. "master"), use its upstream (e.g. "origin/master")
+            # so a stale local branch can't hide commits.
+            local compare_ref="$master_ref"
+            if git -C "$repo_root" show-ref --verify --quiet "refs/heads/${master_ref}"; then
+                local parent_upstream
+                parent_upstream=$(git -C "$repo_root" rev-parse --abbrev-ref "${master_ref}@{upstream}" 2>/dev/null)
+                [[ -n "$parent_upstream" ]] && compare_ref="$parent_upstream"
+            fi
+            master_behind=$(git -C "$repo_root" rev-list --count "HEAD..${compare_ref}" 2>/dev/null)
         fi
 
         local remote_behind=0
