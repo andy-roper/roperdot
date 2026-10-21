@@ -98,34 +98,87 @@ if [[ "$ROPERDOT_SHOW_EXTENDED_GIT_INFO" == "behind-only" ]]; then
             master_ref="$(awk -F= -v b="$branch" '$1==b {print $2; exit}' "$meta_file")"
         fi
 
-        if [[ -z "$master_ref" ]]; then
-            local candidates
-            candidates=$(git -C "$repo_root" branch -r 2>/dev/null \
-                | sed 's/^[[:space:]]*//' \
-                | grep -v 'HEAD' \
-                | grep -i -E '(^|/)master$|(^|[-_])master($|[-_])|(^|/)main$')
-
-            if [[ -n "$candidates" ]]; then
-                local best_ref="" best_base=""
-                local candidate merge_base
-
-                while IFS= read -r candidate; do
-                    candidate="${candidate// /}"
-                    merge_base=$(git -C "$repo_root" merge-base HEAD "$candidate" 2>/dev/null)
-                    if [[ -n "$merge_base" ]]; then
-                        if [[ -z "$best_base" ]] || \
-                           git -C "$repo_root" merge-base --is-ancestor "$best_base" "$merge_base" 2>/dev/null; then
-                            best_base="$merge_base"
-                            best_ref="$candidate"
-                        fi
-                    fi
-                done <<< "$candidates"
-
-                if [[ -n "$best_ref" ]]; then
-                    master_ref="$best_ref"
-                    echo "Setting parent of ${branch} to ${master_ref} in ${meta_file}"
-                    echo "${branch}=${master_ref}" >> "$meta_file"
+        # The remote default branch: origin/HEAD, else origin/master, else origin/main.
+        local default_ref
+        default_ref=$(command git -C "$repo_root" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)
+        if [[ -z "$default_ref" ]]; then
+            local fallback
+            for fallback in origin/master origin/main; do
+                if command git -C "$repo_root" rev-parse --verify --quiet "refs/remotes/${fallback}" >/dev/null; then
+                    default_ref="$fallback"
+                    break
                 fi
+            done
+        fi
+
+        # Work out where this branch came from. parent_kind is:
+        #   own     - not forked by you (cloned, or checked out from its own
+        #             remote, e.g. master or ifscloud-master): no ▼
+        #   parent  - master_ref holds the branch it was created from
+        #   (empty) - unknown
+        # A branch-meta value of "-" is a cached "own".
+        local parent_kind=""
+        if [[ "$master_ref" == "-" ]]; then
+            master_ref=""
+            parent_kind="own"
+        elif [[ -n "$master_ref" ]]; then
+            parent_kind="parent"
+        else
+            # The branch's oldest reflog entry records how it was created.
+            local created_line created_ts created_msg from=""
+            created_line=$(command git -C "$repo_root" reflog show --date=unix --format='%gd %gs' \
+                "refs/heads/${branch}" 2>/dev/null | command tail -n 1)
+            if [[ -n "$created_line" ]]; then
+                created_ts=$(printf '%s\n' "$created_line" | command sed -E 's/^[^@]*@[{]([0-9]+)[}].*/\1/')
+                created_msg="${created_line#* }"
+                case "$created_msg" in
+                    "branch: Created from "*) from="${created_msg#branch: Created from }" ;;
+                    "clone: "*) parent_kind="own" ;;
+                esac
+
+                # checkout -b / switch -c log "Created from HEAD"; HEAD's reflog
+                # has the matching "checkout: moving from <parent> to <branch>".
+                if [[ "$from" == "HEAD" ]]; then
+                    from=$(command git -C "$repo_root" reflog show --date=unix --format='%gd %gs' HEAD 2>/dev/null \
+                        | command awk -v b="$branch" -v t="$created_ts" '
+                            { ts = $1; sub(/^[^@]*@[{]/, "", ts); sub(/[}].*$/, "", ts) }
+                            NF == 7 && $2 == "checkout:" && $3 == "moving" && $4 == "from" &&
+                            $6 == "to" && $7 == b && ts + 0 >= t - 2 { p = $5 }
+                            END { print p }')
+                fi
+
+                from="${from#refs/heads/}"
+                from="${from#refs/remotes/}"
+                if [[ -n "$from" ]]; then
+                    if [[ "$from" == "origin/${branch}" ]]; then
+                        parent_kind="own"
+                    elif command git -C "$repo_root" show-ref --verify --quiet "refs/heads/${from}" || \
+                         command git -C "$repo_root" show-ref --verify --quiet "refs/remotes/${from}"; then
+                        master_ref="$from"
+                        parent_kind="parent"
+                    fi
+                fi
+
+                # Cache what the reflog told us, since reflog entries expire.
+                if [[ -n "$parent_kind" ]]; then
+                    { printf '%s=%s\n' "$branch" "${master_ref:--}" >> "$meta_file"; } 2>/dev/null
+                fi
+            fi
+        fi
+
+        if [[ "$parent_kind" == "own" ]]; then
+            master_ref=""
+        elif [[ -z "$parent_kind" ]]; then
+            # Unknown (reflog expired, or detached HEAD). A master-style branch
+            # tracking its own remote is treated as a master line; anything
+            # else is measured against the remote default branch.
+            local own_upstream
+            own_upstream=$(command git -C "$repo_root" rev-parse --abbrev-ref '@{upstream}' 2>/dev/null)
+            if [[ "$own_upstream" == "origin/${branch}" ]] && \
+               printf '%s\n' "$branch" | command grep -q -i -E '(^|[-_])(master|main)$'; then
+                master_ref=""
+            elif [[ -n "$default_ref" && "$branch" != "${default_ref#*/}" ]]; then
+                master_ref="$default_ref"
             fi
         fi
 
